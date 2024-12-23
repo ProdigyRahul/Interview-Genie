@@ -2,13 +2,18 @@ import { hash } from "bcryptjs";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/server/db";
-import type { User } from "@prisma/client";
+import { sendEmail } from "@/lib/email";
+import { generateOTPEmail } from "@/lib/email-templates/otp-verification";
 
 const signupSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
+
+function generateOTP(): string {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
 
 export async function POST(req: Request) {
   try {
@@ -21,24 +26,49 @@ export async function POST(req: Request) {
 
     if (existingUser) {
       return NextResponse.json(
-        {
-          error: "Email already exists",
-        },
+        { error: "Email already exists" },
         { status: 400 }
       );
     }
 
     const hashedPassword = await hash(password, 10);
+    const otp = generateOTP();
 
-    const user = await db.user.create({
-      data: {
-        name,
-        email,
-        hashedPassword,
-        emailVerified: null,
-        image: null,
-      },
-    }) satisfies User;
+    // Create user and OTP verification in a transaction
+    const { user } = await db.$transaction(async (tx) => {
+      const user = await tx.user.create({
+        data: {
+          name,
+          email,
+          hashedPassword,
+          emailVerified: null,
+          image: null,
+        },
+      });
+
+      // Delete any existing OTP for this user
+      await tx.oTPVerification.deleteMany({
+        where: { userId: user.id },
+      });
+
+      // Create new OTP verification
+      await tx.oTPVerification.create({
+        data: {
+          userId: user.id,
+          otp,
+          expires: new Date(Date.now() + 5 * 60 * 1000), // 5 minutes
+        },
+      });
+
+      return { user };
+    });
+
+    // Send OTP email
+    await sendEmail({
+      to: email,
+      subject: "Verify Your Email - Interview Genie",
+      html: generateOTPEmail(name, otp),
+    });
 
     return NextResponse.json({
       user: {
