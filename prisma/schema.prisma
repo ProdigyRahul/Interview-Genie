@@ -43,6 +43,7 @@ model User {
   interviewNotes    InterviewNote[]
   interviewHistory  InterviewHistory[]
   passwordResetTokens PasswordResetToken[]
+  otpVerifications  OTPVerification[]
 }
 
 model Admin {
@@ -312,4 +313,15 @@ model PasswordResetToken {
   createdAt DateTime @default(now())
 
   @@index([token])
+}
+
+model OTPVerification {
+  id        String   @id @default(cuid())
+  userId    String
+  otp       String
+  expires   DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }

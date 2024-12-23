@@ -33,11 +33,16 @@ export const credentialsProvider = CredentialsProvider({
           name: true,
           image: true,
           hashedPassword: true,
+          isVerified: true,
         },
       });
 
       if (!user?.hashedPassword) {
         throw new Error("Invalid credentials");
+      }
+
+      if (!user.isVerified) {
+        throw new Error("Please verify your email before logging in");
       }
 
       const isPasswordValid = await compare(
