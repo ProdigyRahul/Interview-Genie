@@ -25,8 +25,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import type { ApiError } from "@/types/api";
-import type { ReactNode } from "react";
 import { Loader2 } from "lucide-react";
 
 const formSchema = z.object({
@@ -45,11 +43,6 @@ const formSchema = z.object({
   path: ["confirmPassword"],
 });
 
-interface ToastProps {
-  title?: ReactNode;
-  description?: ReactNode;
-  variant?: "default" | "destructive" | "success";
-}
 
 export function SignupForm() {
   const [isLoading, setIsLoading] = useState(false);
@@ -72,36 +65,28 @@ export function SignupForm() {
       const response = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: values.name,
-          email: values.email,
-          password: values.password,
-        }),
+        body: JSON.stringify(values),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const data = (await response.json()) as ApiError;
-        throw new Error(data.error ?? "Signup failed");
+        throw new Error(data.error || "Failed to create account");
       }
 
       toast({
         variant: "success",
-        title: (
-          <span className="text-base font-semibold text-green-600 dark:text-green-400">
-            Account created!
-          </span>
-        ),
-        description: "Please check your email to verify your account.",
+        title: "Account created",
+        description: "Please verify your email to continue",
       });
 
-      router.push("/login");
-    } catch (err) {
-      console.error("Signup error:", err);
+      router.push(`/verify-otp?userId=${data.user.id}`);
+    } catch (error) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: err instanceof Error ? err.message : "Something went wrong",
-      } as ToastProps);
+        description: error instanceof Error ? error.message : "Something went wrong",
+      });
     } finally {
       setIsLoading(false);
     }

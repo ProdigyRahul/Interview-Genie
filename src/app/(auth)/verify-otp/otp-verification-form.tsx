@@ -33,6 +33,10 @@ export function OTPVerificationForm() {
     }
   }, []);
 
+  const setRef = (element: HTMLInputElement | null, index: number) => {
+    inputRefs.current[index] = element;
+  };
+
   const handleChange = (value: string, index: number) => {
     const newOtp = [...otp];
     newOtp[index] = value;
@@ -60,7 +64,7 @@ export function OTPVerificationForm() {
     pastedData.split("").forEach((value, index) => {
       newOtp[index] = value;
       if (inputRefs.current[index]) {
-        inputRefs.current[index]!.value = value;
+        inputRefs.current[index].value = value;
       }
     });
     
@@ -136,7 +140,7 @@ export function OTPVerificationForm() {
               {otp.map((_, index) => (
                 <input
                   key={index}
-                  ref={(ref) => (inputRefs.current[index] = ref)}
+                  ref={(el) => setRef(el, index)}
                   type="text"
                   maxLength={1}
                   value={otp[index]}
