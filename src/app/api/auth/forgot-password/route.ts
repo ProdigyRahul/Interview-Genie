@@ -29,7 +29,7 @@ export async function POST(req: Request) {
     const resetLink = `${env.NEXTAUTH_URL}/reset-password?token=${token}`;
     
     await sendEmail({
-      to: user.email!,
+      to: user.email,
       subject: "Reset Your Password - Interview Genie",
       html: generatePasswordResetEmail(user.name ?? "User", resetLink),
     });
