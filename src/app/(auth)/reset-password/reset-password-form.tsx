@@ -16,16 +16,9 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, ArrowLeft, KeyRound } from "lucide-react";
+import { Loader2, Eye, EyeOff, KeyRound, ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import Link from "next/link";
 import { PasswordStrength } from "@/components/ui/password-strength";
 
 const formSchema = z.object({
@@ -44,6 +37,8 @@ const formSchema = z.object({
 
 export function ResetPasswordForm() {
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
@@ -91,15 +86,12 @@ export function ResetPasswordForm() {
       });
 
       setIsSuccess(true);
-      setTimeout(() => {
-        router.push("/login");
-      }, 2000);
+      setTimeout(() => router.push("/login"), 2000);
     } catch (error) {
-      console.error("Reset password error:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Something went wrong. Please try again.",
+        description: error instanceof Error ? error.message : "Something went wrong",
       });
     } finally {
       setIsLoading(false);
@@ -107,120 +99,133 @@ export function ResetPasswordForm() {
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader className="space-y-1">
-        <div className="flex items-center">
-          <Button
-            variant="ghost"
-            className="mr-2 px-0 hover:bg-transparent"
-            onClick={() => router.push("/login")}
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <CardTitle className="text-2xl font-bold">Reset Password</CardTitle>
-        </div>
-        <CardDescription>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="space-y-6 w-full"
+    >
+      <div className="space-y-2">
+        <Link
+          href="/login"
+          className="inline-flex items-center text-sm text-muted-foreground hover:text-primary"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to login
+        </Link>
+        <h1 className="text-3xl font-bold tracking-tight">Reset password</h1>
+        <p className="text-muted-foreground">
           Enter your new password below
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {!isSuccess ? (
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>New Password</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="••••••••"
-                          type="password"
-                          disabled={isLoading}
-                          {...field}
-                        />
-                      </FormControl>
-                      <PasswordStrength password={field.value} />
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </motion.div>
+        </p>
+      </div>
 
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4 }}
-              >
-                <FormField
-                  control={form.control}
-                  name="confirmPassword"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Confirm Password</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="••••••••"
-                          type="password"
-                          disabled={isLoading}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </motion.div>
+      {!isSuccess ? (
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>New Password</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Input
+                        placeholder="••••••••"
+                        type={showPassword ? "text" : "password"}
+                        disabled={isLoading}
+                        {...field}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
+                  </FormControl>
+                  <PasswordStrength password={field.value} />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={isLoading}
-              >
-                {isLoading ? (
+            <FormField
+              control={form.control}
+              name="confirmPassword"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Confirm Password</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Input
+                        placeholder="••••••••"
+                        type={showConfirmPassword ? "text" : "password"}
+                        disabled={isLoading}
+                        {...field}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        {showConfirmPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isLoading}
+              size="lg"
+            >
+              {isLoading ? (
+                <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
+                  Resetting password...
+                </>
+              ) : (
+                <>
                   <KeyRound className="mr-2 h-4 w-4" />
-                )}
-                Reset Password
-              </Button>
-            </form>
-          </Form>
-        ) : (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="text-center space-y-4"
-          >
-            <div className="p-3 rounded-full bg-green-100 dark:bg-green-900 w-fit mx-auto">
-              <KeyRound className="h-6 w-6 text-green-600 dark:text-green-400" />
+                  Reset password
+                </>
+              )}
+            </Button>
+          </form>
+        </Form>
+      ) : (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="space-y-6"
+        >
+          <div className="flex flex-col items-center justify-center space-y-4">
+            <div className="rounded-full bg-primary/10 p-3">
+              <KeyRound className="h-6 w-6 text-primary" />
             </div>
-            <div className="space-y-2">
-              <h3 className="font-semibold">Password Reset Complete</h3>
+            <div className="text-center space-y-2">
+              <h3 className="text-lg font-semibold">Password reset successful</h3>
               <p className="text-sm text-muted-foreground">
-                Your password has been reset successfully. Redirecting to login...
+                Your password has been reset. Redirecting to login...
               </p>
             </div>
-          </motion.div>
-        )}
-      </CardContent>
-      <CardFooter className="flex flex-col space-y-4">
-        <div className="text-sm text-muted-foreground text-center">
-          Remember your password?{" "}
-          <a
-            href="/login"
-            className="text-primary hover:underline"
-          >
-            Sign in
-          </a>
-        </div>
-      </CardFooter>
-    </Card>
+          </div>
+        </motion.div>
+      )}
+    </motion.div>
   );
 } 
