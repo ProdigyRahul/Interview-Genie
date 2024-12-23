@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/auth/button";
 import {
   Form,
   FormControl,
@@ -15,19 +15,12 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ui/auth/input";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Loader2, Eye, EyeOff } from "lucide-react";
+import { motion } from "framer-motion";
 import { Icons } from "@/components/ui/icons";
+import Link from "next/link";
 
 const formSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -36,6 +29,7 @@ const formSchema = z.object({
 
 export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
   const searchParams = useSearchParams();
@@ -75,7 +69,6 @@ export function LoginForm() {
 
       router.push(callbackUrl);
       router.refresh();
-
     } catch (err) {
       console.error("Login error:", err);
       toast({
@@ -89,154 +82,126 @@ export function LoginForm() {
   }
 
   return (
-    <AnimatePresence mode="wait">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -20 }}
-        transition={{ duration: 0.2 }}
-      >
-        <Card className="w-full">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold text-center">
-              Welcome back
-            </CardTitle>
-            <CardDescription className="text-center">
-              Enter your credentials to continue
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.1 }}
-                >
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="name@example.com"
-                            type="email"
-                            disabled={isLoading}
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.2 }}
-                >
-                  <FormField
-                    control={form.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Password</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="••••••••"
-                            type="password"
-                            disabled={isLoading}
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                >
-                  <Button
-                    type="submit"
-                    className="w-full"
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="space-y-6"
+    >
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="name@example.com"
+                    type="email"
                     disabled={isLoading}
-                  >
-                    {isLoading && (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    )}
-                    Sign in with Email
-                  </Button>
-                </motion.div>
-              </form>
-            </Form>
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-muted" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">
-                  Or continue with
-                </span>
-              </div>
-            </div>
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Password</FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <Input
+                      placeholder="••••••••"
+                      type={showPassword ? "text" : "password"}
+                      disabled={isLoading}
+                      {...field}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-            <div className="grid gap-3">
-              <Button
-                variant="outline"
-                disabled={isLoading}
-                onClick={() => signIn("google", { callbackUrl })}
-                className="hover:bg-primary/5"
-              >
-                <Icons.google className="mr-2 h-4 w-4" />
-                Google
-              </Button>
-              <Button
-                variant="outline"
-                disabled={isLoading}
-                onClick={() => signIn("discord", { callbackUrl })}
-                className="hover:bg-primary/5"
-              >
-                <Icons.discord className="mr-2 h-4 w-4" />
-                Discord
-              </Button>
-            </div>
-          </CardContent>
-          <CardFooter className="flex flex-col space-y-4">
-            <div className="text-sm text-muted-foreground text-center space-y-2">
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.4 }}
-              >
-                <a
-                  href="/forgot-password"
-                  className="text-sm text-primary hover:underline"
-                >
-                  Forgot your password?
-                </a>
-              </motion.div>
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.5 }}
-              >
-                Don&apos;t have an account?{" "}
-                <a href="/signup" className="text-primary hover:underline">
-                  Sign up
-                </a>
-              </motion.div>
-            </div>
-          </CardFooter>
-        </Card>
-      </motion.div>
-    </AnimatePresence>
+          <div className="flex items-center justify-end">
+            <Link
+              href="/forgot-password"
+              className="text-sm text-primary hover:underline"
+            >
+              Forgot password?
+            </Link>
+          </div>
+
+          <Button
+            type="submit"
+            disabled={isLoading}
+            isLoading={isLoading}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Signing in...
+              </>
+            ) : (
+              "Sign in"
+            )}
+          </Button>
+        </form>
+      </Form>
+
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-border" />
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-background px-2 text-muted-foreground">
+            Or continue with
+          </span>
+        </div>
+      </div>
+
+      <div className="grid gap-3">
+        <Button
+          variant="social"
+          disabled={isLoading}
+          onClick={() => signIn("google", { callbackUrl })}
+          icon={<Icons.google className="h-4 w-4" />}
+        >
+          Google
+        </Button>
+        <Button
+          variant="social"
+          disabled={isLoading}
+          onClick={() => signIn("discord", { callbackUrl })}
+          icon={<Icons.discord className="h-4 w-4" />}
+        >
+          Discord
+        </Button>
+      </div>
+
+      <p className="text-center text-sm text-muted-foreground">
+        Don&apos;t have an account?{" "}
+        <Link href="/signup" className="text-primary hover:underline">
+          Create account
+        </Link>
+      </p>
+    </motion.div>
   );
 } 
