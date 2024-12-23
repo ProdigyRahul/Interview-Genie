@@ -1,10 +1,13 @@
 import NextAuth from "next-auth";
-import { cache } from "react";
-
 import { authConfig } from "./config";
 
-const { auth: uncachedAuth, handlers, signIn, signOut } = NextAuth(authConfig);
+const nextAuth = NextAuth(authConfig);
 
-const auth = cache(uncachedAuth);
+export const {
+  auth,
+  signIn,
+  signOut,
+} = nextAuth;
 
-export { auth, handlers, signIn, signOut };
+// Export handlers for API route
+export const { GET, POST } = nextAuth.handlers;
