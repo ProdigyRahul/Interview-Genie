@@ -23,7 +23,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const user = (await getUserByResetToken(token)) as User | null;
+    const user = (await getUserByResetToken(token)) as User;
     if (!user) {
       return NextResponse.json(
         { error: "Invalid or expired reset token" },

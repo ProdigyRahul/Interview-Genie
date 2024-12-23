@@ -38,7 +38,7 @@ export function ProfileForm() {
     },
   });
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit() {
     try {
       setIsLoading(true);
       // Add your profile update logic here

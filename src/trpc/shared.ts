@@ -1,5 +1,3 @@
-import { env } from "@/env";
-
 export function getUrl() {
   // Browser should use relative url
   if (typeof window !== "undefined") return ""; 

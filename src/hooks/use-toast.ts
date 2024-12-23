@@ -6,8 +6,8 @@ import type {
   ToastProps,
 } from "@/components/ui/toast"
 
-const TOAST_LIMIT = 1
-const TOAST_REMOVE_DELAY = 1000000
+const TOAST_LIMIT = 3
+const TOAST_REMOVE_DELAY = 5000
 
 type ToastVariant = "default" | "destructive" | "success"
 
@@ -19,6 +19,7 @@ interface BaseToast {
   variant?: ToastVariant
   open?: boolean
   onOpenChange?: (open: boolean) => void
+  duration?: number
 }
 
 type ToasterToast = BaseToast & Omit<ToastProps, keyof BaseToast>
@@ -30,12 +31,27 @@ interface Toast extends Partial<Pick<ToasterToast, "id">> {
   action?: ToastActionElement
 }
 
-const actionTypes = {
-  ADD_TOAST: "ADD_TOAST",
-  UPDATE_TOAST: "UPDATE_TOAST",
-  DISMISS_TOAST: "DISMISS_TOAST",
-  REMOVE_TOAST: "REMOVE_TOAST",
-} as const
+type Action =
+  | {
+      type: "ADD_TOAST"
+      toast: ToasterToast
+    }
+  | {
+      type: "UPDATE_TOAST"
+      toast: Partial<ToasterToast>
+    }
+  | {
+      type: "DISMISS_TOAST"
+      toastId?: ToasterToast["id"]
+    }
+  | {
+      type: "REMOVE_TOAST"
+      toastId?: ToasterToast["id"]
+    }
+
+interface State {
+  toasts: ToasterToast[]
+}
 
 let count = 0
 
@@ -44,33 +60,9 @@ function genId() {
   return count.toString()
 }
 
-type ActionType = typeof actionTypes
-
-type Action =
-  | {
-      type: ActionType["ADD_TOAST"]
-      toast: ToasterToast
-    }
-  | {
-      type: ActionType["UPDATE_TOAST"]
-      toast: Partial<ToasterToast>
-    }
-  | {
-      type: ActionType["DISMISS_TOAST"]
-      toastId?: ToasterToast["id"]
-    }
-  | {
-      type: ActionType["REMOVE_TOAST"]
-      toastId?: ToasterToast["id"]
-    }
-
-interface State {
-  toasts: ToasterToast[]
-}
-
 const toastTimeouts = new Map<string, ReturnType<typeof setTimeout>>()
 
-const addToRemoveQueue = (toastId: string) => {
+const addToRemoveQueue = (toastId: string, duration?: number) => {
   if (toastTimeouts.has(toastId)) {
     return
   }
@@ -81,7 +73,7 @@ const addToRemoveQueue = (toastId: string) => {
       type: "REMOVE_TOAST",
       toastId: toastId,
     })
-  }, TOAST_REMOVE_DELAY)
+  }, duration ?? TOAST_REMOVE_DELAY)
 
   toastTimeouts.set(toastId, timeout)
 }
@@ -150,7 +142,7 @@ function dispatch(action: Action) {
   })
 }
 
-function toast(props: Toast) {
+function toast(props: Toast & { duration?: number }) {
   const id = genId()
 
   const update = (props: ToasterToast) =>
@@ -171,6 +163,8 @@ function toast(props: Toast) {
       },
     } as ToasterToast,
   })
+
+  addToRemoveQueue(id, props.duration)
 
   return {
     id: id,
