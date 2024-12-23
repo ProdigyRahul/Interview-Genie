@@ -12,9 +12,9 @@ export default async function LoginPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col space-y-2 text-center">
-        <h1 className="text-3xl font-bold">Interview Genie</h1>
-        <p className="text-muted-foreground">
-          AI-Powered Interview Preparation Platform
+        <h1 className="text-2xl font-semibold tracking-tight">Welcome back</h1>
+        <p className="text-sm text-muted-foreground">
+          Enter your email to sign in to your account
         </p>
       </div>
       <LoginForm />
