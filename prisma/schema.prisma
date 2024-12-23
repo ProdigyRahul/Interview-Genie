@@ -14,17 +14,173 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
-model Post {
-    id        Int      @id @default(autoincrement())
-    name      String
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-
-    createdBy   User   @relation(fields: [createdById], references: [id])
-    createdById String
-
-    @@index([name])
+// Users and Authentication
+model User {
+  id                String    @id @default(cuid())
+  name              String?   // Add this field for NextAuth
+  email             String    @unique
+  emailVerified     DateTime? // Add this field for NextAuth
+  image             String?   // Add this field for NextAuth
+  firstName         String?
+  lastName          String?
+  profileImage      String?
+  subscriptionStatus String?  @default("free")
+  isVerified        Boolean   @default(false)
+  phoneNumber       String?
+  preferences       Json?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  lastLogin         DateTime?
+  hashedPassword    String?   // Changed from password to hashedPassword
+  
+  // Auth related
+  accounts          Account[]
+  sessions          Session[]
+  
+  // Relations
+  resumes           Resume[]
+  mockInterviews    MockInterview[]
+  interviewNotes    InterviewNote[]
+  interviewHistory  InterviewHistory[]
+  passwordResetTokens PasswordResetToken[]
 }
+
+model Admin {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  firstName   String
+  lastName    String
+  role        String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  jobDescriptions JobDescription[]
+  careerDomains   CareerDomain[]
+  jobRoles        JobRole[]
+  interviewScenarios InterviewScenario[]
+}
+
+// Career and Job Structures
+model CareerDomain {
+  id          String    @id @default(cuid())
+  name        String
+  description String?   @db.Text
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  createdById String
+  
+  // Relations
+  createdBy   Admin     @relation(fields: [createdById], references: [id])
+  jobRoles    JobRole[]
+  interviewScenarios InterviewScenario[]
+}
+
+model JobRole {
+  id              String    @id @default(cuid())
+  domainId        String
+  title           String
+  level           String
+  description     String?   @db.Text
+  requiredSkills  Json?
+  experienceYears Int
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  createdById     String
+  
+  // Relations
+  domain          CareerDomain @relation(fields: [domainId], references: [id])
+  createdBy       Admin        @relation(fields: [createdById], references: [id])
+  mockInterviews  MockInterview[]
+  resumes         Resume[]
+  jobDescriptions JobDescription[]
+}
+
+model JobDescription {
+  id              String    @id @default(cuid())
+  roleId          String
+  title           String
+  company         String
+  description     String    @db.Text
+  requirements    Json
+  industry        String
+  experienceLevel String
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  createdById     String
+  
+  // Relations
+  role            JobRole   @relation(fields: [roleId], references: [id])
+  createdBy       Admin     @relation(fields: [createdById], references: [id])
+  mockInterviews  MockInterview[]
+}
+
+model Resume {
+  id          String    @id @default(cuid())
+  userId      String
+  roleId      String
+  resumeUrl   String
+  fileType    String
+  parsedData  Json?
+  atsScore    Int?
+  uploadedAt  DateTime  @default(now())
+  isCurrent   Boolean   @default(false)
+  
+  // Relations
+  user        User      @relation(fields: [userId], references: [id])
+  role        JobRole   @relation(fields: [roleId], references: [id])
+}
+
+model InterviewScenario {
+  id          String    @id @default(cuid())
+  domainId    String
+  title       String
+  description String    @db.Text
+  questions   Json
+  difficulty  String
+  duration    Int       // in minutes
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  createdById String
+  
+  // Relations
+  domain      CareerDomain @relation(fields: [domainId], references: [id])
+  createdBy   Admin        @relation(fields: [createdById], references: [id])
+  mockInterviews MockInterview[]
+}
+
+model MockInterview {
+  id              String    @id @default(cuid())
+  userId          String
+  jobId           String
+  roleId          String
+  scenarioId      String
+  startTime       DateTime
+  endTime         DateTime?
+  interviewType   String
+  status          String
+  score           Int?
+  feedback        Json?
+  duration        Int?
+  technicalScore  Float?
+  behavioralScore Float?
+  communicationScore Float?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  // Relations
+  user            User      @relation(fields: [userId], references: [id])
+  job             JobDescription @relation(fields: [jobId], references: [id])
+  role            JobRole   @relation(fields: [roleId], references: [id])
+  scenario        InterviewScenario @relation(fields: [scenarioId], references: [id])
+  history         InterviewHistory[]
+  notes           InterviewNote[]
+  recordings      MediaRecording[]
+}
+
+// ... continue with other models (InterviewHistory, InterviewNote, MediaRecording, etc.)
 
 // Necessary for Next auth
 model Account {
@@ -54,21 +210,106 @@ model Session {
     user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-model User {
-    id            String    @id @default(cuid())
-    name          String?
-    email         String?   @unique
-    emailVerified DateTime?
-    image         String?
-    accounts      Account[]
-    sessions      Session[]
-    posts         Post[]
-}
-
 model VerificationToken {
     identifier String
     token      String   @unique
     expires    DateTime
 
     @@unique([identifier, token])
+}
+
+model InterviewHistory {
+  id          String    @id @default(cuid())
+  userId      String
+  interviewId String
+  action      String    // 'started', 'paused', 'resumed', 'completed'
+  timestamp   DateTime
+  metadata    Json?     // Additional context about the action
+  createdAt   DateTime  @default(now())
+  
+  // Relations
+  user        User          @relation(fields: [userId], references: [id])
+  interview   MockInterview @relation(fields: [interviewId], references: [id])
+}
+
+model InterviewNote {
+  id          String    @id @default(cuid())
+  interviewId String
+  userId      String
+  content     String    @db.Text
+  timestamp   Int?      // in seconds
+  noteType    String    // 'feedback', 'observation', 'improvement'
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  // Relations
+  interview   MockInterview @relation(fields: [interviewId], references: [id])
+  user        User         @relation(fields: [userId], references: [id])
+}
+
+model MediaRecording {
+  id           String    @id @default(cuid())
+  interviewId  String
+  mediaType    String    // 'video', 'audio'
+  fileUrl      String
+  thumbnailUrl String?
+  duration     Int       // in seconds
+  fileSize     BigInt
+  format       String    // 'mp4', 'webm', 'mp3'
+  quality      String    // 'HD', 'SD', etc.
+  status       String    // 'processing', 'ready', 'archived'
+  createdAt    DateTime  @default(now())
+  archivedAt   DateTime?
+  
+  // Relations
+  interview    MockInterview      @relation(fields: [interviewId], references: [id])
+  segments     RecordingSegment[]
+  analysis     RecordingAnalysis[]
+}
+
+model RecordingSegment {
+  id           String    @id @default(cuid())
+  recordingId  String
+  startTime    Int       // in seconds
+  endTime      Int
+  segmentUrl   String
+  transcript   String?   @db.Text
+  highlights   Json?     // Key moments
+  createdAt    DateTime  @default(now())
+  
+  // Relations
+  recording    MediaRecording @relation(fields: [recordingId], references: [id])
+}
+
+model RecordingAnalysis {
+  id                  String    @id @default(cuid())
+  recordingId         String
+  analysisType        String    // 'video' or 'audio'
+  confidenceScore     Float
+  clarityScore        Float
+  paceScore          Float
+  voiceToneAnalysis   Json?
+  fillerWordsCount    Int
+  silencePeriods      Json?
+  volumeVariance      Json?
+  languageConfidence  Float
+  facialExpressions   Json?
+  eyeContactScore     Float?
+  postureAnalysis     Json?
+  gestureMetrics      Json?
+  createdAt          DateTime  @default(now())
+  
+  // Relations
+  recording          MediaRecording @relation(fields: [recordingId], references: [id])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expires   DateTime
+  createdAt DateTime @default(now())
+
+  @@index([token])
 }
