@@ -87,7 +87,7 @@ export function ForgotPasswordForm() {
         </Link>
         <h1 className="text-3xl font-bold tracking-tight">Reset password</h1>
         <p className="text-muted-foreground">
-          Enter your email address and we'll send you a link to reset your password
+          Enter your email address and we&apos;ll send you a link to reset your password
         </p>
       </div>
 
@@ -146,7 +146,7 @@ export function ForgotPasswordForm() {
             <div className="text-center space-y-2">
               <h3 className="text-lg font-semibold">Check your email</h3>
               <p className="text-sm text-muted-foreground">
-                We've sent you a link to reset your password. The link will expire in 1 hour.
+                We&apos;ve sent you a link to reset your password. The link will expire in 1 hour.
               </p>
             </div>
           </div>
@@ -165,6 +165,13 @@ export function ForgotPasswordForm() {
         Remember your password?{" "}
         <Link href="/login" className="text-primary hover:underline">
           Sign in
+        </Link>
+      </p>
+
+      <p className="text-sm text-muted-foreground">
+        Don&apos;t have an account?{" "}
+        <Link href="/signup" className="text-primary hover:underline">
+          Sign up
         </Link>
       </p>
     </motion.div>

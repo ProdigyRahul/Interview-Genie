@@ -2,16 +2,19 @@
 
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import { motion } from "framer-motion";
+import { motion, type HTMLMotionProps } from "framer-motion";
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+interface ButtonProps extends Omit<HTMLMotionProps<"button">, "className" | "children"> {
   variant?: "default" | "outline" | "social";
   isLoading?: boolean;
+  disabled?: boolean;
   icon?: React.ReactNode;
+  className?: string;
+  children?: React.ReactNode;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = "default", children, isLoading, icon, ...props }, ref) => {
+  ({ className, variant = "default", isLoading, disabled, icon, children, ...props }, ref) => {
     return (
       <motion.button
         ref={ref}
@@ -25,7 +28,8 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           },
           className
         )}
-        whileHover="hover"
+        disabled={disabled ?? isLoading}
+        whileHover={!(disabled || isLoading) ? "hover" : undefined}
         {...props}
       >
         {icon}

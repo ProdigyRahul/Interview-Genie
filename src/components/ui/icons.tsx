@@ -10,7 +10,6 @@ import {
   FileText,
   HelpCircle,
   Image,
-  Laptop,
   Loader2,
   Moon,
   MoreVertical,

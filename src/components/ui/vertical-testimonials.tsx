@@ -78,10 +78,6 @@ export const VerticalTestimonials = ({
   const scrollerRef = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    addAnimation();
-  }, []);
-
-  function addAnimation() {
     if (containerRef.current && scrollerRef.current) {
       const scrollerContent = Array.from(scrollerRef.current.children);
 
@@ -92,22 +88,19 @@ export const VerticalTestimonials = ({
         }
       });
 
-      getSpeed();
+      if (containerRef.current) {
+        if (speed === "fast") {
+          containerRef.current.style.setProperty("--animation-duration", "10s");
+        } else if (speed === "normal") {
+          containerRef.current.style.setProperty("--animation-duration", "15s");
+        } else {
+          containerRef.current.style.setProperty("--animation-duration", "20s");
+        }
+      }
+
       setStart(true);
     }
-  }
-
-  const getSpeed = () => {
-    if (containerRef.current) {
-      if (speed === "fast") {
-        containerRef.current.style.setProperty("--animation-duration", "10s");
-      } else if (speed === "normal") {
-        containerRef.current.style.setProperty("--animation-duration", "15s");
-      } else {
-        containerRef.current.style.setProperty("--animation-duration", "20s");
-      }
-    }
-  };
+  }, [speed]);
 
   return (
     <div

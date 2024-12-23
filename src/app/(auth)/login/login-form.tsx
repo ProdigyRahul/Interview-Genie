@@ -21,7 +21,6 @@ import { Loader2, Eye, EyeOff } from "lucide-react";
 import { motion } from "framer-motion";
 import { Icons } from "@/components/ui/icons";
 import Link from "next/link";
-import { ThemeToggle } from "@/components/theme-toggle";
 
 const formSchema = z.object({
   email: z.string().email("Invalid email address"),
