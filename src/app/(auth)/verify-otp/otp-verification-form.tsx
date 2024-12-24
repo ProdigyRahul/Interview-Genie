@@ -127,7 +127,7 @@ export function OTPVerificationForm() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <Card>
+      <Card className="w-full max-w-[440px] mx-auto">
         <CardHeader>
           <CardTitle>Email Verification</CardTitle>
           <CardDescription>
@@ -136,7 +136,7 @@ export function OTPVerificationForm() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="flex justify-center gap-2">
+            <div className="flex justify-center px-6">
               {otp.map((_, index) => (
                 <input
                   key={index}
@@ -147,9 +147,10 @@ export function OTPVerificationForm() {
                   onChange={(e) => handleChange(e.target.value, index)}
                   onKeyDown={(e) => handleKeyDown(e, index)}
                   onPaste={handlePaste}
-                  className={`w-12 h-12 text-center text-2xl font-bold border rounded-lg
+                  className={`w-11 h-12 text-center text-2xl font-bold border rounded-lg
                     focus:border-primary focus:ring-2 focus:ring-primary/20 
                     transition-all duration-200
+                    mx-1 first:ml-0 last:mr-0
                     ${activeInput === index ? "border-primary" : "border-input"}
                     ${isLoading ? "opacity-50 cursor-not-allowed" : ""}
                   `}

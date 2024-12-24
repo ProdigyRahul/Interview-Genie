@@ -63,14 +63,16 @@ export async function POST(req: Request) {
       return { user };
     });
 
-    // Send OTP email
-    await sendEmail({
+    // Fire and forget email sending
+    void sendEmail({
       to: email,
       subject: "Verify Your Email - Interview Genie",
       html: generateOTPEmail(name, otp),
     });
 
+    // Immediately return success response
     return NextResponse.json({
+      success: true,
       user: {
         id: user.id,
         name: user.name,
