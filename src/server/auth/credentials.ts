@@ -78,7 +78,7 @@ async function verifyCredentials(
 
     if (!isValid) {
       // Track failed attempts using the actual request IP
-      const attempt = loginAttempts.get(email) || {
+      const attempt = loginAttempts.get(email) ?? {
         count: 0,
         firstAttempt: Date.now(),
         notified: false,
@@ -88,10 +88,10 @@ async function verifyCredentials(
 
       // Add IP to tracking
       attempt.ipAddresses.add(
-        req.headers.get("x-forwarded-for") || 
-        req.headers.get("x-real-ip") || 
-        req.headers.get("cf-connecting-ip") || 
-        req.headers.get("true-client-ip") || 
+        req.headers.get("x-forwarded-for") ??
+        req.headers.get("x-real-ip") ??
+        req.headers.get("cf-connecting-ip") ??
+        req.headers.get("true-client-ip") ??
         "127.0.0.1"
       );
       attempt.count++;
