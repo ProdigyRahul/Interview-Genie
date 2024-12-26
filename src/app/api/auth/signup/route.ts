@@ -4,6 +4,8 @@ import { z } from "zod";
 import { db } from "@/server/db";
 import { sendEmail } from "@/lib/email";
 import { generateOTPEmail } from "@/lib/email-templates/otp-verification";
+import { generateWelcomeEmail } from "@/lib/email-templates/welcome";
+import { rateLimit } from "@/lib/rate-limit";
 
 const signupSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -17,6 +19,10 @@ function generateOTP(): string {
 
 export async function POST(req: Request) {
   try {
+    // Rate limiting: 5 attempts per minute
+    const rateLimitResult = await rateLimit(req, "signup", 5, 60 * 1000);
+    if (rateLimitResult) return rateLimitResult;
+
     const data = await req.json();
     const { name, email, password } = signupSchema.parse(data);
 
@@ -66,11 +72,18 @@ export async function POST(req: Request) {
       return { user };
     });
 
-    // Fire and forget email sending
+    // Send OTP verification email
     void sendEmail({
       to: email,
       subject: "Verify Your Email - Interview Genie",
       html: generateOTPEmail(name, otp),
+    });
+
+    // Send welcome email
+    void sendEmail({
+      to: email,
+      subject: "Welcome to Interview Genie! 🎉",
+      html: generateWelcomeEmail(name),
     });
 
     // Immediately return success response

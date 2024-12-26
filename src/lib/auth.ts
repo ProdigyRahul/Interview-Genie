@@ -9,6 +9,20 @@ import type { JWT } from "next-auth/jwt";
 import type { Session } from "next-auth";
 import type { User, Account, Profile } from "next-auth";
 
+const logger = {
+  error(error: Error) {
+    if (error.name !== "CredentialsSignin") {
+      console.error(error);
+    }
+  },
+  warn(code: string) {
+    if (!code.includes("SIGNIN")) {
+      console.warn(code);
+    }
+  },
+  debug() {}, // Disable debug logs
+} as const;
+
 const config = {
   adapter: CustomPrismaAdapter(db),
   session: {
@@ -30,6 +44,7 @@ const config = {
       clientSecret: process.env.GITHUB_SECRET ?? "",
     }),
   ],
+  logger,
   callbacks: {
     async session({ session, token }) {
       if (session.user) {
