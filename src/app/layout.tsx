@@ -1,36 +1,41 @@
+import { GeistSans } from "geist/font/sans";
+import { GeistMono } from "geist/font/mono";
+import { auth } from "@/lib/auth";
+import { SessionProvider } from "@/components/providers/session-provider";
+import { TRPCReactProvider } from "@/trpc/react";
+import { ThemeProvider } from "@/components/providers/theme-provider";
+import { Toaster } from "@/components/ui/toaster";
+import { cn } from "@/lib/utils";
+
 import "@/styles/globals.css";
 
-import { GeistSans } from "geist/font/sans";
-import { Toaster } from "@/components/ui/toaster";
-import { ThemeProvider } from "@/components/providers/theme-provider";
-import type { Metadata, Viewport } from "next";
-import type { PropsWithChildren } from "react";
-
-export const metadata: Metadata = {
-  title: "Interview Genie",
-  description: "Your AI-powered interview preparation assistant",
+export const metadata = {
+  title: "Interview Genie - AI-Powered Interview Preparation Platform",
+  description: "Prepare for your next job interview with AI-powered tools, mock interviews, and personalized feedback.",
   icons: [{ rel: "icon", url: "/favicon.ico" }],
 };
 
-export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "white" },
-    { media: "(prefers-color-scheme: dark)", color: "black" },
-  ],
-};
+export default async function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const session = await auth();
 
-export default function RootLayout({ children }: PropsWithChildren) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={GeistSans.className}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          {children}
-          <Toaster />
+      <body className={cn(
+        "min-h-screen bg-background font-sans antialiased",
+        GeistSans.variable,
+        GeistMono.variable
+      )}>
+        <ThemeProvider>
+          <TRPCReactProvider>
+            <SessionProvider session={session}>
+              {children}
+              <Toaster />
+            </SessionProvider>
+          </TRPCReactProvider>
         </ThemeProvider>
       </body>
     </html>

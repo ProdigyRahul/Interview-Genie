@@ -43,6 +43,9 @@ export async function POST(req: Request) {
           hashedPassword,
           emailVerified: null,
           image: null,
+          credits: 100, // Default credits
+          subscriptionStatus: "free", // Default subscription status
+          isVerified: false, // Default verification status
         },
       });
 
@@ -77,6 +80,9 @@ export async function POST(req: Request) {
         id: user.id,
         name: user.name,
         email: user.email,
+        credits: user.credits,
+        subscriptionStatus: user.subscriptionStatus,
+        isVerified: user.isVerified,
       },
     });
   } catch (error) {

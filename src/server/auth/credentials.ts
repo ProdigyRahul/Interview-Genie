@@ -1,6 +1,12 @@
 import { compare } from "bcryptjs";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { db } from "@/server/db";
+import type { User } from "next-auth";
+
+interface Credentials {
+  email: string;
+  password: string;
+}
 
 export const credentialsProvider = CredentialsProvider({
   id: "credentials",
@@ -17,16 +23,16 @@ export const credentialsProvider = CredentialsProvider({
       placeholder: "••••••••",
     },
   },
-  async authorize(credentials) {
+  async authorize(credentials): Promise<User | null> {
     if (!credentials?.email || !credentials?.password) {
       throw new Error("Invalid credentials");
     }
 
+    const { email, password } = credentials as Credentials;
+
     try {
       const user = await db.user.findUnique({
-        where: { 
-          email: credentials.email as string 
-        },
+        where: { email },
         select: {
           id: true,
           email: true,
@@ -34,6 +40,8 @@ export const credentialsProvider = CredentialsProvider({
           image: true,
           hashedPassword: true,
           isVerified: true,
+          credits: true,
+          subscriptionStatus: true,
         },
       });
 
@@ -45,10 +53,7 @@ export const credentialsProvider = CredentialsProvider({
         throw new Error("Please verify your email before logging in");
       }
 
-      const isPasswordValid = await compare(
-        credentials.password as string,
-        user.hashedPassword
-      );
+      const isPasswordValid = await compare(password, user.hashedPassword);
 
       if (!isPasswordValid) {
         throw new Error("Invalid credentials");
@@ -57,8 +62,11 @@ export const credentialsProvider = CredentialsProvider({
       return {
         id: user.id,
         email: user.email,
-        name: user.name,
-        image: user.image,
+        name: user.name ?? "",
+        image: user.image ?? "",
+        credits: user.credits,
+        subscriptionStatus: user.subscriptionStatus ?? "free",
+        isVerified: user.isVerified,
       };
     } catch (error) {
       console.error("Authentication error:", error);
