@@ -20,7 +20,7 @@ export class RateLimit {
 
   async check(key: string, limit: number, windowMs: number = 60000) {
     const now = Date.now();
-    const store = this.store.get(key) || { timestamp: now, count: 0 };
+    const store = this.store.get(key) ?? { timestamp: now, count: 0 };
 
     // Reset if outside window
     if (now - store.timestamp > windowMs) {
@@ -68,10 +68,10 @@ function getClientIp(req: Request): string {
 
   // Return the first valid IP found
   return (
-    forwardedIp ||
-    realIp ||
-    cfConnectingIp ||
-    trueClientIp ||
+    forwardedIp ??
+    realIp ??
+    cfConnectingIp ??
+    trueClientIp ??
     "127.0.0.1"
   );
 }
