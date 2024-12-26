@@ -3,30 +3,46 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Button } from "./ui/button";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
-import { ThemeToggle } from "./theme-toggle";
-import { Menu, User } from "lucide-react";
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from "@/components/ui/dropdown-menu";
+import { Menu, Briefcase, Award, FileText, Settings, BarChart } from "lucide-react";
 
-const routes = [
+const navItems = [
   {
+    title: "Dashboard",
     href: "/dashboard",
-    label: "Dashboard",
+    icon: BarChart,
   },
   {
+    title: "Job Board",
+    href: "/jobs",
+    icon: Briefcase,
+    description: "Browse and import job descriptions",
+  },
+  {
+    title: "My Interviews",
     href: "/interviews",
-    label: "Interviews",
+    icon: Award,
+    description: "View your interview history and certificates",
   },
   {
-    href: "/profile",
-    label: "Profile",
+    title: "Reports & Analytics",
+    href: "/reports",
+    icon: FileText,
+    description: "Performance analysis and insights",
+  },
+  {
+    title: "Settings",
+    href: "/settings",
+    icon: Settings,
+    description: "Manage your account and preferences",
   },
 ];
 
@@ -34,69 +50,62 @@ export function MainNav() {
   const pathname = usePathname();
 
   return (
-    <div className="border-b bg-background">
-      <div className="flex h-16 items-center px-4">
-        <div className="flex items-center space-x-4">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon" className="md:hidden">
-                <Menu className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-56">
-              <DropdownMenuLabel>Navigation</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {routes.map((route) => (
-                <DropdownMenuItem key={route.href} asChild>
-                  <Link href={route.href}>{route.label}</Link>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Link href="/dashboard" className="hidden md:block">
-            <h1 className="text-xl font-bold">Interview Genie</h1>
+    <>
+      {/* Desktop Navigation */}
+      <nav className="hidden md:flex items-center space-x-6">
+        {navItems.map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={cn(
+              "text-sm font-medium transition-colors hover:text-primary flex items-center gap-2",
+              pathname === item.href
+                ? "text-foreground"
+                : "text-muted-foreground"
+            )}
+          >
+            <item.icon className="h-4 w-4" />
+            {item.title}
           </Link>
-        </div>
-        <nav className="mx-6 hidden items-center space-x-4 md:flex">
-          {routes.map((route) => (
-            <Link
-              key={route.href}
-              href={route.href}
-              className={cn(
-                "text-sm font-medium transition-colors hover:text-primary",
-                pathname === route.href
-                  ? "text-primary"
-                  : "text-muted-foreground"
-              )}
-            >
-              {route.label}
-            </Link>
-          ))}
-        </nav>
-        <div className="ml-auto flex items-center space-x-4">
-          <ThemeToggle />
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <User className="h-5 w-5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link href="/profile">Profile</Link>
+        ))}
+      </nav>
+
+      {/* Mobile Navigation */}
+      <div className="md:hidden">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <Menu className="h-5 w-5" />
+              <span className="sr-only">Open menu</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-80">
+            <DropdownMenuLabel>Navigation</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {navItems.map((item) => (
+              <DropdownMenuItem key={item.href} asChild>
+                <Link
+                  href={item.href}
+                  className={cn(
+                    "flex items-center gap-2 w-full",
+                    pathname === item.href && "font-medium text-foreground"
+                  )}
+                >
+                  <item.icon className="h-4 w-4" />
+                  <div>
+                    <div>{item.title}</div>
+                    {item.description && (
+                      <span className="text-xs text-muted-foreground">
+                        {item.description}
+                      </span>
+                    )}
+                  </div>
+                </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/settings">Settings</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/api/auth/signout">Sign out</Link>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
-    </div>
+    </>
   );
 } 
