@@ -1,306 +1,315 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
-    provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-    provider = "postgresql"
-    // NOTE: When using mysql or sqlserver, uncomment the @db.Text annotations in model Account below
-    // Further reading:
-    // https://next-auth.js.org/adapters/prisma#create-the-prisma-schema
-    // https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#string
-    url      = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
-// Users and Authentication
 model User {
-  id                String    @id @default(cuid())
-  name              String?   // Add this field for NextAuth
-  email             String    @unique
-  emailVerified     DateTime? // Add this field for NextAuth
-  image             String?   // Add this field for NextAuth
-  firstName         String?
-  lastName          String?
-  profileImage      String?
-  subscriptionStatus String?  @default("free")
-  isVerified        Boolean   @default(false)
-  phoneNumber       String?
-  preferences       Json?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-  lastLogin         DateTime?
-  hashedPassword    String?   // Changed from password to hashedPassword
-  
+  id                 String    @id @default(cuid())
+  name               String?
+  email              String    @unique
+  emailVerified      DateTime?
+  image              String?
+  firstName          String?
+  lastName           String?
+  profileImage       String?
+  subscriptionStatus String?   @default("free")
+  isVerified         Boolean   @default(false)
+  phoneNumber        String?
+  preferences        Json?
+  credits            Int       @default(200)
+  xpPoints           Int       @default(0)
+  level              Int       @default(1)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  lastLogin          DateTime?
+  hashedPassword     String?
+
+  // Profile completion fields
+  dateOfBirth        DateTime?
+  gender             String?
+  ageGroup           String?
+  companyName        String?
+  industry           String?
+  country            String?
+  state              String?
+  city               String?
+  pinCode            String?
+  workStatus         String?
+  workExperience     String?
+  qualification      String?
+  otherQualifications String?
+  hardSkills         Json?     // Array of skills
+  isProfileComplete  Boolean   @default(false)
+  profileProgress    Int       @default(0) // Percentage of profile completion
+  avatarUrl          String?
+  resumeUrl          String?
+  cookieConsent      Boolean?
+  experience         String?
+  education          String?
+  aspiration         String?
+  lookingForInternship Boolean?
+
   // Auth related
-  accounts          Account[]
-  sessions          Session[]
-  
+  accounts Account[]
+  sessions Session[]
+
   // Relations
-  resumes           Resume[]
-  mockInterviews    MockInterview[]
-  interviewNotes    InterviewNote[]
-  interviewHistory  InterviewHistory[]
+  resumes             Resume[]
+  mockInterviews      MockInterview[]
+  interviewNotes      InterviewNote[]
+  interviewHistory    InterviewHistory[]
   passwordResetTokens PasswordResetToken[]
-  otpVerifications  OTPVerification[]
+  otpVerifications    OTPVerification[]
+  userEducation       UserEducation?
 }
 
-model Admin {
+model UserEducation {
   id          String   @id @default(cuid())
-  email       String   @unique
-  firstName   String
-  lastName    String
-  role        String
+  userId      String   @unique
+  course      String?
+  result      String?
+  passoutYear String?
+  collegeName String?
+  branchName  String?
+  cgpa        String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   // Relations
-  jobDescriptions JobDescription[]
-  careerDomains   CareerDomain[]
-  jobRoles        JobRole[]
-  interviewScenarios InterviewScenario[]
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-// Career and Job Structures
-model CareerDomain {
-  id          String    @id @default(cuid())
-  name        String
-  description String?   @db.Text
-  isActive    Boolean   @default(true)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  createdById String
-  
-  // Relations
-  createdBy   Admin     @relation(fields: [createdById], references: [id])
-  jobRoles    JobRole[]
+model Admin {
+  id                 String              @id @default(cuid())
+  email              String              @unique
+  firstName          String
+  lastName           String
+  role               String
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  careerDomains      CareerDomain[]
   interviewScenarios InterviewScenario[]
+  jobDescriptions    JobDescription[]
+  jobRoles           JobRole[]
+}
+
+model CareerDomain {
+  id                 String              @id @default(cuid())
+  name               String
+  description        String?
+  isActive           Boolean             @default(true)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  createdById        String
+  createdBy          Admin               @relation(fields: [createdById], references: [id])
+  interviewScenarios InterviewScenario[]
+  jobRoles           JobRole[]
 }
 
 model JobRole {
-  id              String    @id @default(cuid())
+  id              String           @id @default(cuid())
   domainId        String
   title           String
   level           String
-  description     String?   @db.Text
+  description     String?
   requiredSkills  Json?
   experienceYears Int
-  isActive        Boolean   @default(true)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  isActive        Boolean          @default(true)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
   createdById     String
-  
-  // Relations
-  domain          CareerDomain @relation(fields: [domainId], references: [id])
-  createdBy       Admin        @relation(fields: [createdById], references: [id])
+  jobDescriptions JobDescription[]
+  createdBy       Admin            @relation(fields: [createdById], references: [id])
+  domain          CareerDomain     @relation(fields: [domainId], references: [id])
   mockInterviews  MockInterview[]
   resumes         Resume[]
-  jobDescriptions JobDescription[]
 }
 
 model JobDescription {
-  id              String    @id @default(cuid())
+  id              String          @id @default(cuid())
   roleId          String
   title           String
   company         String
-  description     String    @db.Text
+  description     String
   requirements    Json
   industry        String
   experienceLevel String
-  isActive        Boolean   @default(true)
-  createdAt       DateTime  @default(now())
+  isActive        Boolean         @default(true)
+  createdAt       DateTime        @default(now())
   createdById     String
-  
-  // Relations
-  role            JobRole   @relation(fields: [roleId], references: [id])
-  createdBy       Admin     @relation(fields: [createdById], references: [id])
+  createdBy       Admin           @relation(fields: [createdById], references: [id])
+  role            JobRole         @relation(fields: [roleId], references: [id])
   mockInterviews  MockInterview[]
 }
 
 model Resume {
-  id          String    @id @default(cuid())
-  userId      String
-  roleId      String
-  resumeUrl   String
-  fileType    String
-  parsedData  Json?
-  atsScore    Int?
-  uploadedAt  DateTime  @default(now())
-  isCurrent   Boolean   @default(false)
-  
-  // Relations
-  user        User      @relation(fields: [userId], references: [id])
-  role        JobRole   @relation(fields: [roleId], references: [id])
+  id         String   @id @default(cuid())
+  userId     String
+  roleId     String
+  resumeUrl  String
+  fileType   String
+  parsedData Json?
+  atsScore   Int?
+  uploadedAt DateTime @default(now())
+  isCurrent  Boolean  @default(false)
+  role       JobRole  @relation(fields: [roleId], references: [id])
+  user       User     @relation(fields: [userId], references: [id])
 }
 
 model InterviewScenario {
-  id          String    @id @default(cuid())
-  domainId    String
-  title       String
-  description String    @db.Text
-  questions   Json
-  difficulty  String
-  duration    Int       // in minutes
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  createdById String
-  
-  // Relations
-  domain      CareerDomain @relation(fields: [domainId], references: [id])
-  createdBy   Admin        @relation(fields: [createdById], references: [id])
+  id             String          @id @default(cuid())
+  domainId       String
+  title          String
+  description    String
+  questions      Json
+  difficulty     String
+  duration       Int
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  createdById    String
+  createdBy      Admin           @relation(fields: [createdById], references: [id])
+  domain         CareerDomain    @relation(fields: [domainId], references: [id])
   mockInterviews MockInterview[]
 }
 
 model MockInterview {
-  id              String    @id @default(cuid())
-  userId          String
-  jobId           String
-  roleId          String
-  scenarioId      String
-  startTime       DateTime
-  endTime         DateTime?
-  interviewType   String
-  status          String
-  score           Int?
-  feedback        Json?
-  duration        Int?
-  technicalScore  Float?
-  behavioralScore Float?
+  id                 String             @id @default(cuid())
+  userId             String
+  jobId              String
+  roleId             String
+  scenarioId         String
+  startTime          DateTime
+  endTime            DateTime?
+  interviewType      String
+  status             String
+  score              Int?
+  feedback           Json?
+  duration           Int?
+  technicalScore     Float?
+  behavioralScore    Float?
   communicationScore Float?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  
-  // Relations
-  user            User      @relation(fields: [userId], references: [id])
-  job             JobDescription @relation(fields: [jobId], references: [id])
-  role            JobRole   @relation(fields: [roleId], references: [id])
-  scenario        InterviewScenario @relation(fields: [scenarioId], references: [id])
-  history         InterviewHistory[]
-  notes           InterviewNote[]
-  recordings      MediaRecording[]
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  history            InterviewHistory[]
+  notes              InterviewNote[]
+  recordings         MediaRecording[]
+  job                JobDescription     @relation(fields: [jobId], references: [id])
+  role               JobRole            @relation(fields: [roleId], references: [id])
+  scenario           InterviewScenario  @relation(fields: [scenarioId], references: [id])
+  user               User               @relation(fields: [userId], references: [id])
 }
 
-// ... continue with other models (InterviewHistory, InterviewNote, MediaRecording, etc.)
-
-// Necessary for Next auth
 model Account {
-    id                       String  @id @default(cuid())
-    userId                   String
-    type                     String
-    provider                 String
-    providerAccountId        String
-    refresh_token            String? // @db.Text
-    access_token             String? // @db.Text
-    expires_at               Int?
-    token_type               String?
-    scope                    String?
-    id_token                 String? // @db.Text
-    session_state            String?
-    user                     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-    refresh_token_expires_in Int?
+  id                       String  @id @default(cuid())
+  userId                   String
+  type                     String
+  provider                 String
+  providerAccountId        String
+  refresh_token            String?
+  access_token             String?
+  expires_at               Int?
+  token_type               String?
+  scope                    String?
+  id_token                 String?
+  session_state            String?
+  refresh_token_expires_in Int?
+  user                     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-    @@unique([provider, providerAccountId])
+  @@unique([provider, providerAccountId])
 }
 
 model Session {
-    id           String   @id @default(cuid())
-    sessionToken String   @unique
-    userId       String
-    expires      DateTime
-    user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model VerificationToken {
-    identifier String
-    token      String   @unique
-    expires    DateTime
+  identifier String
+  token      String   @unique
+  expires    DateTime
 
-    @@unique([identifier, token])
+  @@unique([identifier, token])
 }
 
 model InterviewHistory {
-  id          String    @id @default(cuid())
+  id          String        @id @default(cuid())
   userId      String
   interviewId String
-  action      String    // 'started', 'paused', 'resumed', 'completed'
+  action      String
   timestamp   DateTime
-  metadata    Json?     // Additional context about the action
-  createdAt   DateTime  @default(now())
-  
-  // Relations
-  user        User          @relation(fields: [userId], references: [id])
+  metadata    Json?
+  createdAt   DateTime      @default(now())
   interview   MockInterview @relation(fields: [interviewId], references: [id])
+  user        User          @relation(fields: [userId], references: [id])
 }
 
 model InterviewNote {
-  id          String    @id @default(cuid())
+  id          String        @id @default(cuid())
   interviewId String
   userId      String
-  content     String    @db.Text
-  timestamp   Int?      // in seconds
-  noteType    String    // 'feedback', 'observation', 'improvement'
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  
-  // Relations
+  content     String
+  timestamp   Int?
+  noteType    String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
   interview   MockInterview @relation(fields: [interviewId], references: [id])
-  user        User         @relation(fields: [userId], references: [id])
+  user        User          @relation(fields: [userId], references: [id])
 }
 
 model MediaRecording {
-  id           String    @id @default(cuid())
+  id           String              @id @default(cuid())
   interviewId  String
-  mediaType    String    // 'video', 'audio'
+  mediaType    String
   fileUrl      String
   thumbnailUrl String?
-  duration     Int       // in seconds
+  duration     Int
   fileSize     BigInt
-  format       String    // 'mp4', 'webm', 'mp3'
-  quality      String    // 'HD', 'SD', etc.
-  status       String    // 'processing', 'ready', 'archived'
-  createdAt    DateTime  @default(now())
+  format       String
+  quality      String
+  status       String
+  createdAt    DateTime            @default(now())
   archivedAt   DateTime?
-  
-  // Relations
-  interview    MockInterview      @relation(fields: [interviewId], references: [id])
-  segments     RecordingSegment[]
+  interview    MockInterview       @relation(fields: [interviewId], references: [id])
   analysis     RecordingAnalysis[]
+  segments     RecordingSegment[]
 }
 
 model RecordingSegment {
-  id           String    @id @default(cuid())
-  recordingId  String
-  startTime    Int       // in seconds
-  endTime      Int
-  segmentUrl   String
-  transcript   String?   @db.Text
-  highlights   Json?     // Key moments
-  createdAt    DateTime  @default(now())
-  
-  // Relations
-  recording    MediaRecording @relation(fields: [recordingId], references: [id])
+  id          String         @id @default(cuid())
+  recordingId String
+  startTime   Int
+  endTime     Int
+  segmentUrl  String
+  transcript  String?
+  highlights  Json?
+  createdAt   DateTime       @default(now())
+  recording   MediaRecording @relation(fields: [recordingId], references: [id])
 }
 
 model RecordingAnalysis {
-  id                  String    @id @default(cuid())
-  recordingId         String
-  analysisType        String    // 'video' or 'audio'
-  confidenceScore     Float
-  clarityScore        Float
+  id                 String         @id @default(cuid())
+  recordingId        String
+  analysisType       String
+  confidenceScore    Float
+  clarityScore       Float
   paceScore          Float
-  voiceToneAnalysis   Json?
-  fillerWordsCount    Int
-  silencePeriods      Json?
-  volumeVariance      Json?
-  languageConfidence  Float
-  facialExpressions   Json?
-  eyeContactScore     Float?
-  postureAnalysis     Json?
-  gestureMetrics      Json?
-  createdAt          DateTime  @default(now())
-  
-  // Relations
+  voiceToneAnalysis  Json?
+  fillerWordsCount   Int
+  silencePeriods     Json?
+  volumeVariance     Json?
+  languageConfidence Float
+  facialExpressions  Json?
+  eyeContactScore    Float?
+  postureAnalysis    Json?
+  gestureMetrics     Json?
+  createdAt          DateTime       @default(now())
   recording          MediaRecording @relation(fields: [recordingId], references: [id])
 }
 
@@ -308,9 +317,9 @@ model PasswordResetToken {
   id        String   @id @default(cuid())
   token     String   @unique
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   expires   DateTime
   createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([token])
 }

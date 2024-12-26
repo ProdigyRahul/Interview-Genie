@@ -1,40 +1,31 @@
-import Link from "next/link";
-import { auth } from "@/server/auth";
+import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
+import { db } from "@/server/db";
 
-export default async function Home() {
+export default async function RootPage() {
   const session = await auth();
 
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-indigo-900 to-purple-900 text-white">
-      <div className="container flex flex-col items-center justify-center gap-8 px-4 py-16">
-        <h1 className="text-5xl font-extrabold tracking-tight text-center sm:text-[5rem]">
-          Interview Genie
-        </h1>
-        <p className="text-2xl text-center">
-          AI-Powered Job Interview Preparation Platform
-        </p>
-        
-        <div className="flex flex-col items-center justify-center gap-4">
-          {session ? (
-            <div className="space-y-4 text-center">
-              <p className="text-xl">Welcome back, {session.user?.name}</p>
-              <Link
-                href="/dashboard"
-                className="inline-block rounded-full bg-white/10 px-10 py-3 font-semibold transition hover:bg-white/20"
-              >
-                Go to Dashboard
-              </Link>
-            </div>
-          ) : (
-            <Link
-              href="/login"
-              className="rounded-full bg-white/10 px-10 py-3 font-semibold transition hover:bg-white/20"
-            >
-              Get Started
-            </Link>
-          )}
-        </div>
-      </div>
-    </main>
-  );
+  // If user is not logged in, redirect to login
+  if (!session) {
+    redirect("/login");
+  }
+
+  // Get full user details from database
+  const user = await db.user.findUnique({
+    where: { id: session.user.id },
+    select: { isVerified: true },
+  });
+
+  // If user not found in database, something is wrong - redirect to login
+  if (!user) {
+    redirect("/login");
+  }
+
+  // If user is logged in but not verified, redirect to OTP verification
+  if (!user.isVerified) {
+    redirect("/verify-otp");
+  }
+
+  // If user is logged in and verified, redirect to dashboard
+  redirect("/dashboard");
 }

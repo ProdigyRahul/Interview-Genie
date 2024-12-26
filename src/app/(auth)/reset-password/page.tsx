@@ -1,4 +1,4 @@
-import { auth } from "@/server/auth";
+import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { ResetPasswordForm } from "./reset-password-form";
 
