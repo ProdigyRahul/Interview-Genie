@@ -1,115 +1,83 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/server/db";
 import { NextResponse } from "next/server";
-import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
-// Define the shape of the education data
-const userEducationSchema = z.object({
-  course: z.string().optional(),
-  result: z.string().optional(),
-  passoutYear: z.string().optional(),
-  collegeName: z.string().optional(),
-  branchName: z.string().optional(),
-  cgpa: z.string().optional(),
-});
-
-// Define the shape of the profile data
+// Define request schema for better type safety
 const profileDataSchema = z.object({
-  firstName: z.string().optional(),
-  lastName: z.string().optional(),
-  phoneNumber: z.string().optional(),
-  gender: z.string().optional(),
-  ageGroup: z.string().optional(),
-  country: z.string().optional(),
-  state: z.string().optional(),
-  city: z.string().optional(),
-  pinCode: z.string().optional(),
-  workStatus: z.string().optional(),
-  experience: z.string().optional(),
-  education: z.string().optional(),
-  aspiration: z.string().optional(),
-  lookingForInternship: z.boolean().optional(),
-  industry: z.string().optional(),
-  avatarUrl: z.string().optional(),
-  resumeUrl: z.string().optional(),
-  cookieConsent: z.boolean().optional(),
-  userEducation: userEducationSchema.optional(),
+  data: z.object({
+    firstName: z.string().min(2, "First name must be at least 2 characters"),
+    lastName: z.string().min(2, "Last name must be at least 2 characters"),
+    phoneNumber: z.string().min(10, "Phone number must be at least 10 characters"),
+    gender: z.string(),
+    country: z.string(),
+    state: z.string(),
+    city: z.string(),
+    pinCode: z.string(),
+    workStatus: z.string(),
+    experience: z.string(),
+    education: z.string(),
+    industry: z.string(),
+    ageGroup: z.string().optional(),
+    aspiration: z.string().optional(),
+    hardSkills: z.array(z.string()).optional(),
+    image: z.string().nullable(),
+  })
 });
 
-export type ProfileUpdateData = Omit<z.infer<typeof profileDataSchema>, "userEducation">;
-
-export async function POST(req: Request) {
+export async function POST(req: Request): Promise<NextResponse> {
   try {
     const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
+    
+    if (!session?.user?.email) {
+      return new NextResponse(
+        JSON.stringify({ error: "Unauthorized" }), 
         { status: 401 }
       );
     }
 
-    const rawData = await req.json();
-    const data = profileDataSchema.parse(rawData);
+    const body = await req.json();
+    const { data } = profileDataSchema.parse(body);
 
-    // Validate resume URL if provided
-    if (data.resumeUrl && !data.resumeUrl.endsWith('.pdf')) {
-      return NextResponse.json(
-        { error: "Invalid resume format. Please upload a PDF file." },
-        { status: 400 }
-      );
-    }
-
-    // Separate userEducation from other update data
-    const { userEducation, ...updateData } = data;
-
-    // Update user data excluding userEducation
-    const updatedUser = await db.user.update({
-      where: { id: session.user.id },
+    // Update user profile
+    const result = await db.user.update({
+      where: { email: session.user.email },
       data: {
-        ...updateData,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        name: `${data.firstName} ${data.lastName}`, // Update name as well
+        phoneNumber: data.phoneNumber,
+        gender: data.gender,
+        country: data.country,
+        state: data.state,
+        city: data.city,
+        pinCode: data.pinCode,
+        workStatus: data.workStatus,
+        experience: data.experience,
+        education: data.education,
+        industry: data.industry,
+        ageGroup: data.ageGroup,
+        aspiration: data.aspiration,
+        hardSkills: data.hardSkills,
+        image: data.image,
         isProfileComplete: true,
+        profileProgress: 100,
+        updatedAt: new Date(),
       },
     });
 
-    // If userEducation data is provided, update it separately
-    if (userEducation) {
-      await db.userEducation.upsert({
-        where: {
-          userId: session.user.id,
-        },
-        create: {
-          userId: session.user.id,
-          ...userEducation,
-        },
-        update: userEducation,
-      });
-    }
+    return new NextResponse(
+      JSON.stringify({
+        success: true,
+        user: result,
+      }),
+      { status: 200 }
+    );
 
-    // Revalidate all necessary paths
-    revalidatePath("/");
-    revalidatePath("/dashboard");
-    revalidatePath("/api/auth/session");
-    revalidatePath("/complete-profile");
-
-    // Return success response with cache control headers
-    const response = NextResponse.json({
-      success: true,
-      user: updatedUser,
-      redirect: "/dashboard",
-    }, {
-      headers: {
-        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0',
-      }
-    });
-
-    return response;
   } catch (error) {
-    console.error("Profile completion error:", error);
-    return NextResponse.json(
-      { error: "Failed to complete profile" },
+    console.error("[PROFILE_COMPLETE]", error);
+    return new NextResponse(
+      JSON.stringify({ error: "Failed to update profile" }), 
       { status: 500 }
     );
   }

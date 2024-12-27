@@ -3,9 +3,9 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 import {
   Card,
   CardContent,
@@ -22,7 +22,6 @@ export function OTPVerificationForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [activeInput, setActiveInput] = useState(0);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
-  const { toast } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
   const userId = searchParams.get("userId");
@@ -75,13 +74,10 @@ export function OTPVerificationForm() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (otp: string) => {
     if (!userId) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Invalid verification link",
+      toast("Invalid verification link", {
+        description: "Please try signing up again",
       });
       return;
     }
@@ -91,10 +87,7 @@ export function OTPVerificationForm() {
       const response = await fetch("/api/auth/verify-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId,
-          otp: otp.join(""),
-        }),
+        body: JSON.stringify({ userId, otp }),
       });
 
       const data = await response.json();
@@ -103,18 +96,23 @@ export function OTPVerificationForm() {
         throw new Error(data.error || "Verification failed");
       }
 
-      toast({
-        variant: "success",
-        title: "Success",
-        description: "Email verified successfully",
+      toast("Account verified!", {
+        description: "You can now sign in to your account",
+        action: {
+          label: "Sign In",
+          onClick: () => router.push("/login"),
+        },
       });
 
-      router.push("/login");
+      // Redirect to login after a short delay
+      setTimeout(() => {
+        router.push("/login");
+      }, 2000);
+
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error instanceof Error ? error.message : "Verification failed",
+      console.error("Verification error:", error);
+      toast("Verification failed", {
+        description: "Please try again or request a new code",
       });
     } finally {
       setIsLoading(false);
@@ -135,7 +133,7 @@ export function OTPVerificationForm() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={() => onSubmit(otp.join(""))} className="space-y-6">
             <div className="flex justify-center px-6">
               {otp.map((_, index) => (
                 <input
