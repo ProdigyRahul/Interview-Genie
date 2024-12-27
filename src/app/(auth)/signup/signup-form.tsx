@@ -16,11 +16,11 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/auth/input";
-import { useToast } from "@/hooks/use-toast";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { Icons } from "@/components/ui/icons";
+import { toast } from "sonner";
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -43,7 +43,6 @@ export function SignupForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const router = useRouter();
-  const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -55,9 +54,10 @@ export function SignupForm() {
     },
   });
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       setIsLoading(true);
+      
       const response = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -67,26 +67,35 @@ export function SignupForm() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to create account");
+        if (response.status === 400) {
+          toast("Email already registered", {
+            description: "Please try signing in with Google or Discord instead",
+            action: {
+              label: "Sign In",
+              onClick: () => router.push("/login")
+            },
+            duration: 5000
+          });
+          return;
+        }
+        throw new Error(data.error || "Something went wrong");
       }
 
-      toast({
-        variant: "success",
-        title: "Account created",
-        description: "Please verify your email to continue",
+      toast.success("Account created!", {
+        description: "Please check your email for verification",
+        duration: 3000
       });
 
       router.push(`/verify-otp?userId=${data.user.id}`);
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error instanceof Error ? error.message : "Something went wrong",
+      console.error("Signup error:", error);
+      toast.error("Failed to create account", {
+        description: "Please try again later"
       });
     } finally {
       setIsLoading(false);
     }
-  }
+  };
 
   return (
     <motion.div

@@ -4,7 +4,7 @@ import { auth } from "@/lib/auth";
 import { SessionProvider } from "@/components/providers/session-provider";
 import { TRPCReactProvider } from "@/trpc/react";
 import { ThemeProvider } from "@/components/providers/theme-provider";
-import { Toaster } from "@/components/ui/toaster";
+import { Toaster } from "sonner";
 import { cn } from "@/lib/utils";
 
 import "@/styles/globals.css";
@@ -33,7 +33,7 @@ export default async function RootLayout({
           <TRPCReactProvider>
             <SessionProvider session={session}>
               {children}
-              <Toaster />
+              <Toaster richColors position="bottom-right" />
             </SessionProvider>
           </TRPCReactProvider>
         </ThemeProvider>

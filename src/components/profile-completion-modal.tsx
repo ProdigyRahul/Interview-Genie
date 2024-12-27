@@ -1,11 +1,14 @@
 "use client";
 
-import * as React from "react";
-import { Upload, X, Star, Trophy, Sparkles, Check } from "lucide-react";
+import { useEffect, useState, useRef } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { toast } from "sonner";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
 import {
   Select,
   SelectContent,
@@ -13,166 +16,330 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { useProfileStore } from "@/store/use-profile-store";
+import { X, Loader2, Upload } from "lucide-react";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-// Mock data - replace with real data from API
-const industries = [
-  "Technology",
-  "Healthcare",
-  "Finance",
-  "Education",
-  "Others",
-];
+// Constants
+const industries = ["Technology", "Healthcare", "Finance", "Education", "Others"];
+const workStatuses = ["Employed", "Unemployed", "Student", "Freelancer"];
+const experiences = ["Fresher", "1-3 years", "3-5 years", "5-10 years", "10+ years"];
+const qualifications = ["High School", "Under Graduate", "Post Graduate", "Doctorate"];
 
-const workStatuses = [
-  "Employed",
-  "Unemployed",
-  "Student",
-  "Freelancer",
-];
+// Form schema
+const formSchema = z.object({
+  firstName: z.string().min(2, "First name must be at least 2 characters"),
+  lastName: z.string().min(2, "Last name must be at least 2 characters"),
+  phoneNumber: z.string().min(10, "Phone number must be at least 10 characters"),
+  gender: z.string(),
+  country: z.string(),
+  state: z.string(),
+  city: z.string(),
+  pinCode: z.string(),
+  workStatus: z.string(),
+  experience: z.string(),
+  education: z.string(),
+  industry: z.string(),
+  ageGroup: z.string().optional(),
+  aspiration: z.string().optional(),
+  hardSkills: z.array(z.string()).optional(),
+});
 
-const experiences = [
-  "Fresher",
-  "1-3 years",
-  "3-5 years",
-  "5-10 years",
-  "10+ years",
-];
-
-const qualifications = [
-  "High School",
-  "Under Graduate",
-  "Post Graduate",
-  "Doctorate",
-];
-
-// Define the type for hard skills
-type Skill = (typeof hardSkills)[number];
-
-const hardSkills = [
-  "Software Engineering",
-  "Project Management",
-  "Data Analysis",
-  "UI/UX Design",
-  "Digital Marketing",
-  "Content Writing",
-  "Graphic Design",
-  "Sales",
-  "Customer Service",
-  "Leadership",
-] as const;
+type FormData = z.infer<typeof formSchema>;
 
 interface ProfileCompletionModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  user: any; // Replace with proper user type
+  user: any;
 }
+
+// Define section weights for better organization
+const SECTION_WEIGHTS = {
+  personalDetails: 0.25, // 25%
+  locationDetails: 0.25, // 25%
+  professionalDetails: 0.35, // 35%
+  hardSkills: 0.15, // 15%
+} as const;
 
 export function ProfileCompletionModal({
   open,
   onOpenChange,
   user,
 }: ProfileCompletionModalProps) {
-  const [selectedSkills, setSelectedSkills] = React.useState<Skill[]>([]);
-  const [progress] = React.useState(30);
-  const [rewards] = React.useState({
-    xpGain: 100,
-    credits: 50,
-    achievements: ["Profile Pioneer"],
+  // State management
+  const [currentSkill, setCurrentSkill] = useState("");
+  const [skills, setSkills] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const initializedRef = useRef(false);
+  
+  // Store
+  const { setHasSubmittedProfile, setProfileProgress, setIsProfileComplete } = useProfileStore();
+
+  // Initialize form
+  const form = useForm<FormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      phoneNumber: "",
+      gender: "",
+      country: "",
+      state: "",
+      city: "",
+      pinCode: "",
+      workStatus: "",
+      experience: "",
+      education: "",
+      industry: "",
+      ageGroup: "",
+      aspiration: "",
+      hardSkills: [],
+    },
+    mode: "onChange",
   });
-  const [skillsOpen, setSkillsOpen] = React.useState(false);
-  const [searchQuery, setSearchQuery] = React.useState("");
 
-  const filteredSkills = React.useMemo(() => {
-    if (!searchQuery) return hardSkills;
-    return hardSkills.filter((skill) =>
-      skill.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [searchQuery]);
+  // Initialize form and state with user data
+  useEffect(() => {
+    if (!user || initializedRef.current) return;
 
-  const handleSkillSelect = React.useCallback((skill: Skill) => {
-    setSelectedSkills((current) => {
-      const currentSkills = [...(current || [])];
-      const skillIndex = currentSkills.indexOf(skill);
+    const firstName = user.name?.split(" ")[0] || "";
+    const lastName = user.name?.split(" ")[1] || "";
+    
+    // Ensure hardSkills is properly typed
+    const userHardSkills = user.hardSkills 
+      ? (Array.isArray(user.hardSkills) 
+          ? (user.hardSkills as string[]).filter((skill): skill is string => 
+              typeof skill === 'string' && skill.length > 0
+            )
+          : []
+        )
+      : [];
+    
+    const initialValues = {
+      firstName,
+      lastName,
+      phoneNumber: user.phoneNumber || "",
+      gender: user.gender || "",
+      country: user.country || "",
+      state: user.state || "",
+      city: user.city || "",
+      pinCode: user.pinCode || "",
+      workStatus: user.workStatus || "",
+      experience: user.experience || "",
+      education: user.education || "",
+      industry: user.industry || "",
+      ageGroup: user.ageGroup || "",
+      aspiration: user.aspiration || "",
+      hardSkills: userHardSkills, // Use the properly typed array
+    };
 
-      if (skillIndex > -1) {
-        currentSkills.splice(skillIndex, 1);
-      } else {
-        currentSkills.push(skill);
+    form.reset(initialValues);
+    setSkills(userHardSkills); // Use the same typed array for skills state
+    setImageUrl(user.image || null);
+    
+    const initialProgress = calculateProgress(initialValues);
+    setProgress(initialProgress);
+    setProfileProgress(initialProgress);
+
+    initializedRef.current = true;
+  }, [user, form, setProfileProgress]);
+
+  // Watch form changes for progress updates
+  useEffect(() => {
+    const subscription = form.watch((value) => {
+      // Ensure hardSkills is properly typed in the progress calculation
+      const formValues = {
+        ...value,
+        hardSkills: Array.isArray(value.hardSkills)
+          ? value.hardSkills.filter((skill): skill is string => 
+              typeof skill === 'string' && skill.length > 0
+            )
+          : []
+      };
+      
+      const newProgress = calculateProgress(formValues);
+      setProgress(newProgress);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [form]);
+
+  // Sync progress with store
+  useEffect(() => {
+    setProfileProgress(progress);
+  }, [progress, setProfileProgress]);
+
+  // Handle skill input
+  const handleSkillInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      if (currentSkill.trim()) {
+        const newSkills = [...skills, currentSkill.trim()];
+        setSkills(newSkills);
+        form.setValue('hardSkills', newSkills);
+        setCurrentSkill("");
+      }
+    }
+  };
+
+  // Remove skill
+  const removeSkill = (skillToRemove: string) => {
+    const newSkills = skills.filter(skill => skill !== skillToRemove);
+    setSkills(newSkills);
+    form.setValue('hardSkills', newSkills);
+  };
+
+  // Handle image upload
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploadingImage(true);
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const response = await fetch('/api/profile/upload-image', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload image');
       }
 
-      return currentSkills;
-    });
-  }, []);
+      const data = await response.json();
+      setImageUrl(data.imageUrl);
+      toast.success('Profile image updated');
+    } catch (error) {
+      console.error('Image upload error:', error);
+      toast.error('Failed to upload image');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
 
-  const handleSkillRemove = React.useCallback((skillToRemove: Skill) => {
-    setSelectedSkills((current) => 
-      current.filter((skill) => skill !== skillToRemove)
+  // Form submission
+  const onSubmit = async (data: FormData) => {
+    try {
+      setIsLoading(true);
+      
+      // Ensure hardSkills is properly typed before submission
+      const sanitizedSkills = skills.filter((skill): skill is string => 
+        typeof skill === 'string' && skill.length > 0
+      );
+      
+      const response = await fetch('/api/profile/complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          data: {
+            ...data,
+            hardSkills: sanitizedSkills, // Use the sanitized array
+            image: imageUrl 
+          }
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to update profile');
+      }
+
+      setHasSubmittedProfile(true);
+      setIsProfileComplete(true);
+      setProfileProgress(100);
+      toast.success('Profile updated successfully');
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Profile update error:', error);
+      toast.error('Failed to update profile');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Calculate progress with proper type safety
+  const calculateProgress = (formData: Partial<FormData>) => {
+    // Personal Details Section (25%)
+    const personalFields = {
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      phoneNumber: formData.phoneNumber,
+      gender: formData.gender,
+    };
+    const personalComplete = Object.values(personalFields).filter(
+      value => typeof value === 'string' && value.trim().length > 0
+    ).length;
+    const personalProgress = (personalComplete / Object.keys(personalFields).length) * SECTION_WEIGHTS.personalDetails * 100;
+
+    // Location Details Section (25%)
+    const locationFields = {
+      country: formData.country,
+      state: formData.state,
+      city: formData.city,
+      pinCode: formData.pinCode,
+    };
+    const locationComplete = Object.values(locationFields).filter(
+      value => typeof value === 'string' && value.trim().length > 0
+    ).length;
+    const locationProgress = (locationComplete / Object.keys(locationFields).length) * SECTION_WEIGHTS.locationDetails * 100;
+
+    // Professional Details Section (35%)
+    const professionalFields = {
+      workStatus: formData.workStatus,
+      experience: formData.experience,
+      education: formData.education,
+      industry: formData.industry,
+    };
+    const professionalComplete = Object.values(professionalFields).filter(
+      value => typeof value === 'string' && value.trim().length > 0
+    ).length;
+    const professionalProgress = (professionalComplete / Object.keys(professionalFields).length) * SECTION_WEIGHTS.professionalDetails * 100;
+
+    // Hard Skills Section (15%)
+    const hasSkills = Array.isArray(formData.hardSkills) && formData.hardSkills.length > 0;
+    const skillsProgress = hasSkills ? SECTION_WEIGHTS.hardSkills * 100 : 0;
+
+    // Calculate total progress
+    const totalProgress = Math.round(
+      personalProgress + locationProgress + professionalProgress + skillsProgress
     );
-  }, []);
+
+    return totalProgress;
+  };
 
   // Get user's initials for avatar fallback
   const getInitials = () => {
-    if (user.name) {
-      return user.name.split(' ').map((n: string) => n[0]).join('').toUpperCase();
+    if (user?.name) {
+      return user.name
+        .split(' ')
+        .map((n: string) => n[0])
+        .join('')
+        .toUpperCase();
     }
-    return user.email?.[0].toUpperCase() || '?';
+    return user?.email?.[0].toUpperCase() || '?';
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
         <div className="p-6 border-b space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <DialogTitle className="text-2xl font-bold">Complete Your Profile</DialogTitle>
-              <p className="text-sm text-muted-foreground">
-                Complete your profile to get personalized interview preparation
-              </p>
-            </div>
-          </div>
+          <DialogTitle className="text-2xl font-bold">Complete Your Profile</DialogTitle>
+          <p className="text-sm text-muted-foreground">
+            Complete your profile to get personalized interview preparation
+          </p>
 
-          {/* Gamification Rewards */}
-          <div className="flex items-center gap-4 p-4 bg-accent/50 rounded-lg">
-            <div className="flex items-center gap-2">
-              <Star className="h-5 w-5 text-yellow-500" />
-              <div>
-                <div className="text-sm font-medium">XP Reward</div>
-                <div className="text-xs text-muted-foreground">+{rewards.xpGain} XP</div>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-purple-500" />
-              <div>
-                <div className="text-sm font-medium">Bonus Credits</div>
-                <div className="text-xs text-muted-foreground">+{rewards.credits} credits</div>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Trophy className="h-5 w-5 text-orange-500" />
-              <div>
-                <div className="text-sm font-medium">Achievement</div>
-                <div className="text-xs text-muted-foreground">{rewards.achievements[0]}</div>
-              </div>
-            </div>
-          </div>
-
+          {/* Progress bar with real-time updates */}
           <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
+            <div className="flex justify-between text-sm">
               <span>Profile Completion</span>
               <span>{progress}%</span>
             </div>
@@ -182,257 +349,355 @@ export function ProfileCompletionModal({
                 style={{ width: `${progress}%` }}
               />
             </Progress>
-            <div className="flex justify-between text-xs text-muted-foreground">
-              <span>Beginner</span>
-              <span>Profile Pro</span>
-            </div>
           </div>
         </div>
 
         <div className="flex-1 overflow-y-auto p-6">
-          <div className="space-y-8">
-            {/* Profile Image Upload */}
-            <div className="flex items-center gap-6">
-              <Avatar className="h-20 w-20">
-                {user.image ? (
-                  <AvatarImage 
-                    src={user.image} 
-                    alt={user.name || "Profile picture"}
-                    className="object-cover"
-                  />
-                ) : (
-                  <AvatarFallback className="bg-primary/10 text-primary text-xl font-semibold">
-                    {getInitials()}
-                  </AvatarFallback>
-                )}
-              </Avatar>
-              <div className="space-y-2">
-                <h3 className="font-medium">Profile Picture</h3>
-                {user.image ? (
-                  <div className="text-sm text-muted-foreground">
-                    Using picture from Google account
-                  </div>
-                ) : (
-                  <Button variant="outline" size="sm">
-                    <Upload className="h-4 w-4 mr-2" />
-                    Upload Photo
-                  </Button>
-                )}
-              </div>
-            </div>
-
-            {/* Resume Upload */}
-            <div className="space-y-4">
-              <div>
-                <h3 className="font-medium mb-2">Quick Fill from Resume</h3>
-                <Button variant="outline" className="w-full h-24 flex flex-col gap-2">
-                  <Upload className="h-8 w-8" />
-                  <span>Upload your resume to auto-fill details</span>
-                </Button>
-              </div>
-            </div>
-
-            {/* Personal Details */}
-            <div className="space-y-4">
-              <h3 className="font-medium">Personal Details</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input placeholder="First Name" defaultValue={user.firstName ?? ""} />
-                <Input placeholder="Last Name" defaultValue={user.lastName ?? ""} />
-                <Input type="date" placeholder="Date of Birth" />
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Gender" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="male">Male</SelectItem>
-                    <SelectItem value="female">Female</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Input placeholder="Phone Number" defaultValue={user.phoneNumber ?? ""} />
-                <Input placeholder="Company Name" />
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Industry" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {industries.map((industry) => (
-                      <SelectItem key={industry} value={industry.toLowerCase()}>
-                        {industry}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {/* Address */}
-            <div className="space-y-4">
-              <h3 className="font-medium">Address</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Country" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="india">India</SelectItem>
-                    {/* Add more countries */}
-                  </SelectContent>
-                </Select>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="State" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="gujarat">Gujarat</SelectItem>
-                    {/* Add more states */}
-                  </SelectContent>
-                </Select>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="City" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ahmedabad">Ahmedabad</SelectItem>
-                    {/* Add more cities */}
-                  </SelectContent>
-                </Select>
-                <Input placeholder="PIN Code" />
-              </div>
-            </div>
-
-            {/* Professional Details */}
-            <div className="space-y-4">
-              <h3 className="font-medium">Professional Details</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Work Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {workStatuses.map((status) => (
-                      <SelectItem key={status} value={status.toLowerCase()}>
-                        {status}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Work Experience" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {experiences.map((exp) => (
-                      <SelectItem key={exp} value={exp.toLowerCase()}>
-                        {exp}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Qualification" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {qualifications.map((qual) => (
-                      <SelectItem key={qual} value={qual.toLowerCase()}>
-                        {qual}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Input placeholder="Other Qualifications" />
-              </div>
-            </div>
-
-            {/* Hard Skills */}
-            <div className="space-y-4">
-              <h3 className="font-medium">Hard Skills</h3>
-              <Popover open={skillsOpen} onOpenChange={setSkillsOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={skillsOpen}
-                    className="w-full justify-between"
-                  >
-                    <span className="truncate">
-                      {selectedSkills.length === 0
-                        ? "Select skills..."
-                        : `${selectedSkills.length} selected`}
-                    </span>
-                    <span className="ml-2 rounded-full bg-primary/10 px-1.5 py-0.5 text-xs font-medium leading-none text-primary">
-                      {selectedSkills.length}
-                    </span>
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[400px] p-0" align="start">
-                  <Command shouldFilter={false}>
-                    <CommandInput 
-                      placeholder="Search skills..." 
-                      value={searchQuery}
-                      onValueChange={setSearchQuery}
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+              {/* Profile Image Section */}
+              <div className="flex items-center gap-6">
+                <Avatar className="h-20 w-20">
+                  {imageUrl ? (
+                    <AvatarImage 
+                      src={imageUrl} 
+                      alt={user?.name || "Profile picture"}
+                      className="object-cover"
                     />
-                    {filteredSkills.length === 0 && (
-                      <CommandEmpty>No skills found.</CommandEmpty>
-                    )}
-                    <CommandGroup className="max-h-64 overflow-auto">
-                      {filteredSkills.map((skill) => {
-                        const isSelected = selectedSkills.includes(skill);
-                        return (
-                          <CommandItem
-                            key={skill}
-                            onSelect={() => {
-                              handleSkillSelect(skill);
-                            }}
-                            className="flex items-center justify-between"
-                          >
-                            <div className="flex items-center">
-                              <div
-                                className={cn(
-                                  "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
-                                  isSelected
-                                    ? "bg-primary text-primary-foreground"
-                                    : "opacity-50 [&_svg]:invisible"
-                                )}
-                              >
-                                <Check className={cn("h-4 w-4")} />
-                              </div>
-                              <span>{skill}</span>
-                            </div>
-                          </CommandItem>
-                        );
-                      })}
-                    </CommandGroup>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-
-              <div className="flex flex-wrap gap-2">
-                {selectedSkills.map((skill) => (
-                  <Badge
-                    key={skill}
-                    variant="secondary"
-                    className="cursor-pointer hover:bg-secondary/80"
-                    onClick={() => handleSkillRemove(skill)}
+                  ) : (
+                    <AvatarFallback className="bg-primary/10 text-primary text-xl font-semibold">
+                      {getInitials()}
+                    </AvatarFallback>
+                  )}
+                </Avatar>
+                <div className="space-y-2">
+                  <h3 className="font-medium">Profile Picture</h3>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    className="hidden"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploadingImage}
                   >
-                    {skill}
-                    <X className="h-3 w-3 ml-1" />
-                  </Badge>
-                ))}
+                    {uploadingImage ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Uploading...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="h-4 w-4 mr-2" />
+                        Upload Photo
+                      </>
+                    )}
+                  </Button>
+                </div>
               </div>
-            </div>
-          </div>
+
+              {/* Personal Details Section */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Personal Details</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="firstName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>First Name</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Enter your first name" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="lastName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Last Name</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Enter your last name" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="phoneNumber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Phone Number</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Enter your phone number" type="tel" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="gender"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Gender</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select your gender" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="male">Male</SelectItem>
+                            <SelectItem value="female">Female</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
+              {/* Location Details Section */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Location Details</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="country"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Country</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select your country" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="india">India</SelectItem>
+                            <SelectItem value="usa">United States</SelectItem>
+                            <SelectItem value="uk">United Kingdom</SelectItem>
+                            {/* Add more countries as needed */}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="state"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>State</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Enter your state" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="city"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>City</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Enter your city" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="pinCode"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>PIN Code</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Enter your PIN code" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
+              {/* Professional Details Section */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Professional Details</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="workStatus"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Work Status</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select your work status" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {workStatuses.map((status) => (
+                              <SelectItem key={status} value={status.toLowerCase()}>
+                                {status}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="experience"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Experience</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select your experience" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {experiences.map((exp) => (
+                              <SelectItem key={exp} value={exp.toLowerCase()}>
+                                {exp}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="education"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Education</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select your education" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {qualifications.map((qual) => (
+                              <SelectItem key={qual} value={qual.toLowerCase()}>
+                                {qual}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="industry"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Industry</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select your industry" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {industries.map((industry) => (
+                              <SelectItem key={industry} value={industry.toLowerCase()}>
+                                {industry}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
+              {/* Hard Skills Section */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Hard Skills</h3>
+                <div className="space-y-2">
+                  <Input
+                    placeholder="Type a skill and press Enter"
+                    value={currentSkill}
+                    onChange={(e) => setCurrentSkill(e.target.value)}
+                    onKeyDown={handleSkillInputKeyDown}
+                  />
+                  <div className="flex flex-wrap gap-2">
+                    {skills.map((skill) => (
+                      <Badge
+                        key={skill}
+                        variant="secondary"
+                        className="cursor-pointer hover:bg-destructive/10"
+                        onClick={() => removeSkill(skill)}
+                      >
+                        {skill}
+                        <X className="ml-1 h-3 w-3" />
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </form>
+          </Form>
         </div>
 
-        <div className="p-6 border-t space-y-4">
-          <div className="text-sm text-muted-foreground text-center">
-            Complete your profile to unlock rewards and start your journey!
+        <div className="p-6 border-t">
+          <div className="flex justify-end gap-4">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={form.handleSubmit(onSubmit)}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                "Save Profile"
+              )}
+            </Button>
           </div>
-          <Button className="w-full" size="lg">
-            <Sparkles className="mr-2 h-4 w-4" />
-            Complete Profile & Claim Rewards
-          </Button>
         </div>
       </DialogContent>
     </Dialog>

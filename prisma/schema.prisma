@@ -15,56 +15,57 @@ model User {
   image              String?
   firstName          String?
   lastName           String?
-  profileImage       String?
-  subscriptionStatus String?   @default("free")
-  isVerified         Boolean   @default(false)
   phoneNumber        String?
-  preferences        Json?
-  credits            Int       @default(200)
-  xpPoints           Int       @default(0)
-  level              Int       @default(1)
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
-  lastLogin          DateTime?
-  hashedPassword     String?
-
-  // Profile completion fields
-  dateOfBirth        DateTime?
   gender             String?
-  ageGroup           String?
-  companyName        String?
-  industry           String?
   country            String?
   state              String?
   city               String?
   pinCode            String?
   workStatus         String?
-  workExperience     String?
-  qualification      String?
-  otherQualifications String?
-  hardSkills         Json?     // Array of skills
-  isProfileComplete  Boolean   @default(false)
-  profileProgress    Int       @default(0) // Percentage of profile completion
-  avatarUrl          String?
-  resumeUrl          String?
-  cookieConsent      Boolean?
   experience         String?
   education          String?
+  industry           String?
+  ageGroup           String?
   aspiration         String?
-  lookingForInternship Boolean?
+  hardSkills         Json?     // Store as JSON array
+  isProfileComplete  Boolean   @default(false)
+  profileProgress    Int       @default(0)
+  subscriptionStatus String    @default("free")
+  isVerified        Boolean   @default(false)
+  credits           Int       @default(100)
+  xpPoints           Int       @default(0)
+  level             Int       @default(1)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  lastLogin          DateTime?
+  hashedPassword     String?
 
-  // Auth related
-  accounts Account[]
-  sessions Session[]
+  // Profile fields
+  companyName        String?
+  company            String?
+  branchName         String?
+  cgpa               String?
+  passoutYear        String?
+  collegeName        String?
+  resumeUrl          String?
+  cookieConsent      Boolean?
+  jobPreference      String?   // "job" or "internship"
+  preferredJobLocations Json?  // Array of locations
+  preferredIndustries  Json?   // Array of industries
+  preferredRoles       Json?   // Array of roles
+  bio                 String?  @db.Text
+  socialLinks         Json?    // LinkedIn, GitHub, etc.
 
   // Relations
+  accounts Account[]
+  sessions Session[]
   resumes             Resume[]
   mockInterviews      MockInterview[]
   interviewNotes      InterviewNote[]
   interviewHistory    InterviewHistory[]
   passwordResetTokens PasswordResetToken[]
   otpVerifications    OTPVerification[]
-  userEducation       UserEducation?
+  education_details   UserEducation?
 }
 
 model UserEducation {
@@ -334,3 +335,4 @@ model OTPVerification {
 
   @@index([userId])
 }
+
