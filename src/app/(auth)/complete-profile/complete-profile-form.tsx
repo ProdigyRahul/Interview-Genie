@@ -24,6 +24,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Progress } from "@/components/ui/progress";
+import { Loader2 } from "lucide-react";
 
 const formSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
@@ -56,6 +58,7 @@ export function CompleteProfileForm() {
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -87,20 +90,38 @@ export function CompleteProfileForm() {
     },
   });
 
-  const onSubmit = async () => {
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       setIsLoading(true);
-      // For now, just show success and redirect
+
+      const formData = new FormData();
+      formData.append('data', JSON.stringify(values));
+      
+
+      const response = await fetch('/api/profile/complete', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to complete profile');
+      }
+
+      if (data.profileProgress) {
+        setProgress(data.profileProgress);
+      }
+
       toast({
         title: "Success",
         description: "Profile completed successfully!",
         variant: "success",
       });
 
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
       router.push("/dashboard");
-    } catch {
+    } catch (error) {
+      console.error('Profile completion error:', error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -116,6 +137,15 @@ export function CompleteProfileForm() {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <Card className="p-6">
           <div className="space-y-6">
+            {/* Progress Bar */}
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>Profile Completion</span>
+                <span>{progress}%</span>
+              </div>
+              <Progress value={progress} className="h-2" />
+            </div>
+
             {/* Personal Information */}
             <div className="grid gap-6 md:grid-cols-2">
               <FormField
@@ -125,7 +155,7 @@ export function CompleteProfileForm() {
                   <FormItem>
                     <FormLabel>First Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="John" {...field} />
+                      <Input placeholder="Enter your first name" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -173,7 +203,14 @@ export function CompleteProfileForm() {
             </div>
 
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? "Completing Profile..." : "Complete Profile"}
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Completing Profile...
+                </>
+              ) : (
+                "Complete Profile"
+              )}
             </Button>
           </div>
         </Card>

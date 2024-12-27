@@ -7,12 +7,12 @@ const verifyOTPSchema = z.object({
   otp: z.string().length(6),
 });
 
-export async function POST(req: Request) {
+export async function POST(req: Request): Promise<NextResponse> {
   try {
     const body = await req.json();
     const { userId, otp } = verifyOTPSchema.parse(body);
 
-    const otpVerification = await db.oTPVerification.findFirst({
+    const otpRecord = await db.oTPVerification.findFirst({
       where: {
         userId,
         otp,
@@ -22,29 +22,36 @@ export async function POST(req: Request) {
       },
     });
 
-    if (!otpVerification) {
-      return NextResponse.json(
-        { error: "Invalid or expired OTP" },
+    if (!otpRecord) {
+      return new NextResponse(
+        JSON.stringify({ error: "Invalid or expired OTP" }),
         { status: 400 }
       );
     }
 
-    // Update user verification status and cleanup OTP
-    await Promise.all([
-      db.user.update({
-        where: { id: userId },
-        data: { isVerified: true },
-      }),
-      db.oTPVerification.delete({
-        where: { id: otpVerification.id },
-      }),
-    ]);
+    // Update user verification status
+    await db.user.update({
+      where: { id: userId },
+      data: { isVerified: true },
+    });
 
-    return NextResponse.json({ message: "Email verified successfully" });
+    // Clean up OTP record
+    await db.oTPVerification.delete({
+      where: { id: otpRecord.id },
+    });
+
+    return new NextResponse(
+      JSON.stringify({ 
+        success: true,
+        message: "Email verified successfully" 
+      }),
+      { status: 200 }
+    );
+
   } catch (error) {
     console.error("OTP verification error:", error);
-    return NextResponse.json(
-      { error: "Failed to verify OTP" },
+    return new NextResponse(
+      JSON.stringify({ error: "Failed to verify OTP" }),
       { status: 500 }
     );
   }

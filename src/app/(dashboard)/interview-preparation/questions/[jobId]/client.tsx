@@ -3,7 +3,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { motion } from "framer-motion";
 import { ArrowLeft, Briefcase, Building2, MessageSquare, ThumbsUp } from "lucide-react";
 import { useRouter } from "next/navigation";
 
