@@ -17,15 +17,24 @@ export default function DashboardPage() {
     isProfileComplete,
     setProfileProgress, 
     setIsProfileComplete,
+    hasShownModalInSession,
+    setHasShownModalInSession
   } = useProfileStore();
   const initialFetchRef = useRef(false);
-  const modalShownInSession = useRef(false);
 
   // Get user data from session
   const user = session?.user ? {
     ...session.user,
     isProfileComplete,
   } : null;
+
+  // Reset hasShownModalInSession when session changes (user logs out)
+  useEffect(() => {
+    if (!session) {
+      initialFetchRef.current = false;
+      setHasShownModalInSession(false);
+    }
+  }, [session, setHasShownModalInSession]);
 
   // Fetch initial profile data and handle modal display
   useEffect(() => {
@@ -35,13 +44,17 @@ export default function DashboardPage() {
           const response = await fetch('/api/profile');
           const data = await response.json();
           
-          setProfileProgress(data.profileProgress || 0);
+          const progress = data.profileProgress || 0;
+          setProfileProgress(progress);
           setIsProfileComplete(data.isProfileComplete || false);
 
-          // Show modal if profile completion is less than 80% and hasn't been shown this session
-          if (!modalShownInSession.current && (data.profileProgress || 0) < 80) {
+          // Show modal if:
+          // 1. Profile completion is less than 80%
+          // 2. Profile has been submitted before (not first time)
+          // 3. Modal hasn't been shown in this session
+          if (progress < 80 && !hasShownModalInSession) {
             setShowProfileModal(true);
-            modalShownInSession.current = true;
+            setHasShownModalInSession(true);
           }
         } catch (error) {
           console.error('Failed to fetch profile:', error);
@@ -52,15 +65,11 @@ export default function DashboardPage() {
       void fetchProfile();
       initialFetchRef.current = true;
     }
-  }, [session, setProfileProgress, setIsProfileComplete]);
+  }, [session, setProfileProgress, setIsProfileComplete, hasShownModalInSession, setHasShownModalInSession]);
 
-  // Reset refs when session changes
-  useEffect(() => {
-    if (!session) {
-      initialFetchRef.current = false;
-      modalShownInSession.current = false;
-    }
-  }, [session]);
+  const handleModalClose = (open: boolean) => {
+    setShowProfileModal(open);
+  };
 
   if (!user) return null;
 
@@ -93,7 +102,7 @@ export default function DashboardPage() {
       {/* Profile completion modal - shows above dashboard content */}
       <ProfileCompletionModal
         open={showProfileModal}
-        onOpenChange={setShowProfileModal}
+        onOpenChange={handleModalClose}
         user={user}
       />
     </>
