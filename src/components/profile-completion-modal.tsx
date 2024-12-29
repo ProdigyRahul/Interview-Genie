@@ -79,7 +79,11 @@ export function ProfileCompletionModal({
   const initializedRef = useRef(false);
   
   // Store
-  const { setHasSubmittedProfile, setProfileProgress, setIsProfileComplete } = useProfileStore();
+  const { 
+    setHasSubmittedProfile, 
+    setProfileProgress, 
+    setIsProfileComplete
+  } = useProfileStore();
 
   // Initialize form
   const form = useForm<FormData>({
@@ -108,45 +112,71 @@ export function ProfileCompletionModal({
   useEffect(() => {
     if (!user || initializedRef.current) return;
 
-    const firstName = user.name?.split(" ")[0] || "";
-    const lastName = user.name?.split(" ")[1] || "";
-    
-    // Ensure hardSkills is properly typed
-    const userHardSkills = user.hardSkills 
-      ? (Array.isArray(user.hardSkills) 
-          ? (user.hardSkills as string[]).filter((skill): skill is string => 
-              typeof skill === 'string' && skill.length > 0
-            )
-          : []
-        )
-      : [];
-    
-    const initialValues = {
-      firstName,
-      lastName,
-      phoneNumber: user.phoneNumber || "",
-      gender: user.gender || "",
-      country: user.country || "",
-      state: user.state || "",
-      city: user.city || "",
-      pinCode: user.pinCode || "",
-      workStatus: user.workStatus || "",
-      experience: user.experience || "",
-      education: user.education || "",
-      industry: user.industry || "",
-      ageGroup: user.ageGroup || "",
-      aspiration: user.aspiration || "",
-      hardSkills: userHardSkills, // Use the properly typed array
+    const fetchUserProfile = async () => {
+      try {
+        const response = await fetch('/api/profile');
+        if (!response.ok) {
+          throw new Error('Failed to fetch profile data');
+        }
+        const profileData = await response.json();
+        
+        // Initialize form with existing data
+        const initialValues = {
+          firstName: profileData.firstName || user.name?.split(" ")[0] || "",
+          lastName: profileData.lastName || user.name?.split(" ")[1] || "",
+          phoneNumber: profileData.phoneNumber || "",
+          gender: profileData.gender || "",
+          country: profileData.country || "",
+          state: profileData.state || "",
+          city: profileData.city || "",
+          pinCode: profileData.pinCode || "",
+          workStatus: profileData.workStatus || "",
+          experience: profileData.experience || "",
+          education: profileData.education || "",
+          industry: profileData.industry || "",
+          ageGroup: profileData.ageGroup || "",
+          aspiration: profileData.aspiration || "",
+          hardSkills: profileData.hardSkills || [],
+        };
+
+        form.reset(initialValues);
+        setSkills(profileData.hardSkills || []); 
+        setImageUrl(profileData.image || null);
+        
+        const initialProgress = calculateProgress(initialValues);
+        setProgress(initialProgress);
+        setProfileProgress(initialProgress);
+      } catch (error) {
+        console.error('Failed to fetch profile data:', error);
+        // Fallback to basic user data if fetch fails
+        const firstName = user.name?.split(" ")[0] || "";
+        const lastName = user.name?.split(" ")[1] || "";
+        
+        const fallbackValues = {
+          firstName,
+          lastName,
+          phoneNumber: "",
+          gender: "",
+          country: "",
+          state: "",
+          city: "",
+          pinCode: "",
+          workStatus: "",
+          experience: "",
+          education: "",
+          industry: "",
+          ageGroup: "",
+          aspiration: "",
+          hardSkills: [],
+        };
+
+        form.reset(fallbackValues);
+        setProgress(0);
+        setProfileProgress(0);
+      }
     };
 
-    form.reset(initialValues);
-    setSkills(userHardSkills); // Use the same typed array for skills state
-    setImageUrl(user.image || null);
-    
-    const initialProgress = calculateProgress(initialValues);
-    setProgress(initialProgress);
-    setProfileProgress(initialProgress);
-
+    void fetchUserProfile();
     initializedRef.current = true;
   }, [user, form, setProfileProgress]);
 
@@ -234,6 +264,12 @@ export function ProfileCompletionModal({
       const sanitizedSkills = skills.filter((skill): skill is string => 
         typeof skill === 'string' && skill.length > 0
       );
+
+      // Calculate final progress before submission
+      const finalProgress = calculateProgress({
+        ...data,
+        hardSkills: sanitizedSkills
+      });
       
       const response = await fetch('/api/profile/complete', {
         method: 'POST',
@@ -241,8 +277,10 @@ export function ProfileCompletionModal({
         body: JSON.stringify({ 
           data: {
             ...data,
-            hardSkills: sanitizedSkills, // Use the sanitized array
-            image: imageUrl 
+            hardSkills: sanitizedSkills,
+            image: imageUrl,
+            profileProgress: finalProgress,
+            isProfileComplete: finalProgress >= 80
           }
         }),
       });
@@ -254,8 +292,8 @@ export function ProfileCompletionModal({
       }
 
       setHasSubmittedProfile(true);
-      setIsProfileComplete(true);
-      setProfileProgress(100);
+      setIsProfileComplete(finalProgress >= 80);
+      setProfileProgress(finalProgress);
       toast.success('Profile updated successfully');
       onOpenChange(false);
     } catch (error) {

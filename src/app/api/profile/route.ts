@@ -16,6 +16,22 @@ export async function GET() {
     const user = await db.user.findUnique({
       where: { id: session.user.id },
       select: {
+        firstName: true,
+        lastName: true,
+        phoneNumber: true,
+        gender: true,
+        country: true,
+        state: true,
+        city: true,
+        pinCode: true,
+        workStatus: true,
+        experience: true,
+        education: true,
+        industry: true,
+        ageGroup: true,
+        aspiration: true,
+        hardSkills: true,
+        image: true,
         profileProgress: true,
         isProfileComplete: true,
       },
@@ -23,6 +39,7 @@ export async function GET() {
 
     return new NextResponse(
       JSON.stringify({
+        ...user,
         profileProgress: user?.profileProgress ?? 0,
         isProfileComplete: user?.isProfileComplete ?? false,
       }),
