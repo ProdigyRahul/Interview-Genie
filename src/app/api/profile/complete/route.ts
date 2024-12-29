@@ -22,6 +22,8 @@ const profileDataSchema = z.object({
     aspiration: z.string().optional(),
     hardSkills: z.array(z.string()).optional(),
     image: z.string().nullable(),
+    profileProgress: z.number(),
+    isProfileComplete: z.boolean()
   })
 });
 
@@ -60,8 +62,8 @@ export async function POST(req: Request): Promise<NextResponse> {
         aspiration: data.aspiration,
         hardSkills: data.hardSkills,
         image: data.image,
-        isProfileComplete: true,
-        profileProgress: 100,
+        isProfileComplete: data.isProfileComplete,
+        profileProgress: data.profileProgress,
         updatedAt: new Date(),
       },
     });
