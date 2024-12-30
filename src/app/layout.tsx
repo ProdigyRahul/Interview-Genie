@@ -1,13 +1,12 @@
 import { GeistSans } from "geist/font/sans";
-import { GeistMono } from "geist/font/mono";
-import { auth } from "@/lib/auth";
-import { SessionProvider } from "@/components/providers/session-provider";
-import { TRPCReactProvider } from "@/trpc/react";
-import { ThemeProvider } from "@/components/providers/theme-provider";
-import { Toaster } from "sonner";
 import { cn } from "@/lib/utils";
-
+import { ThemeProvider } from "@/components/providers/theme-provider";
+import { QueryProvider } from "@/providers/query-provider";
+import { SessionProvider } from "@/components/providers/session-provider";
+import { auth } from "@/lib/auth";
+import { Toaster } from "sonner";
 import "@/styles/globals.css";
+import { ProfileCompletionProvider } from "@/components/providers/profile-completion-provider";
 
 export const metadata = {
   title: "Interview Genie - AI-Powered Interview Preparation Platform",
@@ -23,19 +22,22 @@ export default async function RootLayout({
   const session = await auth();
 
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={cn(
-        "min-h-screen bg-background font-sans antialiased",
-        GeistSans.variable,
-        GeistMono.variable
-      )}>
-        <ThemeProvider>
-          <TRPCReactProvider>
-            <SessionProvider session={session}>
-              {children}
-              <Toaster richColors position="bottom-right" />
-            </SessionProvider>
-          </TRPCReactProvider>
+    <html lang="en" suppressHydrationWarning className={GeistSans.variable}>
+      <body className={cn("min-h-screen bg-background font-sans antialiased")}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <SessionProvider session={session}>
+            <QueryProvider>
+              <ProfileCompletionProvider>
+                <Toaster />
+                {children}
+              </ProfileCompletionProvider>
+            </QueryProvider>
+          </SessionProvider>
         </ThemeProvider>
       </body>
     </html>

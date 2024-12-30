@@ -13,9 +13,9 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
 import { Loader2 } from "lucide-react";
+import { useProfile } from "@/hooks/use-profile";
+import { useEffect } from "react";
 
 const formSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
@@ -24,11 +24,12 @@ const formSchema = z.object({
   phoneNumber: z.string().optional(),
 });
 
-export function ProfileForm() {
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
+type FormData = z.infer<typeof formSchema>;
 
-  const form = useForm<z.infer<typeof formSchema>>({
+export function ProfileForm() {
+  const { profile, updateProfile, isUpdating } = useProfile();
+
+  const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       firstName: "",
@@ -38,26 +39,20 @@ export function ProfileForm() {
     },
   });
 
-  async function onSubmit() {
-    try {
-      setIsLoading(true);
-      // Add your profile update logic here
-      
-      toast({
-        variant: "success",
-        title: "Profile updated",
-        description: "Your profile has been successfully updated.",
+  // Update form when profile data is loaded
+  useEffect(() => {
+    if (profile) {
+      form.reset({
+        firstName: profile.firstName,
+        lastName: profile.lastName,
+        email: profile.email ?? "",
+        phoneNumber: profile.phoneNumber ?? "",
       });
-    } catch (error) {
-      console.error("Profile update error:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to update profile. Please try again.",
-      });
-    } finally {
-      setIsLoading(false);
     }
+  }, [profile, form]);
+
+  async function onSubmit(values: FormData) {
+    updateProfile(values);
   }
 
   return (
@@ -70,7 +65,7 @@ export function ProfileForm() {
             <FormItem>
               <FormLabel>First Name</FormLabel>
               <FormControl>
-                <Input placeholder="John" {...field} disabled={isLoading} />
+                <Input placeholder="John" {...field} disabled={isUpdating} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -84,7 +79,7 @@ export function ProfileForm() {
             <FormItem>
               <FormLabel>Last Name</FormLabel>
               <FormControl>
-                <Input placeholder="Doe" {...field} disabled={isLoading} />
+                <Input placeholder="Doe" {...field} disabled={isUpdating} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -102,7 +97,7 @@ export function ProfileForm() {
                   type="email" 
                   placeholder="john.doe@example.com" 
                   {...field} 
-                  disabled={isLoading}
+                  disabled={isUpdating}
                 />
               </FormControl>
               <FormMessage />
@@ -121,7 +116,7 @@ export function ProfileForm() {
                   type="tel" 
                   placeholder="+1 (555) 000-0000" 
                   {...field} 
-                  disabled={isLoading}
+                  disabled={isUpdating}
                 />
               </FormControl>
               <FormMessage />
@@ -129,8 +124,8 @@ export function ProfileForm() {
           )}
         />
 
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? (
+        <Button type="submit" disabled={isUpdating}>
+          {isUpdating ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Updating...

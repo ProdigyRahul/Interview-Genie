@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
+import { toast } from "sonner";
 import {
   Form,
   FormControl,
@@ -15,7 +16,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
 import { Card } from "@/components/ui/card";
 import {
   Select,
@@ -56,7 +56,6 @@ const formSchema = z.object({
 
 export function CompleteProfileForm() {
   const router = useRouter();
-  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState(0);
 
@@ -97,7 +96,6 @@ export function CompleteProfileForm() {
       const formData = new FormData();
       formData.append('data', JSON.stringify(values));
       
-
       const response = await fetch('/api/profile/complete', {
         method: 'POST',
         body: formData,
@@ -113,20 +111,11 @@ export function CompleteProfileForm() {
         setProgress(data.profileProgress);
       }
 
-      toast({
-        title: "Success",
-        description: "Profile completed successfully!",
-        variant: "success",
-      });
-
+      toast.success('Profile completed successfully!');
       router.push("/dashboard");
     } catch (error) {
       console.error('Profile completion error:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Something went wrong. Please try again.",
-      });
+      toast.error('Something went wrong. Please try again.');
     } finally {
       setIsLoading(false);
     }
