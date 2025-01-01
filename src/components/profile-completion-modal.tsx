@@ -210,23 +210,35 @@ export function ProfileCompletionModal({
         hardSkills: sanitizedSkills
       });
 
-      // Only update if there are actual changes
-      if (finalProgress !== profile?.profileProgress) {
-        await updateProfile({
-          ...data,
-          hardSkills: sanitizedSkills,
-          image: imageUrl,
-          profileProgress: finalProgress,
-          isProfileComplete: finalProgress >= 80
-        });
-      }
+      // Update profile
+      await updateProfile({
+        ...data,
+        hardSkills: sanitizedSkills,
+        image: imageUrl,
+        profileProgress: finalProgress,
+        isProfileComplete: finalProgress >= 80
+      });
 
-      onOpenChange(false);
+      toast.success('Profile updated successfully');
+      
+      // Close modal after successful update
+      if (finalProgress >= 80) {
+        onOpenChange(false);
+      }
     } catch (error) {
       console.error('Profile update error:', error);
       toast.error('Failed to update profile');
     }
   };
+
+  // Watch for profile completion
+  useEffect(() => {
+    if (!open) return;
+    
+    if (isProfileComplete || (currentProgress >= 80)) {
+      onOpenChange(false);
+    }
+  }, [open, isProfileComplete, currentProgress, onOpenChange]);
 
   // Progress display
   const displayProgress = localProgress;
