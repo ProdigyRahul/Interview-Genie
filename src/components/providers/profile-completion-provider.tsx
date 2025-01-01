@@ -1,7 +1,7 @@
 "use client";
 
-import { createContext, useContext, useEffect } from "react";
-import { useProfileCompletion } from "@/hooks/use-profile-completion";
+import { createContext, useContext, useEffect, useRef } from "react";
+import { useProfile } from "@/hooks/use-profile";
 import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
 
@@ -25,59 +25,31 @@ export function ProfileCompletionProvider({
     isProfileComplete,
     profileProgress,
     isLoading,
-    updateProfileCompletion,
-  } = useProfileCompletion();
+    updateProfile,
+  } = useProfile({
+    // Prevent unnecessary refetches
+    staleTime: Infinity,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+  });
+
+  // Track if we've already checked profile completion in this session
+  const checkedRef = useRef(false);
 
   // Check profile completion once per session
   useEffect(() => {
     if (
+      !checkedRef.current &&
       session?.user?.id &&
       !isLoading &&
       !isProfileComplete &&
       !pathname.startsWith("/auth") &&
       !pathname.includes("/complete-profile")
     ) {
-      // Calculate profile progress based on filled fields
-      const calculateProgress = async () => {
-        try {
-          const response = await fetch("/api/profile");
-          const data = await response.json();
-          
-          if (response.ok) {
-            const fields = [
-              data.firstName,
-              data.lastName,
-              data.email,
-              data.phoneNumber,
-              data.gender,
-              data.country,
-              data.state,
-              data.city,
-              data.pinCode,
-              data.workStatus,
-              data.experience,
-              data.education,
-              data.industry,
-              data.ageGroup,
-              data.aspiration,
-              data.hardSkills,
-            ];
-
-            const filledFields = fields.filter(field => field !== null && field !== undefined).length;
-            const progress = Math.round((filledFields / fields.length) * 100);
-
-            if (progress !== profileProgress) {
-              updateProfileCompletion({ profileProgress: progress });
-            }
-          }
-        } catch (error) {
-          console.error("Error calculating profile progress:", error);
-        }
-      };
-
-      void calculateProgress();
+      checkedRef.current = true;
     }
-  }, [session?.user?.id, isLoading, isProfileComplete, pathname, profileProgress, updateProfileCompletion]);
+  }, [session?.user?.id, isLoading, isProfileComplete, pathname]);
 
   return (
     <ProfileCompletionContext.Provider
@@ -85,7 +57,7 @@ export function ProfileCompletionProvider({
         isProfileComplete,
         profileProgress,
         isLoading,
-        updateProfileCompletion,
+        updateProfileCompletion: updateProfile,
       }}
     >
       {children}

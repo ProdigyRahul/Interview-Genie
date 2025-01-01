@@ -21,7 +21,6 @@ import { useProfile } from "@/hooks/use-profile";
 import { X, Loader2, Upload } from "lucide-react";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useProfileCompletion } from "@/hooks/use-profile-completion";
 
 // Constants
 const industries = ["Technology", "Healthcare", "Finance", "Education", "Others"];
@@ -107,8 +106,6 @@ export function ProfileCompletionModal({
     isUpdating
   } = useProfile();
 
-  const { updateProfileCompletion } = useProfileCompletion();
-
   // Initialize form
   useEffect(() => {
     if (!profile || initializedRef.current) return;
@@ -135,59 +132,12 @@ export function ProfileCompletionModal({
     form.reset(initialValues);
     setSkills(profile.hardSkills ?? []); 
     setImageUrl(profile.image ?? null);
-
+    setLocalProgress(calculateProgress(initialValues));
     initializedRef.current = true;
   }, [profile, user, form]);
 
-  // Watch form changes for progress updates
-  useEffect(() => {
-    const subscription = form.watch((value) => {
-      // Ensure hardSkills is properly typed in the progress calculation
-      const formValues = {
-        ...value,
-        hardSkills: Array.isArray(value.hardSkills)
-          ? value.hardSkills.filter((skill): skill is string => 
-              typeof skill === 'string' && skill.length > 0
-            )
-          : []
-      };
-      
-      const progress = calculateProgress(formValues);
-      updateProfileCompletion({ profileProgress: progress });
-    });
-
-    return () => subscription.unsubscribe();
-  }, [form, updateProfileCompletion]);
-
-  // Form submission
-  const onSubmit = async (data: FormData) => {
-    try {
-      // Ensure hardSkills is properly typed before submission
-      const sanitizedSkills = skills.filter((skill): skill is string => 
-        typeof skill === 'string' && skill.length > 0
-      );
-
-      // Calculate final progress before submission
-      const finalProgress = calculateProgress({
-        ...data,
-        hardSkills: sanitizedSkills
-      });
-
-      // Use mutateAsync for proper Promise handling
-      await updateProfile({
-        ...data,
-        hardSkills: sanitizedSkills,
-        image: imageUrl,
-        profileProgress: finalProgress,
-        isProfileComplete: finalProgress >= 80
-      });
-
-      onOpenChange(false);
-    } catch (error) {
-      console.error('Profile update error:', error);
-      toast.error('Failed to update profile');
-    }
-  };
+  // Local state for progress tracking
+  const [localProgress, setLocalProgress] = useState(profile?.profileProgress ?? 0);
 
   // Calculate progress with proper type safety
   const calculateProgress = (formData: Partial<FormData>) => {
@@ -238,6 +188,39 @@ export function ProfileCompletionModal({
 
     return totalProgress;
   };
+
+  // Form submission
+  const onSubmit = async (data: FormData) => {
+    try {
+      const sanitizedSkills = skills.filter((skill): skill is string => 
+        typeof skill === 'string' && skill.length > 0
+      );
+
+      const finalProgress = calculateProgress({
+        ...data,
+        hardSkills: sanitizedSkills
+      });
+
+      // Only update if there are actual changes
+      if (finalProgress !== profile?.profileProgress) {
+        await updateProfile({
+          ...data,
+          hardSkills: sanitizedSkills,
+          image: imageUrl,
+          profileProgress: finalProgress,
+          isProfileComplete: finalProgress >= 80
+        });
+      }
+
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Profile update error:', error);
+      toast.error('Failed to update profile');
+    }
+  };
+
+  // Progress display
+  const displayProgress = localProgress;
 
   // Get user's initials for avatar fallback
   const getInitials = () => {
@@ -314,12 +297,12 @@ export function ProfileCompletionModal({
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span>Profile Completion</span>
-              <span>{profile?.profileProgress ?? 0}%</span>
+              <span>{displayProgress}%</span>
             </div>
-            <Progress value={profile?.profileProgress ?? 0} className="h-2">
+            <Progress value={displayProgress} className="h-2">
               <div
                 className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-500"
-                style={{ width: `${profile?.profileProgress ?? 0}%` }}
+                style={{ width: `${displayProgress}%` }}
               />
             </Progress>
           </div>

@@ -24,6 +24,13 @@ interface ProfileData {
   isProfileComplete?: boolean;
 }
 
+interface MutationContext {
+  previousData: ProfileData | undefined;
+}
+
+const PROFILE_QUERY_KEY = ['profile'] as const;
+const PROFILE_COMPLETION_SHOWN_KEY = 'profile_completion_shown';
+
 // Fetch profile data
 async function fetchProfile(): Promise<ProfileData> {
   const response = await fetch('/api/profile');
@@ -34,11 +41,11 @@ async function fetchProfile(): Promise<ProfileData> {
 }
 
 // Update profile data
-async function updateProfile(data: ProfileData): Promise<ProfileData> {
+async function updateProfile(data: Partial<ProfileData>): Promise<ProfileData> {
   const response = await fetch('/api/profile', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ data }),
+    body: JSON.stringify(data),
   });
   if (!response.ok) {
     throw new Error('Failed to update profile');
@@ -51,31 +58,65 @@ export function useProfile(
 ) {
   const queryClient = useQueryClient();
 
-  // Query for fetching profile data
+  // Query for fetching profile data with aggressive caching
   const query = useQuery<ProfileData, Error>({
-    queryKey: ['profile'],
+    queryKey: PROFILE_QUERY_KEY,
     queryFn: fetchProfile,
-    staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
+    staleTime: Infinity, // Keep data fresh indefinitely until explicitly invalidated
     gcTime: 1000 * 60 * 30, // Keep in garbage collection for 30 minutes
-    refetchOnWindowFocus: false, // Don't refetch on window focus
-    refetchOnReconnect: false, // Don't refetch on reconnect
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchOnMount: false,
+    retry: false,
     ...options,
   });
 
-  // Mutation for updating profile
-  const mutation = useMutation<ProfileData, Error, ProfileData>({
+  // Check if profile completion modal was shown in this session
+  const wasCompletionShown = typeof window !== 'undefined' && 
+    sessionStorage.getItem(PROFILE_COMPLETION_SHOWN_KEY) === 'true';
+
+  // Mutation for updating profile with optimistic updates
+  const mutation = useMutation<ProfileData, Error, Partial<ProfileData>, MutationContext>({
     mutationFn: updateProfile,
-    onSuccess: (data) => {
-      // Update query cache with new data
-      queryClient.setQueryData(['profile'], data);
-      // Show success toast using Sonner
-      toast.success('Profile updated successfully');
+    onMutate: async (newData) => {
+      await queryClient.cancelQueries({ queryKey: PROFILE_QUERY_KEY });
+      const previousData = queryClient.getQueryData<ProfileData>(PROFILE_QUERY_KEY);
+      
+      if (previousData) {
+        queryClient.setQueryData<ProfileData>(PROFILE_QUERY_KEY, {
+          ...previousData,
+          ...newData,
+        });
+      }
+      
+      return { previousData };
     },
-    onError: (error) => {
-      // Show error toast using Sonner
+    onError: (error, _variables, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(PROFILE_QUERY_KEY, context.previousData);
+      }
       toast.error(error.message || 'Failed to update profile');
     },
+    onSuccess: (data) => {
+      queryClient.setQueryData(PROFILE_QUERY_KEY, data);
+      
+      // Only show completion toast if profile was just completed
+      const wasIncomplete = query.data?.isProfileComplete === false;
+      const isNowComplete = data.isProfileComplete === true;
+      
+      if (wasIncomplete && isNowComplete) {
+        toast.success('Profile completed! You can now access all features');
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem(PROFILE_COMPLETION_SHOWN_KEY, 'true');
+        }
+      }
+    },
   });
+
+  const shouldShowCompletion = !wasCompletionShown && 
+    query.data && 
+    !query.data.isProfileComplete && 
+    (query.data.profileProgress ?? 0) < 80;
 
   return {
     profile: query.data,
@@ -86,5 +127,11 @@ export function useProfile(
     isUpdating: mutation.isPending,
     profileProgress: query.data?.profileProgress ?? 0,
     isProfileComplete: query.data?.isProfileComplete ?? false,
+    shouldShowCompletion,
+    markCompletionShown: () => {
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem(PROFILE_COMPLETION_SHOWN_KEY, 'true');
+      }
+    },
   };
 } 

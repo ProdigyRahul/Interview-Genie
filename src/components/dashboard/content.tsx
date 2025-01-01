@@ -1,65 +1,64 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { Suspense } from "react";
 import { Statistics } from "./statistics";
 import { FeatureNav } from "./feature-nav";
 import { QuickActions } from "./quick-actions";
 import { RecentActivity } from "./recent-activity";
 import { ProfileCompletionModal } from "@/components/profile-completion-modal";
-import { useEffect, useState } from "react";
+import { useProfile } from "@/hooks/use-profile";
 
 interface DashboardContentProps {
   user: any;
 }
 
 export function DashboardContent({ user }: DashboardContentProps) {
-  const [showProfileModal, setShowProfileModal] = useState(false);
-
-  // Fetch profile data with React Query
-  const { data: profile } = useQuery({
-    queryKey: ["profile"],
-    queryFn: async () => {
-      const response = await fetch("/api/profile");
-      if (!response.ok) {
-        throw new Error("Failed to fetch profile");
-      }
-      return response.json();
-    },
+  const { 
+    profile,
+    shouldShowCompletion,
+    markCompletionShown
+  } = useProfile({
+    initialData: user,
   });
 
-  // Show modal if profile completion is less than 80%
-  useEffect(() => {
-    if (profile && profile.profileProgress < 80) {
-      setShowProfileModal(true);
-    }
-  }, [profile]);
-
   return (
-    <>
+    <div className="space-y-8">
       {/* Quick Stats */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Statistics />
+        <Suspense fallback={<div className="animate-pulse h-32 bg-muted rounded-lg" />}>
+          <Statistics />
+        </Suspense>
       </div>
 
       {/* Main Feature Navigation */}
       <div className="py-4">
-        <FeatureNav />
+        <Suspense fallback={<div className="animate-pulse h-32 bg-muted rounded-lg" />}>
+          <FeatureNav />
+        </Suspense>
       </div>
 
       {/* Quick Actions and Recent Activity */}
       <div className="grid gap-6 md:grid-cols-7">
-        <QuickActions />
+        <Suspense fallback={<div className="animate-pulse h-32 bg-muted rounded-lg" />}>
+          <QuickActions />
+        </Suspense>
         <div className="md:col-span-3">
-          <RecentActivity />
+          <Suspense fallback={<div className="animate-pulse h-32 bg-muted rounded-lg" />}>
+            <RecentActivity />
+          </Suspense>
         </div>
       </div>
 
       {/* Profile completion modal */}
-      <ProfileCompletionModal
-        open={showProfileModal}
-        onOpenChange={setShowProfileModal}
-        user={user}
-      />
-    </>
+      {shouldShowCompletion && (
+        <ProfileCompletionModal
+          open={shouldShowCompletion}
+          onOpenChange={(open) => {
+            if (!open) markCompletionShown();
+          }}
+          user={profile ?? user}
+        />
+      )}
+    </div>
   );
 } 

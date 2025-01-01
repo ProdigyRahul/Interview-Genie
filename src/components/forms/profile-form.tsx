@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
 import { useProfile } from "@/hooks/use-profile";
 import { useEffect } from "react";
+import { toast } from "sonner";
 
 const formSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
@@ -51,13 +52,18 @@ export function ProfileForm() {
     }
   }, [profile, form]);
 
-  async function onSubmit(values: FormData) {
-    updateProfile(values);
-  }
+  const onSubmit = form.handleSubmit(async (values: FormData) => {
+    try {
+      await updateProfile(values);
+    } catch (error) {
+      console.error('Profile update error:', error);
+      toast.error('Failed to update profile');
+    }
+  });
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={onSubmit} className="space-y-4">
         <FormField
           control={form.control}
           name="firstName"
