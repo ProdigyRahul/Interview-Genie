@@ -105,11 +105,14 @@ export async function POST(req: Request) {
     const body = await req.json();
     const validatedData = profileUpdateSchema.parse(body);
 
-    // Update user profile with selected fields
+    // Update user profile with optimized query
     const updatedProfile = await db.user.update({
       where: { id: session.user.id },
       data: {
         ...validatedData,
+        name: validatedData.firstName && validatedData.lastName 
+          ? `${validatedData.firstName} ${validatedData.lastName}`
+          : undefined,
         updatedAt: new Date(),
       },
       select: profileFields,
