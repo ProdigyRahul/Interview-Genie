@@ -1,5 +1,6 @@
 import type { UseQueryOptions, QueryKey } from "@tanstack/react-query";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 
 interface ProfileData {
@@ -31,43 +32,73 @@ interface MutationContext {
 const PROFILE_QUERY_KEY = ['profile'] as const;
 const PROFILE_COMPLETION_SHOWN_KEY = 'profile_completion_shown';
 
-// Fetch profile data
+// Fetch profile data with proper error handling
 async function fetchProfile(): Promise<ProfileData> {
-  const response = await fetch('/api/profile');
-  if (!response.ok) {
-    throw new Error('Failed to fetch profile');
+  try {
+    const response = await fetch('/api/profile', {
+      headers: {
+        'Cache-Control': 'no-cache',
+      },
+    });
+    
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error('Unauthorized');
+      }
+      throw new Error('Failed to fetch profile');
+    }
+    
+    return response.json();
+  } catch (error) {
+    console.error('Profile fetch error:', error);
+    throw error;
   }
-  return response.json();
 }
 
-// Update profile data
+// Update profile data with proper error handling
 async function updateProfile(data: Partial<ProfileData>): Promise<ProfileData> {
-  const response = await fetch('/api/profile', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  });
-  if (!response.ok) {
-    throw new Error('Failed to update profile');
+  try {
+    const response = await fetch('/api/profile', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache',
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Failed to update profile');
+    }
+
+    return response.json();
+  } catch (error) {
+    console.error('Profile update error:', error);
+    throw error;
   }
-  return response.json();
 }
 
 export function useProfile(
   options: Omit<UseQueryOptions<ProfileData, Error, ProfileData, QueryKey>, 'queryKey' | 'queryFn'> = {}
 ) {
+  const { data: session, status } = useSession();
   const queryClient = useQueryClient();
 
-  // Query for fetching profile data with aggressive caching
+  // Query for fetching profile data with optimized caching
   const query = useQuery<ProfileData, Error>({
-    queryKey: PROFILE_QUERY_KEY,
+    queryKey: [...PROFILE_QUERY_KEY, session?.user?.id],
     queryFn: fetchProfile,
-    staleTime: Infinity, // Keep data fresh indefinitely until explicitly invalidated
-    gcTime: 1000 * 60 * 30, // Keep in garbage collection for 30 minutes
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 30, // 30 minutes
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     refetchOnMount: false,
-    retry: false,
+    retry: (failureCount, error) => {
+      if (error.message === 'Unauthorized') return false;
+      return failureCount < 3;
+    },
+    enabled: status === 'authenticated' && !!session?.user?.id,
     ...options,
   });
 
@@ -113,14 +144,16 @@ export function useProfile(
     },
   });
 
-  const shouldShowCompletion = !wasCompletionShown && 
+  const isAuthenticated = status === 'authenticated' && !!session?.user?.id;
+  const shouldShowCompletion = isAuthenticated && 
+    !wasCompletionShown && 
     query.data && 
     (!query.data.isProfileComplete || (query.data.profileProgress ?? 0) < 80) &&
     !query.isLoading;
 
   return {
     profile: query.data,
-    isLoading: query.isLoading,
+    isLoading: status === 'loading' || query.isLoading,
     isError: query.isError,
     error: query.error,
     updateProfile: mutation.mutateAsync,

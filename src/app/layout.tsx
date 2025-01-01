@@ -1,13 +1,14 @@
-"use client";
+import "@/styles/globals.css";
+import { GeistSans } from "geist/font/sans";
+import { Providers } from "../components/providers";
 
-import { Inter } from "next/font/google";
-import { ThemeProvider } from "next-themes";
-import { Toaster } from "@/components/ui/sonner";
-import { QueryProvider } from "@/providers/query-provider";
-import { SessionProvider } from "next-auth/react";
-import { ProfileCompletionProvider } from "@/components/providers/profile-completion-provider";
-
-const inter = Inter({ subsets: ["latin"] });
+export const metadata = {
+  title: "Interview Genie - AI-Powered Interview Preparation",
+  description: "Prepare for your next job interview with AI-powered mock interviews, personalized feedback, and expert guidance.",
+  icons: {
+    icon: "/favicon.ico",
+  },
+};
 
 export default function RootLayout({
   children,
@@ -16,21 +17,8 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
-        <ThemeProvider
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <QueryProvider>
-            <SessionProvider>
-              <ProfileCompletionProvider>
-                {children}
-                <Toaster richColors closeButton position="top-center" />
-              </ProfileCompletionProvider>
-            </SessionProvider>
-          </QueryProvider>
-        </ThemeProvider>
+      <body className={GeistSans.className}>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

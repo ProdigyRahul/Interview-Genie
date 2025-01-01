@@ -4,6 +4,7 @@ import { getToken } from "next-auth/jwt";
 
 // Paths that don't require authentication
 const publicPaths = [
+  "/",
   "/login",
   "/register",
   "/auth",
@@ -16,23 +17,26 @@ const publicPaths = [
 const authNoProfilePaths = [
   "/complete-profile",
   "/api/profile",
+  "/api/trpc",
+  "/api/auth/callback",
 ];
-
-// Cache configuration for different routes
-const cacheConfig = {
-  // Static assets
-  static: "public, max-age=31536000, immutable", // 1 year
-  // API responses
-  api: "public, max-age=300, stale-while-revalidate=60", // 5 minutes
-  // Dynamic pages
-  dynamic: "public, max-age=0, must-revalidate", // No cache
-};
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Skip middleware for auth callback routes and static assets
+  if (
+    pathname.startsWith('/api/auth/callback/') ||
+    pathname.startsWith('/_next/') ||
+    pathname.includes('.') ||
+    pathname === '/favicon.ico'
+  ) {
+    return NextResponse.next();
+  }
+
   // Check if the path is public
-  if (publicPaths.some((path) => pathname.startsWith(path))) {
+  const isPublicPath = publicPaths.some((path) => pathname.startsWith(path));
+  if (isPublicPath) {
     return NextResponse.next();
   }
 
@@ -42,43 +46,47 @@ export async function middleware(request: NextRequest) {
     secret: process.env.NEXTAUTH_SECRET,
   });
 
-  // If no token and not a public path, redirect to login
-  if (!token) {
+  // Handle auth redirects
+  if (!token && !isPublicPath) {
     const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("callbackUrl", pathname);
+    const callbackUrl = request.nextUrl.pathname + request.nextUrl.search;
+    loginUrl.searchParams.set("callbackUrl", callbackUrl);
     return NextResponse.redirect(loginUrl);
+  }
+
+  // If user is logged in and trying to access login/register pages
+  if (token && (pathname === '/login' || pathname === '/register')) {
+    const callbackUrl = request.nextUrl.searchParams.get("callbackUrl");
+    if (callbackUrl && !callbackUrl.includes('/login')) {
+      return NextResponse.redirect(new URL(callbackUrl, request.url));
+    }
+    return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
   // Set up the response
   const response = NextResponse.next();
 
-  // Add cache headers based on route type
+  // Add cache control headers
   if (pathname.startsWith("/api/")) {
-    if (pathname.includes("profile")) {
-      // Profile endpoints should not be cached by default
-      response.headers.set(
-        "Cache-Control",
-        "no-cache, no-store, must-revalidate"
-      );
-    } else {
-      // Other API endpoints can be cached
-      response.headers.set("Cache-Control", cacheConfig.api);
-    }
-  } else if (pathname.startsWith("/_next/") || pathname.includes(".")) {
-    // Static assets
-    response.headers.set("Cache-Control", cacheConfig.static);
-  } else {
-    // Dynamic pages
-    response.headers.set("Cache-Control", cacheConfig.dynamic);
+    response.headers.set(
+      "Cache-Control",
+      "no-cache, no-store, must-revalidate"
+    );
   }
 
   // Check if profile is complete for protected routes
-  if (!authNoProfilePaths.some((path) => pathname.startsWith(path))) {
+  if (
+    token && 
+    !authNoProfilePaths.some((path) => pathname.startsWith(path))
+  ) {
     const isProfileComplete = token.isProfileComplete === true || 
       (token.profileProgress as number ?? 0) >= 80;
 
     if (!isProfileComplete) {
-      return NextResponse.redirect(new URL("/complete-profile", request.url));
+      const url = new URL("/complete-profile", request.url);
+      const currentUrl = request.nextUrl.pathname + request.nextUrl.search;
+      url.searchParams.set("callbackUrl", currentUrl);
+      return NextResponse.redirect(url);
     }
   }
 
