@@ -24,13 +24,13 @@ export default async function DashboardLayout({
 }) {
   const session = await auth();
 
-  if (!session) {
+  if (!session?.user?.email) {
     redirect("/login");
   }
 
-  // Fetch user data from database with specific fields
+  // Fetch user data from database with specific fields using email
   const user = await db.user.findUnique({
-    where: { id: session.user.id },
+    where: { email: session.user.email },
     select: {
       id: true,
       name: true,
