@@ -235,10 +235,23 @@ export function ProfileCompletionModal({
   useEffect(() => {
     if (!open) return;
     
+    // Only close if profile is complete or progress >= 80%
     if (isProfileComplete || (currentProgress >= 80)) {
       onOpenChange(false);
     }
   }, [open, isProfileComplete, currentProgress, onOpenChange]);
+
+  // Handle modal close attempt
+  const handleCloseAttempt = () => {
+    // Allow closing if profile is complete or progress >= 80%
+    if (isProfileComplete || currentProgress >= 80) {
+      onOpenChange(false);
+      return;
+    }
+
+    // Show warning toast for incomplete profile
+    toast.error("Please complete your profile (minimum 80%) before closing");
+  };
 
   // Progress display
   const displayProgress = localProgress;
@@ -306,7 +319,7 @@ export function ProfileCompletionModal({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleCloseAttempt}>
       <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
         <div className="p-6 border-b space-y-4">
           <DialogTitle className="text-2xl font-bold">Complete Your Profile</DialogTitle>
@@ -664,7 +677,7 @@ export function ProfileCompletionModal({
 
         <div className="p-6 border-t">
           <div className="flex justify-end gap-4">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <Button variant="outline" onClick={handleCloseAttempt}>
               Cancel
             </Button>
             <Button 
