@@ -103,8 +103,17 @@ export function ProfileCompletionModal({
     profile,
     isLoading: isProfileLoading,
     updateProfile,
-    isUpdating
+    isUpdating,
+    profileProgress: currentProgress,
+    isProfileComplete
   } = useProfile();
+
+  // If profile is complete or progress >= 80%, close the modal
+  useEffect(() => {
+    if (open && (isProfileComplete || (currentProgress >= 80))) {
+      onOpenChange(false);
+    }
+  }, [open, isProfileComplete, currentProgress, onOpenChange]);
 
   // Initialize form
   useEffect(() => {

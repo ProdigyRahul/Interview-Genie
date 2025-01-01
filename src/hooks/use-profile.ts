@@ -115,8 +115,8 @@ export function useProfile(
 
   const shouldShowCompletion = !wasCompletionShown && 
     query.data && 
-    !query.data.isProfileComplete && 
-    (query.data.profileProgress ?? 0) < 80;
+    (!query.data.isProfileComplete || (query.data.profileProgress ?? 0) < 80) &&
+    !query.isLoading;
 
   return {
     profile: query.data,

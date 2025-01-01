@@ -9,7 +9,7 @@ interface ProfileCompletionContextType {
   isProfileComplete: boolean;
   profileProgress: number;
   isLoading: boolean;
-  updateProfileCompletion: (data: { profileProgress: number }) => void;
+  updateProfileCompletion: (data: { profileProgress: number }) => Promise<void>;
 }
 
 const ProfileCompletionContext = createContext<ProfileCompletionContextType | null>(null);
@@ -43,21 +43,26 @@ export function ProfileCompletionProvider({
       !checkedRef.current &&
       session?.user?.id &&
       !isLoading &&
-      !isProfileComplete &&
+      (!isProfileComplete || profileProgress < 80) &&
       !pathname.startsWith("/auth") &&
       !pathname.includes("/complete-profile")
     ) {
       checkedRef.current = true;
     }
-  }, [session?.user?.id, isLoading, isProfileComplete, pathname]);
+  }, [session?.user?.id, isLoading, isProfileComplete, profileProgress, pathname]);
+
+  // Wrap updateProfile to match the expected type
+  const handleProfileUpdate = async (data: { profileProgress: number }) => {
+    await updateProfile(data);
+  };
 
   return (
     <ProfileCompletionContext.Provider
       value={{
-        isProfileComplete,
+        isProfileComplete: isProfileComplete || profileProgress >= 80,
         profileProgress,
         isLoading,
-        updateProfileCompletion: updateProfile,
+        updateProfileCompletion: handleProfileUpdate,
       }}
     >
       {children}
