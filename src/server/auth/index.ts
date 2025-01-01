@@ -1,7 +1,7 @@
 import NextAuth from "next-auth";
-import { config } from "@/lib/auth";
+import { authConfig } from "@/lib/auth";
 
-const nextAuth = NextAuth(config);
+const nextAuth = NextAuth(authConfig);
 
 export const {
   auth,
