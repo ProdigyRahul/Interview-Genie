@@ -75,6 +75,7 @@ export function ProfileCompletionModal({
   const [uploadingImage, setUploadingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const initializedRef = useRef(false);
+  const [currentProgress, setCurrentProgress] = useState(user?.profileProgress || 0);
   
   // Form initialization
   const form = useForm<FormData>({
@@ -198,6 +199,25 @@ export function ProfileCompletionModal({
     return totalProgress;
   };
 
+  // Watch form changes and update progress
+  useEffect(() => {
+    const subscription = form.watch((data) => {
+      const sanitizedSkills = skills.filter((skill): skill is string => 
+        typeof skill === 'string' && skill.length > 0
+      );
+
+      const progress = calculateProgress({
+        ...data,
+        hardSkills: sanitizedSkills,
+        image: imageUrl
+      });
+
+      setCurrentProgress(progress);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [form, skills, imageUrl]);
+
   // Form submission
   const onSubmit = async (data: FormData) => {
     try {
@@ -205,18 +225,13 @@ export function ProfileCompletionModal({
         typeof skill === 'string' && skill.length > 0
       );
 
-      const finalProgress = calculateProgress({
-        ...data,
-        hardSkills: sanitizedSkills
-      });
-
       // Update profile
       await updateProfile({
         ...data,
         hardSkills: sanitizedSkills,
         image: imageUrl,
-        profileProgress: finalProgress,
-        isProfileComplete: finalProgress >= 80
+        profileProgress: currentProgress,
+        isProfileComplete: currentProgress >= 80
       });
 
       toast.success('Profile updated successfully');
@@ -226,15 +241,6 @@ export function ProfileCompletionModal({
       toast.error('Failed to update profile');
     }
   };
-
-  // Watch for profile completion
-  useEffect(() => {
-    if (!open) return;
-    
-    if (isProfileComplete) {
-      onOpenChange(false);
-    }
-  }, [open, isProfileComplete, onOpenChange]);
 
   // Handle modal close attempt
   const handleCloseAttempt = () => {
@@ -311,9 +317,14 @@ export function ProfileCompletionModal({
       <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
         <div className="p-6 border-b space-y-4">
           <DialogTitle className="text-2xl font-bold">Complete Your Profile</DialogTitle>
-          <p className="text-sm text-muted-foreground">
-            Complete your profile to get personalized interview preparation
-          </p>
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              Complete your profile to get personalized interview preparation
+            </p>
+            <p className="text-sm font-medium">
+              Completion: {currentProgress}%
+            </p>
+          </div>
 
           {/* Progress bar with real-time updates */}
           <div className="space-y-2">
