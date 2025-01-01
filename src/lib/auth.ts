@@ -72,7 +72,7 @@ export const authConfig = {
       profile(profile) {
         return {
           id: profile.id.toString(),
-          name: profile.name || profile.login,
+          name: profile.name ?? profile.login,
           email: profile.email,
           image: profile.avatar_url,
           // Additional fields for our custom user type
