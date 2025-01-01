@@ -6,7 +6,7 @@ import GitHubProvider from "next-auth/providers/github";
 import { credentialsProvider } from "@/server/auth/credentials";
 import type { NextAuthConfig } from "next-auth";
 import type { JWT } from "next-auth/jwt";
-import type { Session, User } from "next-auth";
+import type { User } from "next-auth";
 
 // Extend the User type to include our custom fields
 interface CustomUser extends User {
