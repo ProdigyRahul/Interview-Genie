@@ -137,19 +137,40 @@ export const authConfig = {
     },
   },
   events: {
-    async signIn({ user, isNewUser }) {
-      if (isNewUser) {
-        // Initialize profile data for new users
-        await db.user.update({
-          where: { id: user.id },
-          data: {
-            isProfileComplete: false,
-            profileProgress: 0,
-            credits: 100, // Initial credits
-            subscriptionStatus: 'free',
-            isVerified: false,
-          },
-        });
+    async signIn({ user, isNewUser, account }) {
+      if (!user?.email) return;
+
+      try {
+        if (isNewUser) {
+          // Initialize profile data for new users
+          await db.user.update({
+            where: { email: user.email },
+            data: {
+              isProfileComplete: false,
+              profileProgress: 0,
+              credits: 100,
+              subscriptionStatus: 'free',
+              isVerified: true,
+              emailVerified: new Date(),
+              // Only set name and image if they are strings
+              ...(typeof user.name === 'string' ? { name: user.name } : {}),
+              ...(typeof user.image === 'string' ? { image: user.image } : {}),
+            },
+          });
+        } else if (account?.provider === "google") {
+          // Update existing user's Google-specific data
+          await db.user.update({
+            where: { email: user.email },
+            data: {
+              emailVerified: new Date(),
+              // Only set name and image if they are strings
+              ...(typeof user.name === 'string' ? { name: user.name } : {}),
+              ...(typeof user.image === 'string' ? { image: user.image } : {}),
+            },
+          });
+        }
+      } catch (error) {
+        console.error("[AUTH_SIGNIN_ERROR]", error);
       }
     },
   },
