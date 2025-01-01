@@ -2,7 +2,7 @@ import NextAuth from "next-auth";
 import { CustomPrismaAdapter } from "@/server/auth/adapter";
 import { db } from "@/server/db";
 import GoogleProvider from "next-auth/providers/google";
-import GitHubProvider from "next-auth/providers/github";
+import DiscordProvider from "next-auth/providers/discord";
 import { credentialsProvider } from "@/server/auth/credentials";
 import type { NextAuthConfig } from "next-auth";
 import type { JWT } from "next-auth/jwt";
@@ -60,9 +60,14 @@ export const authConfig = {
         }
       }
     }),
-    GitHubProvider({
-      clientId: process.env.GITHUB_ID!,
-      clientSecret: process.env.GITHUB_SECRET!,
+    DiscordProvider({
+      clientId: process.env.AUTH_DISCORD_ID!,
+      clientSecret: process.env.AUTH_DISCORD_SECRET!,
+      authorization: {
+        params: {
+          scope: "identify email",
+        },
+      },
     }),
   ],
   callbacks: {
