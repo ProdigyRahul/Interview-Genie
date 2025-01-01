@@ -1,55 +1,125 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Icons } from "@/components/icons";
 import { signIn } from "next-auth/react";
+import { Button } from "@/components/ui/button";
+import { Icons } from "@/components/ui/icons";
+import { toast } from "sonner";
+import { Loader2, Github } from "lucide-react";
+import { motion } from "framer-motion";
 
-export function SocialLoginButtons() {
-  const [isLoading, setIsLoading] = useState({
-    google: false,
-    discord: false,
-  });
+interface SocialLoginButtonsProps {
+  callbackUrl?: string;
+  isLoading?: boolean;
+}
 
-  const handleLogin = async (provider: "google" | "discord") => {
+export function SocialLoginButtons({ 
+  callbackUrl = "/dashboard",
+  isLoading: externalLoading = false 
+}: SocialLoginButtonsProps) {
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isGitHubLoading, setIsGitHubLoading] = useState(false);
+
+  const handleGoogleLogin = async () => {
     try {
-      setIsLoading(prev => ({ ...prev, [provider]: true }));
-      await signIn(provider, { callbackUrl: "/dashboard" });
-    } catch (error) {
-      console.error(`${provider} login error:`, error);
+      setIsGoogleLoading(true);
+      await signIn("google", { callbackUrl });
+    } catch (error: unknown) {
+      console.error("Google login error:", error);
+      toast.error("Failed to sign in with Google", {
+        description: "Please try again",
+      });
     } finally {
-      setIsLoading(prev => ({ ...prev, [provider]: false }));
+      setIsGoogleLoading(false);
     }
   };
 
+  const handleGitHubLogin = async () => {
+    try {
+      setIsGitHubLoading(true);
+      await signIn("github", { callbackUrl });
+    } catch (error: unknown) {
+      console.error("GitHub login error:", error);
+      toast.error("Failed to sign in with GitHub", {
+        description: "Please try again",
+      });
+    } finally {
+      setIsGitHubLoading(false);
+    }
+  };
+
+  const isButtonsDisabled = externalLoading || isGoogleLoading || isGitHubLoading;
+
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
-      <Button
-        variant="outline"
-        onClick={() => handleLogin("google")}
-        disabled={isLoading.google || isLoading.discord}
-        className="w-full gap-2"
+    <motion.div
+      className="space-y-3"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      <motion.div
+        whileHover={{ scale: 1.01 }}
+        whileTap={{ scale: 0.99 }}
+        transition={{ duration: 0.1 }}
       >
-        {isLoading.google ? (
-          <Icons.spinner className="h-4 w-4 animate-spin" />
-        ) : (
-          <Icons.google className="h-4 w-4" />
-        )}
-        Google
-      </Button>
-      <Button
-        variant="outline"
-        onClick={() => handleLogin("discord")}
-        disabled={isLoading.google || isLoading.discord}
-        className="w-full gap-2"
+        <Button
+          variant="social"
+          disabled={isButtonsDisabled}
+          onClick={handleGoogleLogin}
+          className="relative w-full h-11 font-medium"
+        >
+          <motion.div
+            className="flex items-center justify-center w-full"
+            initial={false}
+            animate={isGoogleLoading ? { opacity: 0 } : { opacity: 1 }}
+          >
+            <Icons.google className="mr-2 h-4 w-4" />
+            Continue with Google
+          </motion.div>
+          {isGoogleLoading && (
+            <motion.div
+              className="absolute inset-0 flex items-center justify-center"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <Loader2 className="h-4 w-4 animate-spin" />
+            </motion.div>
+          )}
+        </Button>
+      </motion.div>
+
+      <motion.div
+        whileHover={{ scale: 1.01 }}
+        whileTap={{ scale: 0.99 }}
+        transition={{ duration: 0.1 }}
       >
-        {isLoading.discord ? (
-          <Icons.spinner className="h-4 w-4 animate-spin" />
-        ) : (
-          <Icons.discord className="h-4 w-4" />
-        )}
-        Discord
-      </Button>
-    </div>
+        <Button
+          variant="social"
+          disabled={isButtonsDisabled}
+          onClick={handleGitHubLogin}
+          className="relative w-full h-11 font-medium"
+        >
+          <motion.div
+            className="flex items-center justify-center w-full"
+            initial={false}
+            animate={isGitHubLoading ? { opacity: 0 } : { opacity: 1 }}
+          >
+            <Github className="mr-2 h-4 w-4" />
+            Continue with GitHub
+          </motion.div>
+          {isGitHubLoading && (
+            <motion.div
+              className="absolute inset-0 flex items-center justify-center"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <Loader2 className="h-4 w-4 animate-spin" />
+            </motion.div>
+          )}
+        </Button>
+      </motion.div>
+    </motion.div>
   );
 } 
