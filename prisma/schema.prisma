@@ -66,6 +66,16 @@ model User {
   passwordResetTokens PasswordResetToken[]
   otpVerifications    OTPVerification[]
   education_details   UserEducation?
+
+  @@index([email])
+  @@index([isProfileComplete, profileProgress])
+  @@index([subscriptionStatus])
+  @@index([createdAt])
+  @@index([lastLogin])
+  @@index([workStatus, industry])
+  @@index([experience, education])
+  @@index([jobPreference, isVerified])
+  @@index([level, xpPoints])
 }
 
 model UserEducation {
@@ -82,6 +92,9 @@ model UserEducation {
 
   // Relations
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([passoutYear])
 }
 
 model Admin {
@@ -128,6 +141,10 @@ model JobRole {
   domain          CareerDomain     @relation(fields: [domainId], references: [id])
   mockInterviews  MockInterview[]
   resumes         Resume[]
+
+  @@index([domainId])
+  @@index([isActive])
+  @@index([experienceYears])
 }
 
 model JobDescription {
@@ -145,6 +162,11 @@ model JobDescription {
   createdBy       Admin           @relation(fields: [createdById], references: [id])
   role            JobRole         @relation(fields: [roleId], references: [id])
   mockInterviews  MockInterview[]
+
+  @@index([roleId])
+  @@index([industry])
+  @@index([experienceLevel])
+  @@index([isActive])
 }
 
 model Resume {
@@ -202,6 +224,11 @@ model MockInterview {
   role               JobRole            @relation(fields: [roleId], references: [id])
   scenario           InterviewScenario  @relation(fields: [scenarioId], references: [id])
   user               User               @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+  @@index([startTime])
+  @@index([interviewType])
 }
 
 model Account {
@@ -221,6 +248,8 @@ model Account {
   user                     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@index([provider])
 }
 
 model Session {
@@ -229,6 +258,9 @@ model Session {
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expires])
 }
 
 model VerificationToken {
@@ -330,6 +362,7 @@ model OTPVerification {
   userId    String
   otp       String
   expires   DateTime
+  used      Boolean  @default(false)
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -19,8 +18,8 @@ import { Input } from "@/components/ui/auth/input";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { Icons } from "@/components/ui/icons";
 import { toast } from "sonner";
+import { SocialLoginButtons } from "@/components/auth/social-login-buttons";
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -234,24 +233,7 @@ export function SignupForm() {
         </div>
       </div>
 
-      <div className="grid gap-3">
-        <Button
-          variant="social"
-          disabled={isLoading}
-          onClick={() => signIn("google", { callbackUrl: "/verify-otp" })}
-          icon={<Icons.google className="h-4 w-4" />}
-        >
-          Google
-        </Button>
-        <Button
-          variant="social"
-          disabled={isLoading}
-          onClick={() => signIn("discord", { callbackUrl: "/verify-otp" })}
-          icon={<Icons.discord className="h-4 w-4" />}
-        >
-          Discord
-        </Button>
-      </div>
+      <SocialLoginButtons isLoading={isLoading} callbackUrl="/verify-otp" />
 
       <p className="text-center text-sm text-muted-foreground">
         Already have an account?{" "}

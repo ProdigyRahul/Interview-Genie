@@ -16,11 +16,11 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/auth/input";
-import { useToast } from "@/hooks/use-toast";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { motion } from "framer-motion";
-import { Icons } from "@/components/ui/icons";
 import Link from "next/link";
+import { toast } from "sonner";
+import { SocialLoginButtons } from "@/components/auth/social-login-buttons";
 
 const formSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -31,7 +31,6 @@ export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
-  const { toast } = useToast();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") ?? "/dashboard";
 
@@ -53,29 +52,16 @@ export function LoginForm() {
       });
 
       if (result?.error) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Invalid email or password",
-        });
+        toast.error("Invalid email or password");
         return;
       }
 
-      toast({
-        variant: "success",
-        title: "Success",
-        description: "Logged in successfully",
-      });
-
+      toast.success("Logged in successfully");
       router.push(callbackUrl);
       router.refresh();
     } catch (err) {
       console.error("Login error:", err);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Something went wrong. Please try again.",
-      });
+      toast.error("Something went wrong. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -177,24 +163,7 @@ export function LoginForm() {
         </div>
       </div>
 
-      <div className="grid gap-3">
-        <Button
-          variant="social"
-          disabled={isLoading}
-          onClick={() => signIn("google", { callbackUrl })}
-          icon={<Icons.google className="h-4 w-4" />}
-        >
-          Google
-        </Button>
-        <Button
-          variant="social"
-          disabled={isLoading}
-          onClick={() => signIn("discord", { callbackUrl })}
-          icon={<Icons.discord className="h-4 w-4" />}
-        >
-          Discord
-        </Button>
-      </div>
+      <SocialLoginButtons isLoading={isLoading} callbackUrl={callbackUrl} />
 
       <p className="text-center text-sm text-muted-foreground">
         Don&apos;t have an account?{" "}
