@@ -68,27 +68,32 @@ export const authConfig = {
   callbacks: {
     async jwt({ token, user, trigger, session }) {
       if (trigger === "signIn" && user) {
-        const customUser = user as CustomUser;
-        token.id = customUser.id;
-        token.email = customUser.email;
-        token.name = customUser.name;
-        token.image = customUser.image;
-        token.credits = customUser.credits;
-        token.subscriptionStatus = customUser.subscriptionStatus;
-        token.isVerified = customUser.isVerified;
-
-        // Fetch latest profile data on sign in
-        const userData = await db.user.findUnique({
-          where: { id: customUser.id },
+        // For new sign-ins, fetch the complete user data
+        const dbUser = await db.user.findUnique({
+          where: { email: user.email! },
           select: {
+            id: true,
+            email: true,
+            name: true,
+            image: true,
+            credits: true,
+            subscriptionStatus: true,
+            isVerified: true,
             isProfileComplete: true,
             profileProgress: true,
           },
         });
 
-        if (userData) {
-          token.isProfileComplete = userData.isProfileComplete;
-          token.profileProgress = userData.profileProgress;
+        if (dbUser) {
+          token.id = dbUser.id;
+          token.email = dbUser.email ?? user.email;
+          token.name = dbUser.name ?? user.name ?? "";
+          token.image = dbUser.image ?? undefined;
+          token.credits = dbUser.credits;
+          token.subscriptionStatus = dbUser.subscriptionStatus;
+          token.isVerified = dbUser.isVerified;
+          token.isProfileComplete = dbUser.isProfileComplete;
+          token.profileProgress = dbUser.profileProgress;
         }
       }
 
@@ -137,19 +142,40 @@ export const authConfig = {
     },
   },
   events: {
-    async signIn({ user, isNewUser }) {
-      if (isNewUser) {
-        // Initialize profile data for new users
-        await db.user.update({
-          where: { id: user.id },
-          data: {
-            isProfileComplete: false,
-            profileProgress: 0,
-            credits: 100, // Initial credits
-            subscriptionStatus: 'free',
-            isVerified: false,
-          },
-        });
+    async signIn({ user, isNewUser, account }) {
+      if (!user?.email) return;
+
+      try {
+        if (isNewUser) {
+          // Initialize profile data for new users
+          await db.user.update({
+            where: { email: user.email },
+            data: {
+              isProfileComplete: false,
+              profileProgress: 0,
+              credits: 100,
+              subscriptionStatus: 'free',
+              isVerified: true,
+              emailVerified: new Date(),
+              // Only set name and image if they are strings
+              ...(typeof user.name === 'string' ? { name: user.name } : {}),
+              ...(typeof user.image === 'string' ? { image: user.image } : {}),
+            },
+          });
+        } else if (account?.provider === "google") {
+          // Update existing user's Google-specific data
+          await db.user.update({
+            where: { email: user.email },
+            data: {
+              emailVerified: new Date(),
+              // Only set name and image if they are strings
+              ...(typeof user.name === 'string' ? { name: user.name } : {}),
+              ...(typeof user.image === 'string' ? { image: user.image } : {}),
+            },
+          });
+        }
+      } catch (error) {
+        console.error("[AUTH_SIGNIN_ERROR]", error);
       }
     },
   },
