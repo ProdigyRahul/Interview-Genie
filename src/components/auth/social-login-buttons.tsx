@@ -23,11 +23,16 @@ export function SocialLoginButtons({
   const handleGoogleLogin = async () => {
     try {
       setIsGoogleLoading(true);
-      await signIn("google", { callbackUrl });
-    } catch (error: unknown) {
+      const result = await signIn("google", { callbackUrl, redirect: false });
+      if (result?.error) {
+        toast.error("Failed to sign in with Google", {
+          description: "Please try again later",
+        });
+      }
+    } catch (error) {
       console.error("Google login error:", error);
       toast.error("Failed to sign in with Google", {
-        description: "Please try again",
+        description: "Please try again later",
       });
     } finally {
       setIsGoogleLoading(false);
@@ -37,11 +42,16 @@ export function SocialLoginButtons({
   const handleGitHubLogin = async () => {
     try {
       setIsGitHubLoading(true);
-      await signIn("github", { callbackUrl });
-    } catch (error: unknown) {
+      const result = await signIn("github", { callbackUrl, redirect: false });
+      if (result?.error) {
+        toast.error("Failed to sign in with GitHub", {
+          description: "Please ensure you have a verified email on GitHub",
+        });
+      }
+    } catch (error) {
       console.error("GitHub login error:", error);
       toast.error("Failed to sign in with GitHub", {
-        description: "Please try again",
+        description: "Please try again later",
       });
     } finally {
       setIsGitHubLoading(false);

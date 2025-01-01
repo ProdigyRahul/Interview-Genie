@@ -63,6 +63,25 @@ export const authConfig = {
     GitHubProvider({
       clientId: process.env.GITHUB_ID!,
       clientSecret: process.env.GITHUB_SECRET!,
+      authorization: {
+        params: {
+          // Request user's email and profile data
+          scope: "read:user user:email",
+        },
+      },
+      profile(profile) {
+        return {
+          id: profile.id.toString(),
+          name: profile.name || profile.login,
+          email: profile.email,
+          image: profile.avatar_url,
+          // Additional fields for our custom user type
+          emailVerified: null,
+          credits: 100,
+          subscriptionStatus: "free",
+          isVerified: true,
+        };
+      },
     }),
   ],
   callbacks: {
