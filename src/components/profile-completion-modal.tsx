@@ -220,11 +220,7 @@ export function ProfileCompletionModal({
       });
 
       toast.success('Profile updated successfully');
-      
-      // Close modal after successful update
-      if (finalProgress >= 80) {
-        onOpenChange(false);
-      }
+      onOpenChange(false);
     } catch (error) {
       console.error('Profile update error:', error);
       toast.error('Failed to update profile');
@@ -235,22 +231,14 @@ export function ProfileCompletionModal({
   useEffect(() => {
     if (!open) return;
     
-    // Only close if profile is complete or progress >= 80%
-    if (isProfileComplete || (currentProgress >= 80)) {
+    if (isProfileComplete) {
       onOpenChange(false);
     }
-  }, [open, isProfileComplete, currentProgress, onOpenChange]);
+  }, [open, isProfileComplete, onOpenChange]);
 
   // Handle modal close attempt
   const handleCloseAttempt = () => {
-    // Allow closing if profile is complete or progress >= 80%
-    if (isProfileComplete || currentProgress >= 80) {
-      onOpenChange(false);
-      return;
-    }
-
-    // Show warning toast for incomplete profile
-    toast.error("Please complete your profile (minimum 80%) before closing");
+    onOpenChange(false);
   };
 
   // Progress display
