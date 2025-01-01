@@ -1,11 +1,11 @@
+import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { NextResponse } from "next/server";
+import { z } from "zod";
+import { headers } from "next/headers";
 
-export const runtime = 'nodejs';
-
-// Common profile select object to ensure consistent data shape
-const profileSelect = {
+// Define the profile fields we want to select
+const profileFields = {
   id: true,
   name: true,
   email: true,
@@ -31,85 +31,109 @@ const profileSelect = {
   hardSkills: true,
 } as const;
 
+// Profile update schema
+const profileUpdateSchema = z.object({
+  firstName: z.string().min(2).optional(),
+  lastName: z.string().min(2).optional(),
+  phoneNumber: z.string().min(10).optional(),
+  gender: z.string().optional(),
+  country: z.string().optional(),
+  state: z.string().optional(),
+  city: z.string().optional(),
+  pinCode: z.string().optional(),
+  workStatus: z.string().optional(),
+  experience: z.string().optional(),
+  education: z.string().optional(),
+  industry: z.string().optional(),
+  ageGroup: z.string().optional(),
+  aspiration: z.string().optional(),
+  hardSkills: z.array(z.string()).optional(),
+  image: z.string().nullable().optional(),
+  profileProgress: z.number().min(0).max(100).optional(),
+  isProfileComplete: z.boolean().optional(),
+});
+
 export async function GET() {
   try {
     const session = await auth();
-
-    if (!session?.user) {
-      return new NextResponse("Unauthorized", { status: 401 });
+    if (!session?.user?.id) {
+      return new NextResponse(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401 }
+      );
     }
 
+    // Get user profile with selected fields
     const profile = await db.user.findUnique({
-      where: {
-        id: session.user.id,
-      },
-      select: profileSelect,
+      where: { id: session.user.id },
+      select: profileFields,
     });
 
     if (!profile) {
-      return new NextResponse("Profile not found", { status: 404 });
+      return new NextResponse(
+        JSON.stringify({ error: "Profile not found" }),
+        { status: 404 }
+      );
     }
 
-    return NextResponse.json(profile);
+    // Set response headers with caching
+    return new NextResponse(JSON.stringify(profile), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "public, max-age=300, stale-while-revalidate=60", // 5 minutes
+      },
+    });
   } catch (error) {
     console.error("[PROFILE_GET]", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    return new NextResponse(
+      JSON.stringify({ error: "Internal server error" }),
+      { status: 500 }
+    );
   }
 }
 
 export async function POST(req: Request) {
   try {
     const session = await auth();
-
-    if (!session?.user) {
-      return new NextResponse("Unauthorized", { status: 401 });
+    if (!session?.user?.id) {
+      return new NextResponse(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401 }
+      );
     }
 
     const body = await req.json();
+    const validatedData = profileUpdateSchema.parse(body);
 
-    // Calculate filled fields for progress
-    const fields = [
-      body.firstName,
-      body.lastName,
-      body.email,
-      body.phoneNumber,
-      body.gender,
-      body.country,
-      body.state,
-      body.city,
-      body.pinCode,
-      body.workStatus,
-      body.experience,
-      body.education,
-      body.industry,
-      body.ageGroup,
-      body.aspiration,
-      body.hardSkills,
-    ];
-
-    const filledFields = fields.filter(field => 
-      field !== null && field !== undefined && 
-      (typeof field === 'string' ? field.trim().length > 0 : true)
-    ).length;
-
-    const totalFields = fields.length;
-    const profileProgress = Math.round((filledFields / totalFields) * 100);
-    
+    // Update user profile with selected fields
     const updatedProfile = await db.user.update({
-      where: {
-        id: session.user.id,
-      },
+      where: { id: session.user.id },
       data: {
-        ...body,
-        profileProgress,
-        isProfileComplete: profileProgress >= 80,
+        ...validatedData,
+        updatedAt: new Date(),
       },
-      select: profileSelect,
+      select: profileFields,
     });
 
-    return NextResponse.json(updatedProfile);
+    return new NextResponse(JSON.stringify(updatedProfile), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+      },
+    });
   } catch (error) {
-    console.error("[PROFILE_POST]", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    console.error("[PROFILE_UPDATE]", error);
+    if (error instanceof z.ZodError) {
+      return new NextResponse(
+        JSON.stringify({ error: "Invalid data", details: error.errors }),
+        { status: 400 }
+      );
+    }
+    return new NextResponse(
+      JSON.stringify({ error: "Failed to update profile" }),
+      { status: 500 }
+    );
   }
 } 
