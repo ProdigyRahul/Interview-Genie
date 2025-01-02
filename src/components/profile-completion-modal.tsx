@@ -63,6 +63,12 @@ const SECTION_WEIGHTS = {
   hardSkills: 0.15, // 15%
 } as const;
 
+const LoadingSpinner = () => (
+  <div className="flex-1 flex items-center justify-center">
+    <Loader2 className="h-8 w-8 animate-spin" />
+  </div>
+);
+
 export function ProfileCompletionModal({
   open,
   onOpenChange,
@@ -75,7 +81,7 @@ export function ProfileCompletionModal({
   const [uploadingImage, setUploadingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const initializedRef = useRef(false);
-  const [currentProgress, setCurrentProgress] = useState(user?.profileProgress || 0);
+  const [formProgress, setFormProgress] = useState(0);
   
   // Form initialization
   const form = useForm<FormData>({
@@ -105,25 +111,17 @@ export function ProfileCompletionModal({
     isLoading: isProfileLoading,
     updateProfile,
     isUpdating,
-    profileProgress: currentProgress,
-    isProfileComplete
+    profileProgress: savedProgress,
   } = useProfile();
 
-  // If profile is complete or progress >= 80%, close the modal
-  useEffect(() => {
-    if (open && (isProfileComplete || (currentProgress >= 80))) {
-      onOpenChange(false);
-    }
-  }, [open, isProfileComplete, currentProgress, onOpenChange]);
-
-  // Initialize form
+  // Initialize form and sync with saved progress
   useEffect(() => {
     if (!profile || initializedRef.current) return;
 
     // Initialize form with existing data
     const initialValues = {
-      firstName: profile.firstName ?? user.name?.split(" ")[0] ?? "",
-      lastName: profile.lastName ?? user.name?.split(" ")[1] ?? "",
+      firstName: profile.firstName ?? user?.name?.split(" ")[0] ?? "",
+      lastName: profile.lastName ?? user?.name?.split(" ")[1] ?? "",
       phoneNumber: profile.phoneNumber ?? "",
       gender: profile.gender ?? "",
       country: profile.country ?? "",
@@ -142,24 +140,23 @@ export function ProfileCompletionModal({
     form.reset(initialValues);
     setSkills(profile.hardSkills ?? []); 
     setImageUrl(profile.image ?? null);
-    setLocalProgress(calculateProgress(initialValues));
+    const calculatedProgress = calculateProgress(initialValues);
+    setFormProgress(calculatedProgress);
     initializedRef.current = true;
   }, [profile, user, form]);
 
-  // Local state for progress tracking
-  const [localProgress, setLocalProgress] = useState(profile?.profileProgress ?? 0);
-
   // Calculate progress with proper type safety
-  const calculateProgress = (formData: Partial<FormData>) => {
+  const calculateProgress = (formData: Partial<FormData> & { image?: string | null }) => {
     // Personal Details Section (25%)
     const personalFields = {
       firstName: formData.firstName,
       lastName: formData.lastName,
       phoneNumber: formData.phoneNumber,
       gender: formData.gender,
+      image: formData.image
     };
     const personalComplete = Object.values(personalFields).filter(
-      value => typeof value === 'string' && value.trim().length > 0
+      value => value && typeof value === 'string' && value.trim().length > 0
     ).length;
     const personalProgress = (personalComplete / Object.keys(personalFields).length) * SECTION_WEIGHTS.personalDetails * 100;
 
@@ -199,7 +196,7 @@ export function ProfileCompletionModal({
     return totalProgress;
   };
 
-  // Watch form changes and update progress
+  // Watch form changes and update progress in real-time (without auto-saving)
   useEffect(() => {
     const subscription = form.watch((data) => {
       const sanitizedSkills = skills.filter((skill): skill is string => 
@@ -212,29 +209,36 @@ export function ProfileCompletionModal({
         image: imageUrl
       });
 
-      setCurrentProgress(progress);
+      setFormProgress(progress);
     });
 
     return () => subscription.unsubscribe();
   }, [form, skills, imageUrl]);
 
-  // Form submission
+  // Form submission - close immediately after successful update
   const onSubmit = async (data: FormData) => {
     try {
       const sanitizedSkills = skills.filter((skill): skill is string => 
         typeof skill === 'string' && skill.length > 0
       );
 
+      const updatedProgress = calculateProgress({
+        ...data,
+        hardSkills: sanitizedSkills,
+        image: imageUrl
+      });
+
       // Update profile
       await updateProfile({
         ...data,
         hardSkills: sanitizedSkills,
-        image: imageUrl,
-        profileProgress: currentProgress,
-        isProfileComplete: currentProgress >= 80
-      });
+        profileProgress: updatedProgress,
+        isProfileComplete: updatedProgress === 100,
+        image: imageUrl
+      } as any);
 
-      toast.success('Profile updated successfully');
+      // Show success toast and close modal
+      toast.success('Profile saved successfully');
       onOpenChange(false);
     } catch (error) {
       console.error('Profile update error:', error);
@@ -244,11 +248,28 @@ export function ProfileCompletionModal({
 
   // Handle modal close attempt
   const handleCloseAttempt = () => {
-    onOpenChange(false);
-  };
+    const currentProgress = form.getValues();
+    const sanitizedSkills = skills.filter((skill): skill is string => 
+      typeof skill === 'string' && skill.length > 0
+    );
+    
+    const progress = calculateProgress({
+      ...currentProgress,
+      hardSkills: sanitizedSkills,
+      image: imageUrl
+    });
 
-  // Progress display
-  const displayProgress = localProgress;
+    // Always allow closing if progress is >= 80%
+    if (progress >= 80) {
+      onOpenChange(false);
+      return;
+    }
+
+    // Show confirmation dialog for incomplete profile
+    if (window.confirm('Your profile is incomplete. Are you sure you want to close?')) {
+      onOpenChange(false);
+    }
+  };
 
   // Get user's initials for avatar fallback
   const getInitials = () => {
@@ -322,33 +343,32 @@ export function ProfileCompletionModal({
               Complete your profile to get personalized interview preparation
             </p>
             <p className="text-sm font-medium">
-              Completion: {currentProgress}%
+              Profile Progress: {formProgress}%
+              {savedProgress !== null && savedProgress !== formProgress && (
+                <span className="ml-2 text-muted-foreground">
+                  (Saved: {savedProgress}%)
+                </span>
+              )}
             </p>
           </div>
 
           {/* Progress bar with real-time updates */}
           <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>Profile Completion</span>
-              <span>{displayProgress}%</span>
-            </div>
-            <Progress value={displayProgress} className="h-2">
+            <Progress value={formProgress} className="h-2">
               <div
                 className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-500"
-                style={{ width: `${displayProgress}%` }}
+                style={{ width: `${formProgress}%` }}
               />
             </Progress>
           </div>
         </div>
 
         {isProfileLoading ? (
-          <div className="flex-1 flex items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin" />
-          </div>
+          <LoadingSpinner />
         ) : (
-          <div className="flex-1 overflow-y-auto p-6">
+          <div className="flex-1 overflow-y-auto">
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 p-6">
                 {/* Profile Image Section */}
                 <div className="flex items-center gap-6">
                   <Avatar className="h-20 w-20">
@@ -676,12 +696,17 @@ export function ProfileCompletionModal({
 
         <div className="p-6 border-t">
           <div className="flex justify-end gap-4">
-            <Button variant="outline" onClick={handleCloseAttempt}>
+            <Button 
+              variant="outline" 
+              onClick={handleCloseAttempt}
+              disabled={isUpdating}
+            >
               Cancel
             </Button>
             <Button 
               onClick={form.handleSubmit(onSubmit)}
               disabled={isUpdating}
+              className="min-w-[100px]"
             >
               {isUpdating ? (
                 <>
