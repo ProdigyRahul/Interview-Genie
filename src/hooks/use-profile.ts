@@ -30,14 +30,17 @@ interface MutationContext {
 }
 
 const PROFILE_QUERY_KEY = ['profile'] as const;
-const PROFILE_COMPLETION_SHOWN_KEY = 'profile_completion_shown';
+const PROFILE_COMPLETION_SHOWN_KEY = "profile-completion-shown";
 
 // Fetch profile data with proper error handling
 async function fetchProfile(): Promise<ProfileData> {
   try {
     const response = await fetch('/api/profile', {
+      method: 'GET',
+      credentials: 'include',
       headers: {
         'Cache-Control': 'no-cache',
+        'Content-Type': 'application/json',
       },
     });
     
@@ -60,6 +63,7 @@ async function updateProfile(data: Partial<ProfileData>): Promise<ProfileData> {
   try {
     const response = await fetch('/api/profile', {
       method: 'POST',
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
         'Cache-Control': 'no-cache',
@@ -85,28 +89,17 @@ export function useProfile(
   const { data: session, status } = useSession();
   const queryClient = useQueryClient();
 
-  // Query for fetching profile data with optimized caching
+  // Query for fetching profile data
   const query = useQuery<ProfileData, Error>({
     queryKey: [...PROFILE_QUERY_KEY, session?.user?.id],
     queryFn: fetchProfile,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    gcTime: 1000 * 60 * 30, // 30 minutes
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-    refetchOnMount: false,
-    retry: (failureCount, error) => {
-      if (error.message === 'Unauthorized') return false;
-      return failureCount < 3;
-    },
+    staleTime: 0, // Don't cache the data
     enabled: status === 'authenticated' && !!session?.user?.id,
+    retry: 1, // Only retry once on failure
     ...options,
   });
 
-  // Check if profile completion modal was shown in this session
-  const wasCompletionShown = typeof window !== 'undefined' && 
-    sessionStorage.getItem(PROFILE_COMPLETION_SHOWN_KEY) === 'true';
-
-  // Mutation for updating profile with optimistic updates
+  // Mutation for updating profile
   const mutation = useMutation<ProfileData, Error, Partial<ProfileData>, MutationContext>({
     mutationFn: updateProfile,
     onMutate: async (newData) => {
@@ -131,12 +124,8 @@ export function useProfile(
     onSuccess: (data) => {
       queryClient.setQueryData(PROFILE_QUERY_KEY, data);
       
-      // Only show completion toast if profile was just completed
-      const wasIncomplete = query.data?.isProfileComplete === false;
-      const isNowComplete = data.isProfileComplete === true;
-      
-      if (wasIncomplete && isNowComplete) {
-        toast.success('Profile completed! You can now access all features');
+      // Only set session storage if profile is complete or progress >= 80%
+      if (data.isProfileComplete || (data.profileProgress ?? 0) >= 80) {
         if (typeof window !== 'undefined') {
           sessionStorage.setItem(PROFILE_COMPLETION_SHOWN_KEY, 'true');
         }
@@ -144,15 +133,8 @@ export function useProfile(
     },
   });
 
-  const isAuthenticated = status === 'authenticated' && !!session?.user?.id;
-  const shouldShowCompletion = isAuthenticated && 
-    !wasCompletionShown && 
-    query.data && 
-    (!query.data.isProfileComplete || (query.data.profileProgress ?? 0) < 80) &&
-    !query.isLoading;
-
   return {
-    profile: query.data,
+    profile: query.data ?? null, // Return null for new users
     isLoading: status === 'loading' || query.isLoading,
     isError: query.isError,
     error: query.error,
@@ -160,7 +142,10 @@ export function useProfile(
     isUpdating: mutation.isPending,
     profileProgress: query.data?.profileProgress ?? 0,
     isProfileComplete: query.data?.isProfileComplete ?? false,
-    shouldShowCompletion,
+    shouldShowCompletion: !query.data?.isProfileComplete && 
+      (query.data?.profileProgress ?? 0) < 80 && 
+      typeof window !== 'undefined' && 
+      sessionStorage.getItem(PROFILE_COMPLETION_SHOWN_KEY) !== 'true',
     markCompletionShown: () => {
       if (typeof window !== 'undefined') {
         sessionStorage.setItem(PROFILE_COMPLETION_SHOWN_KEY, 'true');

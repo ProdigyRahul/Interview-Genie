@@ -1,9 +1,10 @@
 "use client";
 
-import { createContext, useContext, useEffect, useRef } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { useProfile } from "@/hooks/use-profile";
 import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
+import { ProfileCompletionModal } from "@/components/profile-completion-modal";
 
 interface ProfileCompletionContextType {
   isProfileComplete: boolean;
@@ -14,6 +15,8 @@ interface ProfileCompletionContextType {
 
 const ProfileCompletionContext = createContext<ProfileCompletionContextType | null>(null);
 
+const PROFILE_COMPLETION_SHOWN_KEY = "profile-completion-shown";
+
 export function ProfileCompletionProvider({
   children,
 }: {
@@ -21,51 +24,84 @@ export function ProfileCompletionProvider({
 }) {
   const { data: session } = useSession();
   const pathname = usePathname();
+  const [showModal, setShowModal] = useState(false);
+  const initialCheckDone = useRef(false);
+
   const {
+    profile,
     isProfileComplete,
     profileProgress,
     isLoading,
     updateProfile,
-  } = useProfile({
-    // Prevent unnecessary refetches
-    staleTime: Infinity,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-  });
+  } = useProfile();
 
-  // Track if we've already checked profile completion in this session
-  const checkedRef = useRef(false);
-
-  // Check profile completion once per session
+  // Reset state when user changes
   useEffect(() => {
-    if (
-      !checkedRef.current &&
-      session?.user?.id &&
-      !isLoading &&
-      (!isProfileComplete || profileProgress < 80) &&
-      !pathname.startsWith("/auth") &&
-      !pathname.includes("/complete-profile")
-    ) {
-      checkedRef.current = true;
+    initialCheckDone.current = false;
+    if (!session?.user && typeof window !== 'undefined') {
+      sessionStorage.removeItem(PROFILE_COMPLETION_SHOWN_KEY);
     }
-  }, [session?.user?.id, isLoading, isProfileComplete, profileProgress, pathname]);
+  }, [session?.user]);
+
+  // Check if modal should be shown - only once when data is ready
+  useEffect(() => {
+    if (!session?.user || isLoading) return;
+    if (initialCheckDone.current) return;
+
+    const wasShown = typeof window !== 'undefined' && 
+      sessionStorage.getItem(PROFILE_COMPLETION_SHOWN_KEY) === 'true';
+
+    // Show modal for:
+    // 1. New users (profile is null)
+    // 2. Incomplete profiles
+    // 3. Progress < 80%
+    // 4. Not shown in this session
+    // 5. Not on auth pages
+    if (!wasShown && 
+        !pathname.startsWith("/auth") &&
+        (!profile || !isProfileComplete) && 
+        (profileProgress ?? 0) < 80) {
+      setShowModal(true);
+    }
+    
+    initialCheckDone.current = true;
+  }, [session?.user, isLoading, profile, isProfileComplete, profileProgress, pathname]);
+
+  // Handle modal close
+  const handleModalClose = (open: boolean) => {
+    if (!open && typeof window !== 'undefined') {
+      sessionStorage.setItem(PROFILE_COMPLETION_SHOWN_KEY, 'true');
+    }
+    setShowModal(open);
+  };
 
   // Wrap updateProfile to match the expected type
   const handleProfileUpdate = async (data: { profileProgress: number }) => {
-    await updateProfile(data);
+    try {
+      await updateProfile(data);
+    } catch (error) {
+      console.error('Failed to update profile:', error);
+      throw error;
+    }
   };
 
   return (
     <ProfileCompletionContext.Provider
       value={{
-        isProfileComplete: isProfileComplete || profileProgress >= 80,
-        profileProgress,
+        isProfileComplete: isProfileComplete || (profileProgress ?? 0) >= 100,
+        profileProgress: profileProgress ?? 0,
         isLoading,
         updateProfileCompletion: handleProfileUpdate,
       }}
     >
       {children}
+      {showModal && session?.user && (
+        <ProfileCompletionModal
+          open={showModal}
+          onOpenChange={handleModalClose}
+          user={session.user}
+        />
+      )}
     </ProfileCompletionContext.Provider>
   );
 }
