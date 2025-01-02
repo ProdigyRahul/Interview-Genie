@@ -15,8 +15,12 @@ interface DashboardContentProps {
 export function DashboardContent({ user }: DashboardContentProps) {
   const { 
     profile,
-    shouldShowCompletion,
-    markCompletionShown
+    shouldShowCompletion = false,
+    markCompletionShown = () => {
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('profile-completion-shown', 'true');
+      }
+    }
   } = useProfile({
     initialData: user,
   });

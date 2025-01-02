@@ -41,7 +41,7 @@ export function ProfileCompletionProvider({
     if (!session?.user && typeof window !== 'undefined') {
       sessionStorage.removeItem(PROFILE_COMPLETION_SHOWN_KEY);
     }
-  }, [session?.user?.id]); // Reset when user ID changes
+  }, [session?.user]);
 
   // Check if modal should be shown - only once when data is ready
   useEffect(() => {

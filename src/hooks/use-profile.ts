@@ -142,5 +142,14 @@ export function useProfile(
     isUpdating: mutation.isPending,
     profileProgress: query.data?.profileProgress ?? 0,
     isProfileComplete: query.data?.isProfileComplete ?? false,
+    shouldShowCompletion: !query.data?.isProfileComplete && 
+      (query.data?.profileProgress ?? 0) < 80 && 
+      typeof window !== 'undefined' && 
+      sessionStorage.getItem(PROFILE_COMPLETION_SHOWN_KEY) !== 'true',
+    markCompletionShown: () => {
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem(PROFILE_COMPLETION_SHOWN_KEY, 'true');
+      }
+    },
   };
 } 
