@@ -96,20 +96,35 @@ export async function POST(req: Request) {
       });
     });
 
-    // Fire and forget email sending
-    void sendEmail({
-      to: email,
-      subject: "New Verification Code - Interview Genie",
-      html: generateOTPEmail(user.name ?? "User", otp),
-    }).catch(error => {
-      // Log error but don't wait for it
-      console.error("Failed to send OTP email:", error);
-    });
+    // Send email and handle errors
+    try {
+      const emailResult = await sendEmail({
+        to: email,
+        subject: "New Verification Code - Interview Genie",
+        html: generateOTPEmail(user.name ?? "User", otp),
+      });
 
-    return NextResponse.json({
-      success: true,
-      message: "New verification code sent",
-    });
+      if (!emailResult.success) {
+        console.error("Failed to send OTP email:", emailResult.error);
+        return NextResponse.json(
+          { error: "Failed to send verification code" },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: "New verification code sent",
+      });
+
+    } catch (emailError) {
+      console.error("Error sending OTP email:", emailError);
+      return NextResponse.json(
+        { error: "Failed to send verification code" },
+        { status: 500 }
+      );
+    }
+
   } catch (error) {
     console.error("Resend OTP error:", error);
     
