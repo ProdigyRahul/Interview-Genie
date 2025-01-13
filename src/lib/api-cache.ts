@@ -16,58 +16,24 @@ export function createCachedResponse(data: any, init?: ResponseInit) {
 
 // Cache user data fetching
 export const getUserData = (userId: string) => cache(
-  ["user", userId],
+  `user:${userId}`,
   async () => {
     const user = await db.user.findUnique({
       where: { id: userId },
       select: {
         id: true,
-        email: true,
         name: true,
+        email: true,
         image: true,
-        isProfileComplete: true,
-        profileProgress: true,
-      },
+        credits: true,
+        subscriptionStatus: true,
+        isVerified: true,
+      }
     });
     return user;
   },
   {
-    tags: ["user", `user-${userId}`],
-    revalidate: 300, // Cache for 5 minutes
-  }
-);
-
-// Cache profile data fetching
-export const getProfileData = (userId: string) => cache(
-  ["profile", userId],
-  async () => {
-    const profile = await db.user.findUnique({
-      where: { id: userId },
-      select: {
-        firstName: true,
-        lastName: true,
-        phoneNumber: true,
-        gender: true,
-        country: true,
-        state: true,
-        city: true,
-        pinCode: true,
-        workStatus: true,
-        experience: true,
-        education: true,
-        industry: true,
-        ageGroup: true,
-        aspiration: true,
-        hardSkills: true,
-        image: true,
-        profileProgress: true,
-        isProfileComplete: true,
-      },
-    });
-    return profile;
-  },
-  {
-    tags: ["profile", `user-${userId}`],
-    revalidate: 300, // Cache for 5 minutes
+    ttl: 300, // Cache for 5 minutes
+    tags: ['user']
   }
 ); 

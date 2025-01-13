@@ -4,7 +4,6 @@ import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
 import { QueryProvider } from "@/providers/query-provider";
 import { SessionProvider } from "next-auth/react";
-import { ProfileCompletionProvider } from "@/components/providers/profile-completion-provider";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -16,10 +15,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
     >
       <QueryProvider>
         <SessionProvider>
-          <ProfileCompletionProvider>
-            {children}
-            <Toaster richColors closeButton position="top-center" />
-          </ProfileCompletionProvider>
+          {children}
+          <Toaster richColors closeButton position="top-center" />
         </SessionProvider>
       </QueryProvider>
     </ThemeProvider>

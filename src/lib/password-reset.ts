@@ -1,17 +1,36 @@
-import { randomBytes, createHash } from "crypto";
-import { db } from "@/server/db";
-import type { User } from "@prisma/client";
+import { db } from "@/lib/db";
+import type { User } from ".prisma/client";
 
-export async function generateResetToken(userId: string): Promise<string> {
-  const token = randomBytes(32).toString("hex");
-  const hashedToken = createHash("sha256").update(token).digest("hex");
-  const expires = new Date(Date.now() + 5 * 60 * 1000);
+// Helper function to convert ArrayBuffer to hex string
+function bufferToHex(buffer: ArrayBuffer): string {
+  return Array.from(new Uint8Array(buffer))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+}
 
+// Helper function to generate random bytes using Web Crypto API
+async function generateRandomBytes(length: number): Promise<string> {
+  const buffer = new Uint8Array(length);
+  crypto.getRandomValues(buffer);
+  return bufferToHex(buffer);
+}
+
+// Helper function to create SHA-256 hash
+async function sha256(message: string): Promise<string> {
+  const msgBuffer = new TextEncoder().encode(message);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+  return bufferToHex(hashBuffer);
+}
+
+export async function generateResetToken(user: User): Promise<string> {
+  const token = await generateRandomBytes(32);
+  const hashedToken = await sha256(token);
+  
   await db.passwordResetToken.create({
     data: {
-      userId,
+      userId: user.id,
       token: hashedToken,
-      expires,
+      expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
     },
   });
 
@@ -19,7 +38,7 @@ export async function generateResetToken(userId: string): Promise<string> {
 }
 
 export async function validateResetToken(token: string): Promise<boolean> {
-  const hashedToken = createHash("sha256").update(token).digest("hex");
+  const hashedToken = await sha256(token);
   
   const resetToken = await db.passwordResetToken.findFirst({
     where: {
@@ -30,11 +49,11 @@ export async function validateResetToken(token: string): Promise<boolean> {
     },
   });
 
-  return Boolean(resetToken);
+  return !!resetToken;
 }
 
 export async function getUserByResetToken(token: string): Promise<User | null> {
-  const hashedToken = createHash("sha256").update(token).digest("hex");
+  const hashedToken = await sha256(token);
   
   const resetToken = await db.passwordResetToken.findFirst({
     where: {
@@ -49,4 +68,14 @@ export async function getUserByResetToken(token: string): Promise<User | null> {
   });
 
   return resetToken?.user ?? null;
+}
+
+export async function deleteResetToken(token: string): Promise<void> {
+  const hashedToken = await sha256(token);
+  
+  await db.passwordResetToken.deleteMany({
+    where: {
+      token: hashedToken,
+    },
+  });
 } 
