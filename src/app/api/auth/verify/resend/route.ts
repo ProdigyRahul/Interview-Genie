@@ -9,15 +9,25 @@ const schema = z.object({
   email: z.string().email(),
 });
 
-// Helper function to send OTP email in background
-function sendOTPEmailInBackground(email: string, name: string, otp: string) {
-  void sendEmail({
-    to: email,
-    subject: "New Verification Code - Interview Genie",
-    html: generateOTPEmail(name, otp),
-  }).catch(error => {
-    console.error("Failed to send OTP email:", error);
-  });
+// Helper function to send OTP email
+async function sendOTPEmail(email: string, name: string, otp: string): Promise<boolean> {
+  try {
+    const result = await sendEmail({
+      to: email,
+      subject: "New Verification Code - Interview Genie",
+      html: generateOTPEmail(name, otp),
+    });
+
+    if (!result.success) {
+      console.error("Failed to send OTP email:", result.error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Error sending OTP email:", error);
+    return false;
+  }
 }
 
 export async function POST(req: Request) {
@@ -107,8 +117,19 @@ export async function POST(req: Request) {
       });
     });
 
-    // Send OTP email in background
-    sendOTPEmailInBackground(email, user.name ?? "User", otp);
+    // In production, ensure email is sent
+    if (process.env.NODE_ENV === "production") {
+      const emailSent = await sendOTPEmail(email, user.name ?? "User", otp);
+      if (!emailSent) {
+        return NextResponse.json(
+          { error: "Failed to send verification code" },
+          { status: 500 }
+        );
+      }
+    } else {
+      // In development, send in background
+      void sendOTPEmail(email, user.name ?? "User", otp);
+    }
 
     return NextResponse.json({
       success: true,
