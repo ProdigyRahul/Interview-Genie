@@ -63,21 +63,35 @@ export async function POST(req: Request): Promise<NextResponse> {
       },
     });
 
-    // Fire and forget email sending
-    void sendEmail({
-      to: email,
-      subject: "Verify your email",
-      html: generateOTPEmail(name, otp),
-    });
+    try {
+      // Send verification email
+      const verificationResult = await sendEmail({
+        to: email,
+        subject: "Verify your email",
+        html: generateOTPEmail(name, otp),
+      });
 
-    // Fire and forget welcome email
-    void sendEmail({
-      to: email,
-      subject: "Welcome to Interview Genie! 🎉",
-      html: generateWelcomeEmail(name),
-    });
+      if (!verificationResult.success) {
+        console.error("Failed to send verification email:", verificationResult.error);
+      }
 
-    // Return success response immediately
+      // Send welcome email
+      const welcomeResult = await sendEmail({
+        to: email,
+        subject: "Welcome to Interview Genie! 🎉",
+        html: generateWelcomeEmail(name),
+      });
+
+      if (!welcomeResult.success) {
+        console.error("Failed to send welcome email:", welcomeResult.error);
+      }
+
+    } catch (emailError) {
+      // Log email errors but don't fail the signup
+      console.error("Error sending signup emails:", emailError);
+    }
+
+    // Return success response
     return new NextResponse(
       JSON.stringify({ 
         success: true, 

@@ -6,7 +6,7 @@ const transporter = nodemailer.createTransport({
   auth: {
     user: env.EMAIL_USER,
     pass: env.EMAIL_PASS,
-  },
+  }
 });
 
 export type EmailTemplate = {
@@ -17,16 +17,39 @@ export type EmailTemplate = {
 
 export async function sendEmail({ to, subject, html }: EmailTemplate) {
   try {
+    console.log("Attempting to send email to:", to, "with subject:", subject);
+
     const info = await transporter.sendMail({
-      from: `"Interview Genie" <${env.EMAIL_USER}>`,
+      from: env.EMAIL_USER,
       to,
       subject,
       html,
+      headers: {
+        'X-Priority': '1',
+        'X-MSMail-Priority': 'High',
+        'Importance': 'high'
+      }
     });
-    console.log("Email sent:", info.messageId);
+
+    console.log("Email sent successfully:", {
+      messageId: info.messageId,
+      response: info.response,
+      to,
+      subject
+    });
+
     return { success: true, messageId: info.messageId };
   } catch (error) {
-    console.error("Error sending email:", error);
+    console.error("Failed to send email:", {
+      error: error instanceof Error ? {
+        message: error.message,
+        name: error.name,
+        stack: error.stack
+      } : error,
+      to,
+      subject
+    });
+    
     return { success: false, error };
   }
 }
