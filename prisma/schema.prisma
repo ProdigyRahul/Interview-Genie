@@ -78,26 +78,6 @@ model User {
   @@index([level, xpPoints])
   @@index([isVerified, email])
   @@index([updatedAt])
-  @@index([isActive])
-  @@index([experienceYears])
-  @@index([domainId, isActive])
-  @@index([experienceYears, isActive])
-  @@index([experienceLevel])
-  @@index([roleId, isActive])
-  @@index([industry, experienceLevel, isActive])
-  @@index([startTime])
-  @@index([interviewType])
-  @@index([userId, status])
-  @@index([userId, startTime])
-  @@index([technicalScore, behavioralScore, communicationScore])
-  @@index([createdAt])
-  @@index([userId, createdAt])
-  @@index([status])
-  @@index([interviewId, status])
-  @@index([token])
-  @@index([expires])
-  @@index([userId])
-  @@index([userId, expires])
 }
 
 model UserEducation {
@@ -269,13 +249,10 @@ model InterviewHistory {
   interview   MockInterview @relation(fields: [interviewId], references: [id])
   user        User          @relation(fields: [userId], references: [id])
 
-<<<<<<< HEAD
   @@index([createdAt])
   @@index([userId, createdAt])
-=======
   @@index([userId])
   @@index([interviewId])
->>>>>>> e3d3440 (fix: update prisma schema and sync database)
 }
 
 model InterviewNote {
@@ -354,14 +331,10 @@ model MediaRecording {
   analysis     RecordingAnalysis[]
   segments     RecordingSegment[]
 
-<<<<<<< HEAD
   @@index([status])
   @@index([createdAt])
   @@index([interviewId, status])
-=======
   @@index([interviewId])
-  @@index([status])
->>>>>>> e3d3440 (fix: update prisma schema and sync database)
 }
 
 model RecordingSegment {
@@ -409,11 +382,8 @@ model PasswordResetToken {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([token])
-<<<<<<< HEAD
   @@index([expires])
-=======
   @@index([userId])
->>>>>>> e3d3440 (fix: update prisma schema and sync database)
 }
 
 model OTPVerification {
