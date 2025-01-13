@@ -72,9 +72,13 @@ const activities = [
   },
 ];
 
-export function RecentActivity() {
+interface RecentActivityProps {
+  className?: string;
+}
+
+export function RecentActivity({ className }: RecentActivityProps) {
   return (
-    <Card>
+    <Card className={className}>
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span>Recent Activity</span>

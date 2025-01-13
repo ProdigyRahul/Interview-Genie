@@ -12,6 +12,11 @@ import {
   Sparkles,
 } from "lucide-react";
 
+interface FeatureNavProps {
+  className?: string;
+  type?: 'document' | 'interview' | 'resources' | 'progress';
+}
+
 const features = [
   {
     title: "Document Preparation",
@@ -27,6 +32,7 @@ const features = [
       "LinkedIn Profile Creator",
       "Cover Letter Generator",
     ],
+    type: 'document'
   },
   {
     title: "Interview Preparation",
@@ -42,6 +48,7 @@ const features = [
       "Technical Interviews",
       "Behavioral Interviews",
     ],
+    type: 'interview'
   },
   {
     title: "Resources",
@@ -57,6 +64,7 @@ const features = [
       "Industry Insights",
       "Career Tips",
     ],
+    type: 'resources'
   },
   {
     title: "Progress & Analytics",
@@ -72,13 +80,18 @@ const features = [
       "Skill Assessment",
       "Certificates",
     ],
+    type: 'progress'
   },
 ];
 
-export function FeatureNav() {
+export function FeatureNav({ type }: FeatureNavProps) {
+  const filteredFeatures = type 
+    ? features.filter(feature => feature.type === type)
+    : features;
+
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
-      {features.map((feature) => (
+    <div className="grid grid-cols-1 gap-4">
+      {filteredFeatures.map((feature) => (
         <Link key={feature.title} href={feature.href} className="block">
           <Card className="group h-full transition-all hover:border-primary hover:shadow-lg">
             <div className="relative h-full p-4 md:p-6">

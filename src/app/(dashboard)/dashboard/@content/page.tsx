@@ -1,20 +1,19 @@
 import { Suspense } from "react";
+import { DashboardContent } from "@/components/dashboard/content";
 import { auth } from "@/lib/auth";
-import { DashboardContent } from "@/components/dashboard";
+import { redirect } from "next/navigation";
 
-export default async function ContentPage() {
+export default async function DashboardPage() {
   const session = await auth();
 
-  if (!session?.user) return null;
+  if (!session?.user) {
+    redirect("/login");
+  }
 
   return (
-    <Suspense 
+    <Suspense
       fallback={
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 w-1/3 bg-muted rounded" />
-          <div className="h-32 bg-muted rounded" />
-          <div className="h-32 bg-muted rounded" />
-        </div>
+        <div className="w-full h-48 rounded-lg bg-muted animate-pulse" />
       }
     >
       <DashboardContent user={session.user} />

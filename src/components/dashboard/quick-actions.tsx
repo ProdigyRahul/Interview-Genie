@@ -13,6 +13,20 @@ import {
   GraduationCap,
 } from "lucide-react";
 
+interface User {
+  id: string;
+  email: string;
+  name: string;
+  image?: string;
+  credits: number;
+  subscriptionStatus: string;
+  isVerified: boolean;
+}
+
+interface QuickActionsProps {
+  user: User;
+}
+
 const quickActions = [
   {
     title: "Resume Builder",
@@ -64,7 +78,7 @@ const quickActions = [
   },
 ];
 
-export function QuickActions() {
+export function QuickActions({ user }: QuickActionsProps) {
   return (
     <Card className="col-span-4">
       <CardHeader>
@@ -77,7 +91,7 @@ export function QuickActions() {
           </div>
           <div className="flex items-center text-sm">
             <Sparkles className="h-4 w-4 mr-1 text-yellow-500" />
-            <span className="font-medium">Available Credits: 150</span>
+            <span className="font-medium">Available Credits: {user.credits}</span>
           </div>
         </div>
       </CardHeader>

@@ -4,65 +4,88 @@ import { Suspense } from "react";
 import { Statistics } from "./statistics";
 import { FeatureNav } from "./feature-nav";
 import { QuickActions } from "./quick-actions";
-import { RecentActivity } from "./recent-activity";
-import { ProfileCompletionModal } from "@/components/profile-completion-modal";
-import { useProfile } from "@/hooks/use-profile";
 
-interface DashboardContentProps {
-  user: any;
+interface User {
+  id: string;
+  email: string;
+  name: string;
+  image?: string;
+  credits: number;
+  subscriptionStatus: string;
+  isVerified: boolean;
 }
 
-export function DashboardContent({ user }: DashboardContentProps) {
-  const { 
-    profile,
-    shouldShowCompletion = false,
-    markCompletionShown = () => {
-      if (typeof window !== 'undefined') {
-        sessionStorage.setItem('profile-completion-shown', 'true');
-      }
-    }
-  } = useProfile({
-    initialData: user,
-  });
+interface DashboardContentProps {
+  children?: React.ReactNode;
+  user: User;
+}
 
+export function DashboardContent({ 
+  children,
+  user,
+}: DashboardContentProps) {
   return (
-    <div className="space-y-8">
-      {/* Quick Stats */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Suspense fallback={<div className="animate-pulse h-32 bg-muted rounded-lg" />}>
-          <Statistics />
-        </Suspense>
+    <div className="flex-1 space-y-6 p-8 pt-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
       </div>
 
-      {/* Main Feature Navigation */}
-      <div className="py-4">
-        <Suspense fallback={<div className="animate-pulse h-32 bg-muted rounded-lg" />}>
-          <FeatureNav />
-        </Suspense>
-      </div>
+      <Suspense 
+        fallback={
+          <div className="w-full h-48 rounded-lg bg-muted animate-pulse" />
+        }
+      >
+        <Statistics />
+      </Suspense>
 
-      {/* Quick Actions and Recent Activity */}
-      <div className="grid gap-6 md:grid-cols-7">
-        <Suspense fallback={<div className="animate-pulse h-32 bg-muted rounded-lg" />}>
-          <QuickActions />
-        </Suspense>
-        <div className="md:col-span-3">
-          <Suspense fallback={<div className="animate-pulse h-32 bg-muted rounded-lg" />}>
-            <RecentActivity />
+      <div className="space-y-6">
+        {/* Document Preparation and Interview Preparation */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Suspense
+            fallback={
+              <div className="w-full h-48 rounded-lg bg-muted animate-pulse" />
+            }
+          >
+            <FeatureNav type="document" />
+          </Suspense>
+          <Suspense
+            fallback={
+              <div className="w-full h-48 rounded-lg bg-muted animate-pulse" />
+            }
+          >
+            <FeatureNav type="interview" />
           </Suspense>
         </div>
-      </div>
 
-      {/* Profile completion modal */}
-      {shouldShowCompletion && (
-        <ProfileCompletionModal
-          open={shouldShowCompletion}
-          onOpenChange={(open) => {
-            if (!open) markCompletionShown();
-          }}
-          user={profile ?? user}
-        />
-      )}
+        {/* Resources and Progress & Analytics */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Suspense
+            fallback={
+              <div className="w-full h-48 rounded-lg bg-muted animate-pulse" />
+            }
+          >
+            <FeatureNav type="resources" />
+          </Suspense>
+          <Suspense
+            fallback={
+              <div className="w-full h-48 rounded-lg bg-muted animate-pulse" />
+            }
+          >
+            <FeatureNav type="progress" />
+          </Suspense>
+        </div>
+
+        {/* Quick Actions */}
+        <Suspense
+          fallback={
+            <div className="w-full h-48 rounded-lg bg-muted animate-pulse" />
+          }
+        >
+          <QuickActions user={user} />
+        </Suspense>
+
+        {children}
+      </div>
     </div>
   );
 } 
