@@ -27,18 +27,18 @@ model User {
   industry           String?
   ageGroup           String?
   aspiration         String?
-  hardSkills         Json?     // Store as JSON array
+  hardSkills         Json?
   isProfileComplete  Boolean   @default(false)
   profileProgress    Int       @default(0)
   subscriptionStatus String    @default("free")
   isVerified        Boolean   @default(false)
   credits           Int       @default(100)
-  xpPoints           Int       @default(0)
+  xpPoints          Int       @default(0)
   level             Int       @default(1)
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
-  lastLogin          DateTime?
-  hashedPassword     String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  lastLogin         DateTime?
+  hashedPassword    String?
 
   // Profile fields
   companyName        String?
@@ -49,23 +49,23 @@ model User {
   collegeName        String?
   resumeUrl          String?
   cookieConsent      Boolean?
-  jobPreference      String?   // "job" or "internship"
-  preferredJobLocations Json?  // Array of locations
-  preferredIndustries  Json?   // Array of industries
-  preferredRoles       Json?   // Array of roles
+  jobPreference      String?
+  preferredJobLocations Json?
+  preferredIndustries  Json?
+  preferredRoles       Json?
   bio                 String?  @db.Text
-  socialLinks         Json?    // LinkedIn, GitHub, etc.
+  socialLinks         Json?
 
   // Relations
-  accounts Account[]
-  sessions Session[]
-  resumes             Resume[]
-  mockInterviews      MockInterview[]
-  interviewNotes      InterviewNote[]
-  interviewHistory    InterviewHistory[]
+  accounts           Account[]
+  sessions           Session[]
+  resumes           Resume[]
+  mockInterviews    MockInterview[]
+  interviewNotes    InterviewNote[]
+  interviewHistory  InterviewHistory[]
   passwordResetTokens PasswordResetToken[]
-  otpVerifications    OTPVerification[]
-  education_details   UserEducation?
+  otpVerifications  OTPVerification[]
+  education_details UserEducation?
 
   @@index([email])
   @@index([isProfileComplete, profileProgress])
@@ -111,39 +111,67 @@ model UserEducation {
   cgpa        String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-
-  // Relations
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([passoutYear])
 }
 
-model Admin {
-  id                 String              @id @default(cuid())
-  email              String              @unique
-  firstName          String
-  lastName           String
-  role               String
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
-  careerDomains      CareerDomain[]
-  interviewScenarios InterviewScenario[]
-  jobDescriptions    JobDescription[]
-  jobRoles           JobRole[]
+model Account {
+  id                       String  @id @default(cuid())
+  userId                   String
+  type                     String
+  provider                 String
+  providerAccountId        String
+  refresh_token            String?
+  access_token            String?
+  expires_at              Int?
+  token_type              String?
+  scope                   String?
+  id_token                String?
+  session_state           String?
+  refresh_token_expires_in Int?
+  user                    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@index([provider])
 }
 
-model CareerDomain {
-  id                 String              @id @default(cuid())
-  name               String
-  description        String?
-  isActive           Boolean             @default(true)
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
-  createdById        String
-  createdBy          Admin               @relation(fields: [createdById], references: [id])
-  interviewScenarios InterviewScenario[]
-  jobRoles           JobRole[]
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expires])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Resume {
+  id         String   @id @default(cuid())
+  userId     String
+  roleId     String
+  resumeUrl  String
+  fileType   String
+  parsedData Json?
+  atsScore   Int?
+  uploadedAt DateTime @default(now())
+  isCurrent  Boolean  @default(false)
+  role       JobRole  @relation(fields: [roleId], references: [id])
+  user       User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([roleId])
 }
 
 model JobRole {
@@ -195,36 +223,6 @@ model JobDescription {
   @@index([industry, experienceLevel, isActive])
 }
 
-model Resume {
-  id         String   @id @default(cuid())
-  userId     String
-  roleId     String
-  resumeUrl  String
-  fileType   String
-  parsedData Json?
-  atsScore   Int?
-  uploadedAt DateTime @default(now())
-  isCurrent  Boolean  @default(false)
-  role       JobRole  @relation(fields: [roleId], references: [id])
-  user       User     @relation(fields: [userId], references: [id])
-}
-
-model InterviewScenario {
-  id             String          @id @default(cuid())
-  domainId       String
-  title          String
-  description    String
-  questions      Json
-  difficulty     String
-  duration       Int
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-  createdById    String
-  createdBy      Admin           @relation(fields: [createdById], references: [id])
-  domain         CareerDomain    @relation(fields: [domainId], references: [id])
-  mockInterviews MockInterview[]
-}
-
 model MockInterview {
   id                 String             @id @default(cuid())
   userId             String
@@ -260,46 +258,6 @@ model MockInterview {
   @@index([technicalScore, behavioralScore, communicationScore])
 }
 
-model Account {
-  id                       String  @id @default(cuid())
-  userId                   String
-  type                     String
-  provider                 String
-  providerAccountId        String
-  refresh_token            String?
-  access_token             String?
-  expires_at               Int?
-  token_type               String?
-  scope                    String?
-  id_token                 String?
-  session_state            String?
-  refresh_token_expires_in Int?
-  user                     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([provider, providerAccountId])
-  @@index([userId])
-  @@index([provider])
-}
-
-model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([expires])
-}
-
-model VerificationToken {
-  identifier String
-  token      String   @unique
-  expires    DateTime
-
-  @@unique([identifier, token])
-}
-
 model InterviewHistory {
   id          String        @id @default(cuid())
   userId      String
@@ -311,8 +269,13 @@ model InterviewHistory {
   interview   MockInterview @relation(fields: [interviewId], references: [id])
   user        User          @relation(fields: [userId], references: [id])
 
+<<<<<<< HEAD
   @@index([createdAt])
   @@index([userId, createdAt])
+=======
+  @@index([userId])
+  @@index([interviewId])
+>>>>>>> e3d3440 (fix: update prisma schema and sync database)
 }
 
 model InterviewNote {
@@ -326,6 +289,52 @@ model InterviewNote {
   updatedAt   DateTime      @updatedAt
   interview   MockInterview @relation(fields: [interviewId], references: [id])
   user        User          @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([interviewId])
+}
+
+model Admin {
+  id                 String              @id @default(cuid())
+  email              String              @unique
+  firstName          String
+  lastName           String
+  role               String
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  careerDomains      CareerDomain[]
+  interviewScenarios InterviewScenario[]
+  jobDescriptions    JobDescription[]
+  jobRoles           JobRole[]
+}
+
+model CareerDomain {
+  id                 String              @id @default(cuid())
+  name               String
+  description        String?
+  isActive           Boolean             @default(true)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  createdById        String
+  createdBy          Admin               @relation(fields: [createdById], references: [id])
+  interviewScenarios InterviewScenario[]
+  jobRoles           JobRole[]
+}
+
+model InterviewScenario {
+  id             String          @id @default(cuid())
+  domainId       String
+  title          String
+  description    String
+  questions      Json
+  difficulty     String
+  duration       Int
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  createdById    String
+  createdBy      Admin           @relation(fields: [createdById], references: [id])
+  domain         CareerDomain    @relation(fields: [domainId], references: [id])
+  mockInterviews MockInterview[]
 }
 
 model MediaRecording {
@@ -345,9 +354,14 @@ model MediaRecording {
   analysis     RecordingAnalysis[]
   segments     RecordingSegment[]
 
+<<<<<<< HEAD
   @@index([status])
   @@index([createdAt])
   @@index([interviewId, status])
+=======
+  @@index([interviewId])
+  @@index([status])
+>>>>>>> e3d3440 (fix: update prisma schema and sync database)
 }
 
 model RecordingSegment {
@@ -360,6 +374,8 @@ model RecordingSegment {
   highlights  Json?
   createdAt   DateTime       @default(now())
   recording   MediaRecording @relation(fields: [recordingId], references: [id])
+
+  @@index([recordingId])
 }
 
 model RecordingAnalysis {
@@ -380,6 +396,8 @@ model RecordingAnalysis {
   gestureMetrics     Json?
   createdAt          DateTime       @default(now())
   recording          MediaRecording @relation(fields: [recordingId], references: [id])
+
+  @@index([recordingId])
 }
 
 model PasswordResetToken {
@@ -391,7 +409,11 @@ model PasswordResetToken {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([token])
+<<<<<<< HEAD
   @@index([expires])
+=======
+  @@index([userId])
+>>>>>>> e3d3440 (fix: update prisma schema and sync database)
 }
 
 model OTPVerification {
