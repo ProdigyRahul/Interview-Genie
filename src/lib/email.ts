@@ -17,39 +17,20 @@ export type EmailTemplate = {
 
 export async function sendEmail({ to, subject, html }: EmailTemplate) {
   try {
-    console.log("Attempting to send email to:", to, "with subject:", subject);
-
     const info = await transporter.sendMail({
-      from: env.EMAIL_USER,
+      from: {
+        name: "Interview Genie",
+        address: env.EMAIL_USER
+      },
       to,
       subject,
       html,
-      headers: {
-        'X-Priority': '1',
-        'X-MSMail-Priority': 'High',
-        'Importance': 'high'
-      }
     });
 
-    console.log("Email sent successfully:", {
-      messageId: info.messageId,
-      response: info.response,
-      to,
-      subject
-    });
-
+    console.log("Email sent:", info.messageId);
     return { success: true, messageId: info.messageId };
   } catch (error) {
-    console.error("Failed to send email:", {
-      error: error instanceof Error ? {
-        message: error.message,
-        name: error.name,
-        stack: error.stack
-      } : error,
-      to,
-      subject
-    });
-    
+    console.error("Error sending email:", error);
     return { success: false, error };
   }
 }

@@ -9,6 +9,17 @@ const schema = z.object({
   email: z.string().email(),
 });
 
+// Helper function to send OTP email in background
+function sendOTPEmailInBackground(email: string, name: string, otp: string) {
+  void sendEmail({
+    to: email,
+    subject: "New Verification Code - Interview Genie",
+    html: generateOTPEmail(name, otp),
+  }).catch(error => {
+    console.error("Failed to send OTP email:", error);
+  });
+}
+
 export async function POST(req: Request) {
   try {
     // Rate limiting: 3 attempts per 5 minutes per IP
@@ -96,34 +107,13 @@ export async function POST(req: Request) {
       });
     });
 
-    // Send email and handle errors
-    try {
-      const emailResult = await sendEmail({
-        to: email,
-        subject: "New Verification Code - Interview Genie",
-        html: generateOTPEmail(user.name ?? "User", otp),
-      });
+    // Send OTP email in background
+    sendOTPEmailInBackground(email, user.name ?? "User", otp);
 
-      if (!emailResult.success) {
-        console.error("Failed to send OTP email:", emailResult.error);
-        return NextResponse.json(
-          { error: "Failed to send verification code" },
-          { status: 500 }
-        );
-      }
-
-      return NextResponse.json({
-        success: true,
-        message: "New verification code sent",
-      });
-
-    } catch (emailError) {
-      console.error("Error sending OTP email:", emailError);
-      return NextResponse.json(
-        { error: "Failed to send verification code" },
-        { status: 500 }
-      );
-    }
+    return NextResponse.json({
+      success: true,
+      message: "New verification code sent",
+    });
 
   } catch (error) {
     console.error("Resend OTP error:", error);
