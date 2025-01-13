@@ -5,7 +5,7 @@ import { authCache } from "@/lib/auth-cache";
 
 // Use Node.js runtime for better database operations
 export const dynamic = "force-dynamic";
-export const maxDuration = 300; // Set max duration to 300 seconds
+export const maxDuration = 10; // Set max duration to 10 seconds
 
 const verifyOTPSchema = z.object({
   userId: z.string(),
