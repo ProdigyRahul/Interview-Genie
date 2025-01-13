@@ -1,27 +1,34 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { db } from "@/server/db";
+import { db } from "@/lib/db";
 import { sendEmail } from "@/lib/email";
 import { generateOTPEmail } from "@/lib/email-templates/otp-verification";
-import { rateLimit } from "@/lib/rate-limit";
+import { authCache } from "@/lib/auth-cache";
 
 const schema = z.object({
   email: z.string().email(),
 });
 
-// Track resend attempts with timeout
-const resendAttempts = new Map<string, number>();
-
-// Clean up old attempts every hour
-setInterval(() => {
-  resendAttempts.clear();
-}, 60 * 60 * 1000);
-
 export async function POST(req: Request) {
   try {
-    // Rate limiting: 3 attempts per 5 minutes
-    const rateLimitResult = await rateLimit(req, "resend-otp", 3, 5 * 60 * 1000);
-    if (rateLimitResult) return rateLimitResult;
+    // Rate limiting: 3 attempts per 5 minutes per IP
+    const ip = req.headers.get("x-forwarded-for") ?? 
+      req.headers.get("x-real-ip") ?? 
+      "127.0.0.1";
+    
+    const rateLimitKey = `resend-otp:${ip}`;
+    const isAllowed = await authCache.checkRateLimit(rateLimitKey, 3, 300);
+    
+    if (!isAllowed) {
+      const remainingTime = await authCache.getRemainingAttempts(rateLimitKey);
+      return NextResponse.json(
+        { 
+          error: "Too many attempts",
+          remainingSeconds: Math.ceil(remainingTime / 60)
+        },
+        { status: 429 }
+      );
+    }
 
     const body = await req.json();
     const { email } = schema.parse(body);
@@ -33,6 +40,10 @@ export async function POST(req: Request) {
         id: true,
         name: true,
         isVerified: true,
+        otpVerifications: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+        },
       },
     });
 
@@ -50,15 +61,15 @@ export async function POST(req: Request) {
       );
     }
 
-    // Check for timeout
-    const lastAttempt = resendAttempts.get(email);
-    if (lastAttempt) {
-      const timeElapsed = Date.now() - lastAttempt;
-      if (timeElapsed < 60000) { // 60 seconds timeout
+    // Check cooldown period
+    const lastOTP = user.otpVerifications[0];
+    if (lastOTP) {
+      const timeSinceLastOTP = Date.now() - lastOTP.createdAt.getTime();
+      if (timeSinceLastOTP < 60000) { // 60 seconds cooldown
         return NextResponse.json(
           { 
-            error: "Please wait before requesting another OTP",
-            remainingSeconds: Math.ceil((60000 - timeElapsed) / 1000)
+            error: "Please wait before requesting another code",
+            remainingSeconds: Math.ceil((60000 - timeSinceLastOTP) / 1000)
           },
           { status: 429 }
         );
@@ -68,9 +79,9 @@ export async function POST(req: Request) {
     // Generate new OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // Update OTP in database
+    // Update OTP in database within a transaction
     await db.$transaction(async (tx) => {
-      // Delete any existing OTP
+      // Delete any existing OTPs for this user
       await tx.oTPVerification.deleteMany({
         where: { userId: user.id },
       });
@@ -85,15 +96,15 @@ export async function POST(req: Request) {
       });
     });
 
-    // Send new OTP email
-    await sendEmail({
+    // Fire and forget email sending
+    void sendEmail({
       to: email,
       subject: "New Verification Code - Interview Genie",
       html: generateOTPEmail(user.name ?? "User", otp),
+    }).catch(error => {
+      // Log error but don't wait for it
+      console.error("Failed to send OTP email:", error);
     });
-
-    // Update resend attempt timestamp
-    resendAttempts.set(email, Date.now());
 
     return NextResponse.json({
       success: true,
@@ -101,6 +112,14 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     console.error("Resend OTP error:", error);
+    
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: "Invalid email address" },
+        { status: 400 }
+      );
+    }
+
     return NextResponse.json(
       { error: "Failed to resend verification code" },
       { status: 500 }

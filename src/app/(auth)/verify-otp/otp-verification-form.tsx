@@ -20,17 +20,30 @@ const OTP_LENGTH = 6;
 export function OTPVerificationForm() {
   const [otp, setOtp] = useState<string[]>(new Array(OTP_LENGTH).fill(""));
   const [isLoading, setIsLoading] = useState(false);
+  const [isResending, setIsResending] = useState(false);
+  const [resendTimeout, setResendTimeout] = useState(0);
   const [activeInput, setActiveInput] = useState(0);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const router = useRouter();
   const searchParams = useSearchParams();
   const userId = searchParams.get("userId");
+  const email = searchParams.get("email");
 
   useEffect(() => {
     if (inputRefs.current[0]) {
       inputRefs.current[0].focus();
     }
   }, []);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (resendTimeout > 0) {
+      timer = setInterval(() => {
+        setResendTimeout(prev => Math.max(0, prev - 1));
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [resendTimeout]);
 
   const setRef = (element: HTMLInputElement | null, index: number) => {
     inputRefs.current[index] = element;
@@ -71,6 +84,51 @@ export function OTPVerificationForm() {
     if (inputRefs.current[pastedData.length - 1]) {
       inputRefs.current[pastedData.length - 1]?.focus();
       setActiveInput(pastedData.length - 1);
+    }
+  };
+
+  const handleResend = async () => {
+    if (!email || resendTimeout > 0 || isResending) return;
+
+    try {
+      setIsResending(true);
+      const response = await fetch("/api/auth/verify/resend", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (response.status === 429) {
+          setResendTimeout(data.remainingSeconds || 60);
+          throw new Error("Please wait before requesting another code");
+        }
+        throw new Error(data.error || "Failed to resend code");
+      }
+
+      // Clear current OTP inputs
+      setOtp(new Array(OTP_LENGTH).fill(""));
+      inputRefs.current[0]?.focus();
+      setActiveInput(0);
+
+      // Set timeout for next resend
+      setResendTimeout(60);
+
+      toast.success("New verification code sent!", {
+        description: "Please check your email for the new code",
+        duration: 5000,
+      });
+
+    } catch (error) {
+      console.error("Resend error:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to resend code", {
+        icon: <XCircle className="h-5 w-5 text-destructive" />,
+        duration: 5000,
+      });
+    } finally {
+      setIsResending(false);
     }
   };
 
@@ -209,13 +267,26 @@ export function OTPVerificationForm() {
           <CardFooter className="flex flex-col space-y-4">
             <div className="text-sm text-muted-foreground text-center">
               Didn&apos;t receive the code?{" "}
-              <button
-                onClick={() => {/* Add resend logic */}}
-                className="text-primary hover:text-primary/80 hover:underline transition-colors disabled:opacity-50"
-                disabled={isLoading}
-              >
-                Resend
-              </button>
+              {resendTimeout > 0 ? (
+                <span className="text-muted-foreground/80 font-medium">
+                  Resend available in <span className="text-primary">{resendTimeout}s</span>
+                </span>
+              ) : (
+                <button
+                  onClick={handleResend}
+                  className="text-primary hover:text-primary/80 font-medium hover:underline transition-colors disabled:opacity-50 disabled:no-underline disabled:hover:text-primary"
+                  disabled={isResending || isLoading || !email}
+                >
+                  {isResending ? (
+                    <span className="flex items-center">
+                      <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                      Sending...
+                    </span>
+                  ) : (
+                    "Resend code"
+                  )}
+                </button>
+              )}
             </div>
           </CardFooter>
         </Card>
