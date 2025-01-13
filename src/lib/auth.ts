@@ -18,8 +18,6 @@ interface CustomUser extends User {
   credits: number;
   subscriptionStatus: string;
   isVerified: boolean;
-  isProfileComplete?: boolean;
-  profileProgress?: number;
 }
 
 // Extend the JWT type to include our custom fields
@@ -31,8 +29,6 @@ interface CustomJWT extends JWT {
   credits: number;
   subscriptionStatus: string;
   isVerified: boolean;
-  isProfileComplete?: boolean;
-  profileProgress?: number;
 }
 
 export const authConfig = {
@@ -98,8 +94,6 @@ export const authConfig = {
             credits: true,
             subscriptionStatus: true,
             isVerified: true,
-            isProfileComplete: true,
-            profileProgress: true,
           },
         });
 
@@ -111,8 +105,6 @@ export const authConfig = {
           token.credits = dbUser.credits;
           token.subscriptionStatus = dbUser.subscriptionStatus;
           token.isVerified = dbUser.isVerified;
-          token.isProfileComplete = dbUser.isProfileComplete;
-          token.profileProgress = dbUser.profileProgress;
         }
       }
 
@@ -141,8 +133,6 @@ export const authConfig = {
           credits: customToken.credits,
           subscriptionStatus: customToken.subscriptionStatus,
           isVerified: customToken.isVerified,
-          isProfileComplete: customToken.isProfileComplete,
-          profileProgress: customToken.profileProgress,
         } as CustomUser;
       }
       return session;
@@ -170,8 +160,6 @@ export const authConfig = {
           await db.user.update({
             where: { email: user.email },
             data: {
-              isProfileComplete: false,
-              profileProgress: 0,
               credits: 100,
               subscriptionStatus: 'free',
               isVerified: true,

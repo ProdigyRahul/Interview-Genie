@@ -76,6 +76,28 @@ model User {
   @@index([experience, education])
   @@index([jobPreference, isVerified])
   @@index([level, xpPoints])
+  @@index([isVerified, email])
+  @@index([updatedAt])
+  @@index([isActive])
+  @@index([experienceYears])
+  @@index([domainId, isActive])
+  @@index([experienceYears, isActive])
+  @@index([experienceLevel])
+  @@index([roleId, isActive])
+  @@index([industry, experienceLevel, isActive])
+  @@index([startTime])
+  @@index([interviewType])
+  @@index([userId, status])
+  @@index([userId, startTime])
+  @@index([technicalScore, behavioralScore, communicationScore])
+  @@index([createdAt])
+  @@index([userId, createdAt])
+  @@index([status])
+  @@index([interviewId, status])
+  @@index([token])
+  @@index([expires])
+  @@index([userId])
+  @@index([userId, expires])
 }
 
 model UserEducation {
@@ -145,6 +167,8 @@ model JobRole {
   @@index([domainId])
   @@index([isActive])
   @@index([experienceYears])
+  @@index([domainId, isActive])
+  @@index([experienceYears, isActive])
 }
 
 model JobDescription {
@@ -167,6 +191,8 @@ model JobDescription {
   @@index([industry])
   @@index([experienceLevel])
   @@index([isActive])
+  @@index([roleId, isActive])
+  @@index([industry, experienceLevel, isActive])
 }
 
 model Resume {
@@ -229,6 +255,9 @@ model MockInterview {
   @@index([status])
   @@index([startTime])
   @@index([interviewType])
+  @@index([userId, status])
+  @@index([userId, startTime])
+  @@index([technicalScore, behavioralScore, communicationScore])
 }
 
 model Account {
@@ -281,6 +310,9 @@ model InterviewHistory {
   createdAt   DateTime      @default(now())
   interview   MockInterview @relation(fields: [interviewId], references: [id])
   user        User          @relation(fields: [userId], references: [id])
+
+  @@index([createdAt])
+  @@index([userId, createdAt])
 }
 
 model InterviewNote {
@@ -312,6 +344,10 @@ model MediaRecording {
   interview    MockInterview       @relation(fields: [interviewId], references: [id])
   analysis     RecordingAnalysis[]
   segments     RecordingSegment[]
+
+  @@index([status])
+  @@index([createdAt])
+  @@index([interviewId, status])
 }
 
 model RecordingSegment {
@@ -355,6 +391,7 @@ model PasswordResetToken {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([token])
+  @@index([expires])
 }
 
 model OTPVerification {
@@ -367,5 +404,7 @@ model OTPVerification {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+  @@index([expires])
+  @@index([userId, expires])
 }
 

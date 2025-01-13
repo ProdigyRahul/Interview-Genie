@@ -8,15 +8,18 @@ export const env = createEnv({
    */
   server: {
     NEXTAUTH_URL: z.string().url(),
-    NEXTAUTH_SECRET: z.string().min(1),
-    GOOGLE_CLIENT_ID: z.string().min(1),
-    GOOGLE_CLIENT_SECRET: z.string().min(1),
-    AUTH_DISCORD_ID: z.string().min(1),
-    AUTH_DISCORD_SECRET: z.string().min(1),
-    DATABASE_URL: z.string().min(1),
+    NEXTAUTH_SECRET: z.string(),
+    GOOGLE_CLIENT_ID: z.string(),
+    GOOGLE_CLIENT_SECRET: z.string(),
+    AUTH_DISCORD_ID: z.string(),
+    AUTH_DISCORD_SECRET: z.string(),
+    DATABASE_URL: z.string(),
     NODE_ENV: z.enum(["development", "test", "production"]),
-    EMAIL_USER: z.string().min(1),
-    EMAIL_PASS: z.string().min(1),
+    EMAIL_USER: z.string(),
+    EMAIL_PASS: z.string(),
+    UPSTASH_REDIS_REST_URL: z.string().url(),
+    UPSTASH_REDIS_REST_TOKEN: z.string(),
+    CSRF_SECRET: z.string(),
   },
 
   /**
@@ -43,6 +46,9 @@ export const env = createEnv({
     NODE_ENV: process.env.NODE_ENV,
     EMAIL_USER: process.env.EMAIL_USER,
     EMAIL_PASS: process.env.EMAIL_PASS,
+    UPSTASH_REDIS_REST_URL: process.env.UPSTASH_REDIS_REST_URL,
+    UPSTASH_REDIS_REST_TOKEN: process.env.UPSTASH_REDIS_REST_TOKEN,
+    CSRF_SECRET: process.env.CSRF_SECRET,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

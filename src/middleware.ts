@@ -13,54 +13,24 @@ const publicPaths = [
   "/favicon.ico",
 ];
 
-// Paths that require authentication but don't require a complete profile
-const authNoProfilePaths = [
-  "/complete-profile",
-  "/api/profile",
-  "/api/trpc",
-  "/api/auth/callback",
-];
+export const runtime = 'nodejs';
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Skip middleware for auth callback routes and static assets
-  if (
-    pathname.startsWith('/api/auth/callback/') ||
-    pathname.startsWith('/_next/') ||
-    pathname.includes('.') ||
-    pathname === '/favicon.ico'
-  ) {
+  // Allow public paths
+  if (publicPaths.some((path) => pathname.startsWith(path))) {
     return NextResponse.next();
   }
 
-  // Check if the path is public
-  const isPublicPath = publicPaths.some((path) => pathname.startsWith(path));
-  if (isPublicPath) {
-    return NextResponse.next();
-  }
+  // Check for auth token
+  const token = await getToken({ req: request });
 
-  // Get the token
-  const token = await getToken({
-    req: request,
-    secret: process.env.NEXTAUTH_SECRET,
-  });
-
-  // Handle auth redirects
-  if (!token && !isPublicPath) {
-    const loginUrl = new URL("/login", request.url);
-    const callbackUrl = request.nextUrl.pathname + request.nextUrl.search;
-    loginUrl.searchParams.set("callbackUrl", callbackUrl);
-    return NextResponse.redirect(loginUrl);
-  }
-
-  // If user is logged in and trying to access login/register pages
-  if (token && (pathname === '/login' || pathname === '/register')) {
-    const callbackUrl = request.nextUrl.searchParams.get("callbackUrl");
-    if (callbackUrl && !callbackUrl.includes('/login')) {
-      return NextResponse.redirect(new URL(callbackUrl, request.url));
-    }
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+  // Redirect to login if no token and not on a public path
+  if (!token) {
+    const url = new URL("/login", request.url);
+    url.searchParams.set("callbackUrl", pathname);
+    return NextResponse.redirect(url);
   }
 
   // Set up the response
@@ -72,22 +42,6 @@ export async function middleware(request: NextRequest) {
       "Cache-Control",
       "no-cache, no-store, must-revalidate"
     );
-  }
-
-  // Check if profile is complete for protected routes
-  if (
-    token && 
-    !authNoProfilePaths.some((path) => pathname.startsWith(path))
-  ) {
-    const isProfileComplete = token.isProfileComplete === true || 
-      (token.profileProgress as number ?? 0) >= 80;
-
-    if (!isProfileComplete) {
-      const url = new URL("/complete-profile", request.url);
-      const currentUrl = request.nextUrl.pathname + request.nextUrl.search;
-      url.searchParams.set("callbackUrl", currentUrl);
-      return NextResponse.redirect(url);
-    }
   }
 
   return response;
