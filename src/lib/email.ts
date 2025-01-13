@@ -1,6 +1,15 @@
 import nodemailer from "nodemailer";
 import { env } from "@/env";
 
+// Type definition for SMTP errors
+interface SMTPError extends Error {
+  code?: string;
+  command?: string;
+  responseCode?: number;
+  response?: string;
+}
+
+// Create transporter with verification
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -8,6 +17,24 @@ const transporter = nodemailer.createTransport({
     pass: env.EMAIL_PASS,
   }
 });
+
+// Verify connection on startup
+if (process.env.NODE_ENV === "production") {
+  transporter.verify((error) => {
+    if (error) {
+      const smtpError = error as SMTPError;
+      console.error("SMTP Connection Error:", {
+        error: smtpError.message,
+        code: smtpError.code,
+        command: smtpError.command,
+        user: env.EMAIL_USER,
+        service: "gmail"
+      });
+    } else {
+      console.log("SMTP Server is ready to send emails");
+    }
+  });
+}
 
 export type EmailTemplate = {
   to: string;
@@ -17,6 +44,14 @@ export type EmailTemplate = {
 
 export async function sendEmail({ to, subject, html }: EmailTemplate) {
   try {
+    // Log environment and attempt
+    console.log("Email attempt:", {
+      environment: process.env.NODE_ENV,
+      to,
+      subject,
+      from: env.EMAIL_USER
+    });
+
     const info = await transporter.sendMail({
       from: {
         name: "Interview Genie",
@@ -25,13 +60,42 @@ export async function sendEmail({ to, subject, html }: EmailTemplate) {
       to,
       subject,
       html,
+      priority: "high",
+      headers: {
+        'X-Priority': '1',
+        'X-MSMail-Priority': 'High',
+        'Importance': 'high'
+      }
     });
 
-    console.log("Email sent:", info.messageId);
+    console.log("Email sent successfully:", {
+      messageId: info.messageId,
+      response: info.response,
+      to,
+      subject,
+      environment: process.env.NODE_ENV
+    });
+
     return { success: true, messageId: info.messageId };
   } catch (error) {
-    console.error("Error sending email:", error);
-    return { success: false, error };
+    // Enhanced error logging for production debugging
+    const smtpError = error as SMTPError;
+    console.error("Email sending failed:", {
+      error: {
+        message: smtpError.message,
+        name: smtpError.name,
+        code: smtpError.code,
+        command: smtpError.command,
+        response: smtpError.response,
+        stack: smtpError.stack
+      },
+      to,
+      subject,
+      environment: process.env.NODE_ENV,
+      emailUser: env.EMAIL_USER
+    });
+    
+    return { success: false, error: smtpError };
   }
 }
 
