@@ -18,18 +18,21 @@ function generateOTP(): string {
 }
 
 // Helper function to send emails in background
-function sendEmailsInBackground(email: string, name: string, otp: string) {
-  // Send verification email
-  void sendEmail({
-    to: email,
-    subject: "Verify your email - Interview Genie",
-    html: generateOTPEmail(name, otp),
-  }).catch(error => {
-    console.error("Failed to send verification email:", error);
-  });
+async function sendEmailsInBackground(email: string, name: string, otp: string) {
+  try {
+    // Send verification email first and wait for it
+    const verificationResult = await sendEmail({
+      to: email,
+      subject: "Verify your email - Interview Genie",
+      html: generateOTPEmail(name, otp),
+    });
 
-  // Send welcome email after a short delay to prevent Gmail throttling
-  setTimeout(() => {
+    if (!verificationResult.success) {
+      console.error("Failed to send verification email:", verificationResult.error);
+      return false;
+    }
+
+    // Send welcome email after verification email succeeds
     void sendEmail({
       to: email,
       subject: "Welcome to Interview Genie! 🎉",
@@ -37,7 +40,12 @@ function sendEmailsInBackground(email: string, name: string, otp: string) {
     }).catch(error => {
       console.error("Failed to send welcome email:", error);
     });
-  }, 2000); // 2 second delay
+
+    return true;
+  } catch (error) {
+    console.error("Error in sendEmailsInBackground:", error);
+    return false;
+  }
 }
 
 export async function POST(req: Request): Promise<NextResponse> {
@@ -86,10 +94,18 @@ export async function POST(req: Request): Promise<NextResponse> {
       },
     });
 
-    // Send emails in background
-    sendEmailsInBackground(email, name, otp);
+    // In production, ensure OTP email is sent
+    if (process.env.NODE_ENV === "production") {
+      const emailSent = await sendEmailsInBackground(email, name, otp);
+      if (!emailSent) {
+        console.error("Failed to send OTP email in production");
+      }
+    } else {
+      // In development, send emails in background
+      void sendEmailsInBackground(email, name, otp);
+    }
 
-    // Return success response immediately
+    // Return success response
     return new NextResponse(
       JSON.stringify({ 
         success: true, 
