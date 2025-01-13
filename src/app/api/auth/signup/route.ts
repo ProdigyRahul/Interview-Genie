@@ -17,6 +17,29 @@ function generateOTP(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
+// Helper function to send emails in background
+function sendEmailsInBackground(email: string, name: string, otp: string) {
+  // Send verification email
+  void sendEmail({
+    to: email,
+    subject: "Verify your email - Interview Genie",
+    html: generateOTPEmail(name, otp),
+  }).catch(error => {
+    console.error("Failed to send verification email:", error);
+  });
+
+  // Send welcome email after a short delay to prevent Gmail throttling
+  setTimeout(() => {
+    void sendEmail({
+      to: email,
+      subject: "Welcome to Interview Genie! 🎉",
+      html: generateWelcomeEmail(name),
+    }).catch(error => {
+      console.error("Failed to send welcome email:", error);
+    });
+  }, 2000); // 2 second delay
+}
+
 export async function POST(req: Request): Promise<NextResponse> {
   try {
     // Rate limiting: 5 attempts per minute
@@ -63,35 +86,10 @@ export async function POST(req: Request): Promise<NextResponse> {
       },
     });
 
-    try {
-      // Send verification email
-      const verificationResult = await sendEmail({
-        to: email,
-        subject: "Verify your email",
-        html: generateOTPEmail(name, otp),
-      });
+    // Send emails in background
+    sendEmailsInBackground(email, name, otp);
 
-      if (!verificationResult.success) {
-        console.error("Failed to send verification email:", verificationResult.error);
-      }
-
-      // Send welcome email
-      const welcomeResult = await sendEmail({
-        to: email,
-        subject: "Welcome to Interview Genie! 🎉",
-        html: generateWelcomeEmail(name),
-      });
-
-      if (!welcomeResult.success) {
-        console.error("Failed to send welcome email:", welcomeResult.error);
-      }
-
-    } catch (emailError) {
-      // Log email errors but don't fail the signup
-      console.error("Error sending signup emails:", emailError);
-    }
-
-    // Return success response
+    // Return success response immediately
     return new NextResponse(
       JSON.stringify({ 
         success: true, 
