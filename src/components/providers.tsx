@@ -12,11 +12,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
       defaultTheme="system"
       enableSystem
       disableTransitionOnChange
+      forcedTheme={undefined}
+      storageKey="interview-genie-theme"
     >
       <QueryProvider>
         <SessionProvider>
           {children}
-          <Toaster richColors closeButton position="top-center" />
+          <Toaster richColors closeButton position="bottom-right" />
         </SessionProvider>
       </QueryProvider>
     </ThemeProvider>
