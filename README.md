@@ -1,29 +1,75 @@
-# Create T3 App
+# Interview Genie 🧞‍♂️
 
-This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`.
+An AI-powered interview preparation platform built with the [T3 Stack](https://create.t3.gg/).
 
-## What's next? How do I make an app with this?
+## Features 🌟
 
-We try to keep this project as simple as possible, so you can start with just the scaffolding we set up for you, and add additional things later when they become necessary.
+- AI-powered mock interviews
+- Resume analysis and optimization
+- LinkedIn profile integration
+- Real-time feedback
+- Progress tracking
+- Document preparation tools
 
-If you are not familiar with the different technologies used in this project, please refer to the respective docs. If you still are in the wind, please join our [Discord](https://t3.gg/discord) and ask for help.
+## Tech Stack 🛠️
 
-- [Next.js](https://nextjs.org)
-- [NextAuth.js](https://next-auth.js.org)
-- [Prisma](https://prisma.io)
-- [Drizzle](https://orm.drizzle.team)
-- [Tailwind CSS](https://tailwindcss.com)
-- [tRPC](https://trpc.io)
+- [Next.js](https://nextjs.org) - React framework
+- [NextAuth.js](https://next-auth.js.org) - Authentication
+- [Prisma](https://prisma.io) - Database ORM
+- [Tailwind CSS](https://tailwindcss.com) - Styling
+- [tRPC](https://trpc.io) - API layer
+- PostgreSQL - Database
+- Redis - Caching
+- Vercel - Hosting
 
-## Learn More
+## Documentation 📚
 
-To learn more about the [T3 Stack](https://create.t3.gg/), take a look at the following resources:
+- [Setup Guide](/docs/SETUP.md)
+- [Contributing Guidelines](/docs/CONTRIBUTING.md)
+- [API Documentation](/docs/api)
+- [Component Documentation](/docs/components)
 
-- [Documentation](https://create.t3.gg/)
-- [Learn the T3 Stack](https://create.t3.gg/en/faq#what-learning-resources-are-currently-available) — Check out these awesome tutorials
+## Getting Started 🚀
 
-You can check out the [create-t3-app GitHub repository](https://github.com/t3-oss/create-t3-app) — your feedback and contributions are welcome!
+1. Clone the repository
+2. Install dependencies: `npm install`
+3. Copy environment variables: `cp .env.example .env`
+4. Configure your `.env` file
+5. Start development server: `npm run dev`
 
-## How do I deploy this?
+## Development Workflow 🔄
 
-Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
+1. Create feature branch from `development`
+2. Make changes and test
+3. Create PR to `development`
+4. After review, merge to `development`
+5. Periodic releases from `development` to `main`
+
+## Available Scripts 📝
+
+```bash
+npm run dev      # Start development server
+npm run build    # Build for production
+npm run start    # Start production server
+npm run lint     # Run ESLint
+npm run format   # Format code
+```
+
+## Contributing 🤝
+
+We welcome contributions! Please see our [Contributing Guidelines](/docs/CONTRIBUTING.md).
+
+## Deployment 🌐
+
+This project is deployed on [Vercel](https://vercel.com). For deployment instructions, see:
+- [Vercel Deployment Guide](https://create.t3.gg/en/deployment/vercel)
+- [Our Setup Guide](/docs/SETUP.md)
+
+## License 📄
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments 🙏
+
+- [T3 Stack](https://create.t3.gg/) for the amazing foundation
+- All our contributors and supporters
