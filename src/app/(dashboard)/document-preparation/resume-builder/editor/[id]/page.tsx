@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,9 +28,17 @@ import {
   ExternalLink,
   Medal,
   Sparkles,
+  Loader2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SkillsInput } from "@/components/ui/skills-input";
+import { useSaveResume } from "@/hooks/use-save-resume";
+import { isSectionComplete } from "@/lib/validations/resume";
+import { Skeleton } from "@/components/ui/skeleton";
+import { SectionNavigation } from "@/components/resume/section-navigation";
+import { TemplateSelector } from "@/components/resume/template-selector";
+import { ResumeData, TemplateType } from '@/lib/types/resume';
+import { generateResumePDF } from '@/lib/templates/pdf-generator';
 
 // Animation variants
 const fadeIn = {
@@ -77,21 +85,9 @@ const tabs = [
     required: false,
   },
   {
-    id: "volunteering",
-    label: "Volunteering",
-    icon: Heart,
-    required: false,
-  },
-  {
     id: "skills",
     label: "Skills",
     icon: Brain,
-    required: false,
-  },
-  {
-    id: "references",
-    label: "References",
-    icon: Users,
     required: false,
   },
   {
@@ -151,70 +147,224 @@ interface AchievementData {
   description: string;
 }
 
-interface VolunteerData {
-  organization: string;
-  role: string;
-  startDate: string;
-  endDate: string;
-  description: string;
-}
-
 interface FormState {
   name: string;
-  jobTitle: string;
   email: string;
   phone: string;
-  location: string;
   linkedIn: string;
+  github: string;
+  location: string;
   portfolio: string;
+  jobTitle: string;
   summary: string;
+  experiences: Record<string, {
+    companyName: string;
+    jobTitle: string;
+    location: string;
+    startDate: string;
+    endDate: string;
+    description: string;
+    technologies: string[];
+  }>;
+  education: Record<string, {
+    school: string;
+    degree: string;
+    fieldOfStudy: string;
+    location: string;
+    startDate: string;
+    endDate: string;
+    achievements: string[];
+    gpa?: string;
+  }>;
+  projects: Record<string, {
+    name: string;
+    technologies: string[];
+    startDate: string;
+    endDate: string;
+    description: string;
+    url?: string;
+  }>;
   skills: {
     technical: string[];
     soft: string[];
-    tools: string[];
+    languages: string[];
   };
-  experiences: Record<number, Partial<ExperienceData>>;
-  projects: Record<number, Partial<ProjectData>>;
-  education: Record<number, Partial<EducationData>>;
-  certifications: Record<number, Partial<CertificationData>>;
-  achievements: Record<number, Partial<AchievementData>>;
-  volunteering: Record<number, Partial<VolunteerData>>;
+  certifications: Record<string, {
+    name: string;
+    issuingOrg: string;
+    issueDate: string;
+    expiryDate?: string;
+    credentialId: string;
+    credentialUrl?: string;
+  }>;
+  achievements: Record<string, {
+    title: string;
+    date: string;
+    description: string;
+  }>;
 }
+
+interface AIGenerateButtonProps {
+  onClick: () => void;
+  isLoading?: boolean;
+  label?: string;
+  fullWidth?: boolean;
+}
+
+function AIGenerateButton({ 
+  onClick, 
+  isLoading = false, 
+  label = "Generate Description", 
+  fullWidth = true 
+}: AIGenerateButtonProps) {
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      className={cn(
+        "group hover:border-primary/50",
+        fullWidth ? "w-full" : "min-w-[200px]"
+      )}
+      onClick={onClick}
+      disabled={isLoading}
+    >
+      {isLoading ? (
+        <div className="flex items-center gap-2">
+          <div className="relative w-4 h-4">
+            <div className="absolute inset-0">
+              <div className="w-full h-full border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+            </div>
+          </div>
+          <span>Generating...</span>
+        </div>
+      ) : (
+        <div className="flex items-center gap-2">
+          <Sparkles className="h-4 w-4 group-hover:scale-110 transition-transform" />
+          <span>{label}</span>
+        </div>
+      )}
+    </Button>
+  );
+}
+
+// Add LoadingSkeleton component
+function LoadingSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="space-y-2">
+        <Skeleton className="h-8 w-64" />
+        <Skeleton className="h-4 w-96" />
+      </div>
+
+      <Card>
+        <div className="p-4 border-b">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
+            {Array(6).fill(0).map((_, i) => (
+              <Skeleton key={i} className="h-10 w-full" />
+            ))}
+          </div>
+        </div>
+
+        <div className="p-6 space-y-6">
+          <div className="space-y-2">
+            <Skeleton className="h-6 w-48" />
+            <Skeleton className="h-4 w-96" />
+          </div>
+
+          <Card className="p-4">
+            <div className="grid gap-6 md:grid-cols-2">
+              {Array(6).fill(0).map((_, i) => (
+                <div key={i} className="space-y-2">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+// Add InitialLoadingState component for the data fetching animation
+function InitialLoadingState() {
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center space-y-4">
+      <div className="relative w-20 h-20">
+        <div className="absolute inset-0 flex items-center justify-center">
+          <FileText className="w-10 h-10 text-primary animate-pulse" />
+        </div>
+        <div className="absolute inset-0">
+          <div className="w-full h-full border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+        </div>
+      </div>
+      <div className="text-center space-y-2">
+        <h3 className="text-lg font-semibold">Loading Your Resume</h3>
+        <p className="text-sm text-muted-foreground">Please wait while we fetch your data...</p>
+      </div>
+    </div>
+  );
+}
+
+// Add degree options constant
+const degreeOptions = [
+  "B.Tech",
+  "B.E.",
+  "B.Sc",
+  "B.A",
+  "B.Com",
+  "BBA",
+  "BCA",
+  "M.Tech",
+  "M.E.",
+  "M.Sc",
+  "M.A",
+  "M.Com",
+  "MBA",
+  "MCA",
+  "Ph.D",
+  "Other"
+];
 
 export default function ResumeEditorPage() {
   const params = useParams();
   const resumeId = params.id as string;
   const [activeTab, setActiveTab] = useState("personal");
-  const [isGenerating, setIsGenerating] = useState<Record<string, boolean>>({});
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isGeneratingAI, setIsGeneratingAI] = useState<Record<string, boolean>>({});
   const [experiences, setExperiences] = useState([{ id: 1 }]);
   const [projects, setProjects] = useState([{ id: 1 }]);
   const [education, setEducation] = useState([{ id: 1 }]);
   const [certifications, setCertifications] = useState([{ id: 1 }]);
   const [achievements, setAchievements] = useState([{ id: 1 }]);
-  const [volunteering, setVolunteering] = useState([{ id: 1 }]);
-  const [references, setReferences] = useState([{ id: 1 }]);
   const [loading, setLoading] = useState(true);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [selectedTemplate, setSelectedTemplate] = useState<TemplateType>("modern");
+  const [resumeTitle, setResumeTitle] = useState("");
+  const router = useRouter();
+  const [atsScore, setAtsScore] = useState<any>(null);
 
   // Add form data state for each section
   const [formData, setFormData] = useState<FormState>({
     name: '',
-    jobTitle: '',
     email: '',
     phone: '',
-    location: '',
     linkedIn: '',
+    github: '',
+    location: '',
     portfolio: '',
+    jobTitle: '',
     summary: '',
     experiences: {},
     projects: {},
     education: {},
     certifications: {},
     achievements: {},
-    volunteering: {},
     skills: {
       technical: [],
       soft: [],
-      tools: []
+      languages: []
     }
   });
 
@@ -229,15 +379,19 @@ export default function ResumeEditorPage() {
     summary: false
   });
 
+  const { isSaving, validationErrors, saveSection } = useSaveResume(resumeId);
+
   useEffect(() => {
     const fetchResumeData = async () => {
       try {
-        setLoading(true);
+        setIsInitialLoading(true);
         const response = await fetch(`/api/resumes/${resumeId}`);
         if (!response.ok) {
           throw new Error('Failed to fetch resume data');
         }
         const data = await response.json();
+        
+        console.log("Fetched resume data:", data); // Debug log
         
         // Update form data with fetched resume data
         setFormData(prevState => ({
@@ -245,7 +399,7 @@ export default function ResumeEditorPage() {
           name: data.personalInfo?.fullName || '',
           jobTitle: data.personalInfo?.jobTitle || '',
           email: data.personalInfo?.email || '',
-          phone: data.personalInfo?.phoneNumber || '',
+          phone: data.personalInfo?.phone || '',
           location: data.personalInfo?.location || '',
           linkedIn: data.personalInfo?.linkedIn || '',
           portfolio: data.personalInfo?.portfolio || '',
@@ -305,20 +459,10 @@ export default function ResumeEditorPage() {
             };
             return acc;
           }, {}) || {},
-          volunteering: data.volunteering?.reduce((acc: any, vol: any) => {
-            acc[vol.id] = {
-              organization: vol.organization,
-              role: vol.role,
-              startDate: vol.startDate,
-              endDate: vol.endDate,
-              description: vol.description
-            };
-            return acc;
-          }, {}) || {},
           skills: {
-            technical: data.skills?.technical?.split(',').map((s: string) => s.trim()) || [],
-            soft: data.skills?.soft?.split(',').map((s: string) => s.trim()) || [],
-            tools: data.skills?.tools?.split(',').map((s: string) => s.trim()) || []
+            technical: Array.isArray(data.skills?.technical) ? data.skills.technical : [],
+            soft: Array.isArray(data.skills?.soft) ? data.skills.soft : [],
+            languages: Array.isArray(data.skills?.languages) ? data.skills.languages : []
           }
         }));
 
@@ -328,22 +472,30 @@ export default function ResumeEditorPage() {
         if (data.education?.length) setEducation(data.education.map((edu: any) => ({ id: edu.id })));
         if (data.certifications?.length) setCertifications(data.certifications.map((cert: any) => ({ id: cert.id })));
         if (data.achievements?.length) setAchievements(data.achievements.map((ach: any) => ({ id: ach.id })));
-        if (data.volunteering?.length) setVolunteering(data.volunteering.map((vol: any) => ({ id: vol.id })));
-        if (data.references?.length) setReferences(data.references.map((ref: any) => ({ id: ref.id })));
 
         // Update completion status
         const newCompletedSections = { ...completedSections };
         if (data.personalInfo?.fullName) newCompletedSections.personal = true;
         if (data.experiences?.length) newCompletedSections.experience = true;
+        if (data.projects?.length && data.projects.every((proj: { name: string; startDate: string; endDate: string; description: string; }) => 
+          proj.name && proj.startDate && proj.endDate && proj.description
+        )) newCompletedSections.projects = true;
+        if (data.certifications?.length && data.certifications.every((cert: { name: string; issuingOrg: string; issueDate: string; }) => 
+          cert.name && cert.issuingOrg && cert.issueDate
+        )) newCompletedSections.certifications = true;
         if (data.education?.length) newCompletedSections.education = true;
-        if (data.skills) newCompletedSections.skills = true;
+        if (data.skills?.technical?.length > 0) newCompletedSections.skills = true;
         if (data.summary?.content) newCompletedSections.summary = true;
+        if (data.achievements?.length && data.achievements.every((ach: { title: string; date: string; description: string; }) => 
+          ach.title && ach.date && ach.description
+        )) newCompletedSections.achievements = true;
         setCompletedSections(newCompletedSections);
 
       } catch (error) {
         console.error('Error fetching resume data:', error);
         toast.error('Failed to load resume data. Please try again.');
       } finally {
+        setIsInitialLoading(false);
         setLoading(false);
       }
     };
@@ -354,7 +506,7 @@ export default function ResumeEditorPage() {
   }, [resumeId]);
 
   const handleGenerateAI = async (section: string, id: number, field: string) => {
-    setIsGenerating({ ...isGenerating, [`${section}-${id}-${field}`]: true });
+    setIsGeneratingAI({ ...isGeneratingAI, [`${section}-${id}-${field}`]: true });
     try {
       let context = {};
       
@@ -384,18 +536,21 @@ export default function ResumeEditorPage() {
           };
           break;
         case 'achievement_description':
-          context = {
-            title: formData.achievements[id]?.title,
-            company: formData.experiences ? Object.values(formData.experiences)[0]?.companyName : undefined,
-            description: formData.achievements[id]?.description || ''
-          };
-          break;
-        case 'volunteer_description':
-          context = {
-            role: formData.volunteering[id]?.role,
-            organization: formData.volunteering[id]?.organization,
-            description: formData.volunteering[id]?.description || ''
-          };
+          // Handle both education achievements and general achievements
+          if (field === 'achievements') {
+            context = {
+              school: formData.education[id]?.school,
+              degree: formData.education[id]?.degree,
+              fieldOfStudy: formData.education[id]?.fieldOfStudy,
+              description: formData.education[id]?.achievements || ''
+            };
+          } else {
+            context = {
+              title: formData.achievements[id]?.title,
+              company: formData.experiences ? Object.values(formData.experiences)[0]?.companyName : undefined,
+              description: formData.achievements[id]?.description || ''
+            };
+          }
           break;
       }
 
@@ -432,23 +587,25 @@ export default function ResumeEditorPage() {
                 }
               };
             case 'achievement_description':
+              // Handle both education achievements and general achievements
+              if (field === 'achievements') {
+                return {
+                  ...prev,
+                  education: {
+                    ...prev.education,
+                    [id]: {
+                      ...prev.education[id],
+                      achievements: response.content
+                    }
+                  }
+                };
+              }
               return {
                 ...prev,
                 achievements: {
                   ...prev.achievements,
                   [id]: {
                     ...prev.achievements[id],
-                    description: response.content
-                  }
-                }
-              };
-            case 'volunteer_description':
-              return {
-                ...prev,
-                volunteering: {
-                  ...prev.volunteering,
-                  [id]: {
-                    ...prev.volunteering[id],
                     description: response.content
                   }
                 }
@@ -465,7 +622,7 @@ export default function ResumeEditorPage() {
       console.error('Error generating content:', error);
       toast.error('Failed to generate content. Please try again.');
     } finally {
-      setIsGenerating({ ...isGenerating, [`${section}-${id}-${field}`]: false });
+      setIsGeneratingAI({ ...isGeneratingAI, [`${section}-${id}-${field}`]: false });
     }
   };
 
@@ -487,12 +644,6 @@ export default function ResumeEditorPage() {
       case "achievements":
         setAchievements([...achievements, newItem]);
         break;
-      case "volunteering":
-        setVolunteering([...volunteering, newItem]);
-        break;
-      case "references":
-        setReferences([...references, newItem]);
-        break;
     }
   };
 
@@ -512,12 +663,6 @@ export default function ResumeEditorPage() {
         break;
       case "achievements":
         setAchievements(achievements.filter(item => item.id !== id));
-        break;
-      case "volunteering":
-        setVolunteering(volunteering.filter(item => item.id !== id));
-        break;
-      case "references":
-        setReferences(references.filter(item => item.id !== id));
         break;
     }
   };
@@ -539,24 +684,48 @@ export default function ResumeEditorPage() {
 
       // Check if section is complete
       const sectionData = updatedSection[id];
-      const isComplete = Object.values(sectionData).every(val => 
-        (Array.isArray(val) ? val.length > 0 : typeof val === 'string' && val.trim() !== '')
-      );
+      let isComplete = false;
+
+      if (section === 'achievements') {
+        isComplete = Object.values(updatedSection).length > 0 &&
+          Object.values(updatedSection).every(ach => 
+            ach?.title?.trim() !== "" &&
+            ach?.date?.trim() !== "" &&
+            ach?.description?.trim() !== ""
+          );
+      } else {
+        isComplete = Object.values(sectionData).every(val => 
+          (Array.isArray(val) ? val.length > 0 : typeof val === 'string' && val.trim() !== '')
+        );
+      }
       
       // Update completion status
-      const completionUpdate = { [section]: isComplete };
-      setCompletedSections(prevState => Object.assign({}, prevState, completionUpdate));
+      setCompletedSections(prevState => ({
+        ...prevState,
+        [section]: isComplete
+      }));
 
       // Update form data
-      const formUpdate = { [section]: updatedSection };
-      return Object.assign({}, prev, formUpdate) as FormState;
+      return {
+        ...prev,
+        [section]: updatedSection
+      } as FormState;
     });
   };
 
   const renderSectionHeader = (title: string, description: string) => (
     <div className="space-y-2">
+      {loading ? (
+        <>
+          <Skeleton className="h-6 w-48" />
+          <Skeleton className="h-4 w-96" />
+        </>
+      ) : (
+        <>
       <h3 className="text-lg font-semibold">{title}</h3>
       <p className="text-sm text-muted-foreground">{description}</p>
+        </>
+      )}
     </div>
   );
 
@@ -591,6 +760,342 @@ export default function ResumeEditorPage() {
       )}
     </TabsTrigger>
   );
+
+  // Save handlers for each section
+  const handleSavePersonal = async () => {
+    console.log("Saving personal data:", {
+      fullName: formData.name,
+      jobTitle: formData.jobTitle,
+      email: formData.email,
+      phone: formData.phone,
+      location: formData.location,
+      linkedIn: formData.linkedIn,
+      portfolio: formData.portfolio,
+    });
+    
+    await saveSection("personal", {
+      fullName: formData.name,
+      jobTitle: formData.jobTitle,
+      email: formData.email,
+      phone: formData.phone, // This matches the schema now
+      location: formData.location,
+      linkedIn: formData.linkedIn,
+      portfolio: formData.portfolio,
+    });
+  };
+
+  const handleSaveExperience = async () => {
+    const experienceData = Object.values(formData.experiences).map(exp => ({
+      companyName: exp.companyName,
+      jobTitle: exp.jobTitle,
+      startDate: exp.startDate,
+      endDate: exp.endDate,
+      description: exp.description,
+      technologies: exp.technologies || [],
+    }));
+    await saveSection("experience", experienceData);
+  };
+
+  const handleSaveProjects = async () => {
+    const projectsData = Object.values(formData.projects).map(proj => ({
+      name: proj.name,
+      description: proj.description,
+      url: proj.url,
+      technologies: proj.technologies || [],
+      startDate: proj.startDate,
+      endDate: proj.endDate,
+    }));
+    await saveSection("projects", projectsData);
+  };
+
+  const handleSaveEducation = async () => {
+    const educationData = Object.values(formData.education).map(edu => ({
+      school: edu.school,
+      degree: edu.degree,
+      fieldOfStudy: edu.fieldOfStudy,
+      startDate: edu.startDate,
+      endDate: edu.endDate,
+      gpa: edu.gpa,
+      achievements: edu.achievements,
+    }));
+    await saveSection("education", educationData);
+  };
+
+  const handleSaveCertifications = async () => {
+    const certificationsData = Object.values(formData.certifications).map(cert => ({
+      name: cert.name,
+      issuingOrg: cert.issuingOrg,
+      issueDate: cert.issueDate,
+      expiryDate: cert.expiryDate,
+      credentialId: cert.credentialId,
+      credentialUrl: cert.credentialUrl,
+    }));
+    await saveSection("certifications", certificationsData);
+  };
+
+  const handleSaveAchievements = async () => {
+    const achievementsData = Object.values(formData.achievements).map(ach => ({
+      title: ach.title,
+      date: ach.date,
+      description: ach.description,
+    }));
+    await saveSection("achievements", achievementsData);
+  };
+
+  const handleSaveSkills = async () => {
+    await saveSection("skills", formData.skills);
+  };
+
+  const handleSaveSummary = async () => {
+    await saveSection("summary", { content: formData.summary });
+  };
+
+  // Get save handler for current section
+  const getSaveHandler = (section: string) => {
+    const handlers: Record<string, () => Promise<void>> = {
+      personal: handleSavePersonal,
+      experience: handleSaveExperience,
+      projects: handleSaveProjects,
+      education: handleSaveEducation,
+      certifications: handleSaveCertifications,
+      achievements: handleSaveAchievements,
+      skills: handleSaveSkills,
+      summary: handleSaveSummary,
+    };
+    return handlers[section];
+  };
+
+  // Check if current section is valid
+  const isCurrentSectionValid = () => {
+    console.log("Checking if current section is valid:", activeTab);
+    switch (activeTab) {
+      case "personal":
+        // Map form field names to validation field names
+        const personalData = {
+          fullName: formData.name,
+          jobTitle: formData.jobTitle,
+          email: formData.email,
+          phone: formData.phone,
+          location: formData.location,
+          linkedIn: formData.linkedIn,
+          portfolio: formData.portfolio,
+        };
+        console.log("Personal data being validated:", personalData);
+        return isSectionComplete("personal", personalData);
+      case "experience":
+        console.log("Validating experience data:", formData.experiences);
+        return Object.values(formData.experiences).length > 0 &&
+          Object.values(formData.experiences).every(exp => 
+            exp?.companyName?.trim() !== "" &&
+            exp?.jobTitle?.trim() !== "" &&
+            exp?.startDate?.trim() !== "" &&
+            exp?.endDate?.trim() !== "" &&
+            exp?.description?.trim() !== ""
+          );
+      case "projects":
+        console.log("Validating projects data:", formData.projects);
+        const projectsValid = Object.values(formData.projects).length > 0 &&
+          Object.values(formData.projects).every(proj => 
+            proj?.name?.trim() !== "" &&
+            proj?.startDate?.trim() !== "" &&
+            proj?.endDate?.trim() !== "" &&
+            proj?.description?.trim() !== ""
+          );
+        console.log("Projects validation result:", projectsValid);
+        return projectsValid;
+      case "education":
+        console.log("Validating education data:", formData.education);
+        return Object.values(formData.education).length > 0 &&
+          Object.values(formData.education).every(edu => 
+            edu?.school?.trim() !== "" &&
+            edu?.degree?.trim() !== "" &&
+            edu?.fieldOfStudy?.trim() !== "" &&
+            edu?.startDate?.trim() !== "" &&
+            edu?.endDate?.trim() !== ""
+          );
+      case "certifications":
+        console.log("Validating certifications data:", formData.certifications);
+        const certificationsValid = Object.values(formData.certifications).length > 0 &&
+          Object.values(formData.certifications).every(cert => 
+            cert?.name?.trim() !== "" &&
+            cert?.issuingOrg?.trim() !== "" &&
+            cert?.issueDate?.trim() !== ""
+          );
+        console.log("Certifications validation result:", certificationsValid);
+        return certificationsValid;
+      case "achievements":
+        console.log("Validating achievements data:", formData.achievements);
+        const achievementsValid = Object.values(formData.achievements).length > 0 &&
+          Object.values(formData.achievements).every(ach => 
+            ach?.title?.trim() !== "" &&
+            ach?.date?.trim() !== "" &&
+            ach?.description?.trim() !== ""
+          );
+        console.log("Achievements validation result:", achievementsValid);
+        return achievementsValid;
+      case "skills":
+        console.log("Validating skills data:", formData.skills);
+        const skillsValid = formData.skills.technical.length > 0;
+        console.log("Skills validation result:", skillsValid, "Technical skills:", formData.skills.technical);
+        return skillsValid;
+      case "summary":
+        return formData.summary?.trim() !== "";
+      case "finish":
+        return true;
+      default:
+        return false;
+    }
+  };
+
+  const handleGenerateResume = async () => {
+    try {
+      setIsGenerating(true);
+
+      // Prepare resume data
+      const resumeData = {
+        personalInfo: {
+          name: formData.name || '',
+          email: formData.email || '',
+          phone: formData.phone || '',
+          linkedin: formData.linkedIn || '',
+          github: formData.github || '',
+          location: formData.location || '',
+          website: formData.portfolio || '',
+          title: formData.jobTitle || ''
+        },
+        summary: formData.summary || '',
+        experience: Object.values(formData.experiences || {})
+          .filter(exp => exp && exp.companyName) // Only include non-empty experiences
+          .map((exp) => ({
+            company: exp.companyName || '',
+            position: exp.jobTitle || '',
+            location: exp.location || '',
+            startDate: exp.startDate || '',
+            endDate: exp.endDate || 'Present',
+            description: exp.description ? 
+              exp.description.split('\n')
+                .map(line => line.trim())
+                .filter(line => line.length > 0) : 
+              []
+          })),
+        education: Object.values(formData.education || {})
+          .filter(edu => edu && edu.school) // Only include non-empty education entries
+          .map((edu) => ({
+            school: edu.school || '',
+            degree: edu.degree || '',
+            location: edu.location || '',
+            startDate: edu.startDate || '',
+            endDate: edu.endDate || 'Present',
+            description: edu.achievements ? 
+              [edu.achievements].flat().map(ach => ach.toString().trim()).filter(Boolean) :
+              []
+          })),
+        projects: Object.values(formData.projects || {})
+          .filter(proj => proj && proj.name) // Only include non-empty projects
+          .map((proj) => ({
+            name: proj.name || '',
+            technologies: Array.isArray(proj.technologies) ? 
+              proj.technologies.join(', ') : 
+              (proj.technologies || ''),
+            date: proj.startDate || '',
+            description: proj.description ?
+              proj.description.split('\n')
+                .map(line => line.trim())
+                .filter(line => line.length > 0) :
+              []
+          })),
+        skills: {
+          technical: Array.isArray(formData.skills?.technical) ? 
+            formData.skills.technical.filter(Boolean) : [],
+          soft: Array.isArray(formData.skills?.soft) ? 
+            formData.skills.soft.filter(Boolean) : [],
+          languages: Array.isArray(formData.skills?.languages) ? 
+            formData.skills.languages.filter(Boolean) : []
+        },
+        certifications: Object.values(formData.certifications || {})
+          .filter(cert => cert && cert.name) // Only include non-empty certifications
+          .map((cert) => ({
+            name: cert.name || '',
+            issuer: cert.issuingOrg || '',
+            date: cert.issueDate || '',
+            description: cert.credentialId || ''
+          })),
+        achievements: Object.values(formData.achievements || {})
+          .filter(ach => ach && ach.title) // Only include non-empty achievements
+          .map((ach) => ({
+            title: ach.title || '',
+            date: ach.date || '',
+            description: ach.description || ''
+          }))
+      };
+
+      // Validate required sections
+      const requiredSections = ['personalInfo', 'experience', 'education', 'skills'];
+      const missingFields = requiredSections.filter(section => {
+        if (section === 'personalInfo') {
+          return !resumeData.personalInfo.name || 
+                 !resumeData.personalInfo.email || 
+                 !resumeData.personalInfo.phone;
+        }
+        if (section === 'experience') {
+          return resumeData.experience.length === 0;
+        }
+        if (section === 'education') {
+          return resumeData.education.length === 0;
+        }
+        if (section === 'skills') {
+          return resumeData.skills.technical.length === 0;
+        }
+        return false;
+      });
+
+      if (missingFields.length > 0) {
+        throw new Error(`Please complete the following required sections: ${missingFields.join(', ')}`);
+      }
+
+      // Make the API call
+      const response = await fetch('/api/resumes/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          data: resumeData,
+          template: 'modern', // Default to modern template
+          resumeId: params.id
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to generate resume');
+      }
+
+      const result = await response.json();
+      
+      // Handle the response
+      if (result.success) {
+        toast.success('Resume generated successfully!');
+        // Navigate to the view page
+        router.push(`/document-preparation/resume-builder/${params.id}/view`);
+      } else {
+        throw new Error('Failed to generate resume');
+      }
+    } catch (error) {
+      console.error('Error generating resume:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to generate resume');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  if (isInitialLoading) {
+    return <InitialLoadingState />;
+  }
+
+  if (loading) {
+    return <LoadingSkeleton />;
+  }
 
   return (
     <div className="space-y-6">
@@ -638,7 +1143,10 @@ export default function ResumeEditorPage() {
                             id="name"
                             placeholder="John Doe"
                             value={formData.name}
-                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                            onChange={(e) => {
+                              const newValue = e.target.value;
+                              setFormData(prev => ({ ...prev, name: newValue }));
+                            }}
                             required
                           />
                         </div>
@@ -648,7 +1156,10 @@ export default function ResumeEditorPage() {
                         <Input 
                           placeholder="Senior Software Engineer"
                           value={formData.jobTitle}
-                          onChange={(e) => setFormData({ ...formData, jobTitle: e.target.value })}
+                          onChange={(e) => {
+                            const newValue = e.target.value;
+                            setFormData(prev => ({ ...prev, jobTitle: newValue }));
+                          }}
                           required
                         />
                       </div>
@@ -658,7 +1169,10 @@ export default function ResumeEditorPage() {
                           type="email" 
                           placeholder="john@example.com"
                           value={formData.email}
-                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                          onChange={(e) => {
+                            const newValue = e.target.value;
+                            setFormData(prev => ({ ...prev, email: newValue }));
+                          }}
                           required
                         />
                       </div>
@@ -667,7 +1181,10 @@ export default function ResumeEditorPage() {
                         <Input 
                           placeholder="+1 234 567 8900"
                           value={formData.phone}
-                          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                          onChange={(e) => {
+                            const newValue = e.target.value;
+                            setFormData(prev => ({ ...prev, phone: newValue }));
+                          }}
                           required
                         />
                       </div>
@@ -676,7 +1193,11 @@ export default function ResumeEditorPage() {
                         <Input 
                           placeholder="City, Country"
                           value={formData.location}
-                          onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                          onChange={(e) => {
+                            const newValue = e.target.value;
+                            setFormData(prev => ({ ...prev, location: newValue }));
+                          }}
+                          required
                         />
                       </div>
                       <div className="space-y-2">
@@ -685,7 +1206,10 @@ export default function ResumeEditorPage() {
                           <Input 
                             placeholder="linkedin.com/in/johndoe"
                             value={formData.linkedIn}
-                            onChange={(e) => setFormData({ ...formData, linkedIn: e.target.value })}
+                            onChange={(e) => {
+                              const newValue = e.target.value;
+                              setFormData(prev => ({ ...prev, linkedIn: newValue }));
+                            }}
                           />
                           <Button variant="outline" size="icon">
                             <ExternalLink className="h-4 w-4" />
@@ -698,7 +1222,10 @@ export default function ResumeEditorPage() {
                           <Input 
                             placeholder="johndoe.com"
                             value={formData.portfolio}
-                            onChange={(e) => setFormData({ ...formData, portfolio: e.target.value })}
+                            onChange={(e) => {
+                              const newValue = e.target.value;
+                              setFormData(prev => ({ ...prev, portfolio: newValue }));
+                            }}
                           />
                           <Button variant="outline" size="icon">
                             <ExternalLink className="h-4 w-4" />
@@ -707,6 +1234,14 @@ export default function ResumeEditorPage() {
                       </div>
                     </div>
                   </Card>
+                  <SectionNavigation
+                    currentTab="personal"
+                    onTabChange={setActiveTab}
+                    isValid={isCurrentSectionValid()}
+                    isSaving={isSaving}
+                    onSave={handleSavePersonal}
+                    validationErrors={validationErrors}
+                  />
                 </TabsContent>
 
                 {/* Experience Tab */}
@@ -721,11 +1256,11 @@ export default function ResumeEditorPage() {
                         <div className="grid gap-6 md:grid-cols-2 w-full">
                           <div className="space-y-2">
                             <Label>Company Name</Label>
-                            <Input 
-                              placeholder="Company Name"
-                              value={formData.experiences[exp.id]?.companyName || ''}
-                              onChange={(e) => handleInputChange('experiences', exp.id, 'companyName', e.target.value)}
-                            />
+                              <Input 
+                                placeholder="Company Name"
+                                value={formData.experiences[exp.id]?.companyName || ''}
+                                onChange={(e) => handleInputChange('experiences', exp.id, 'companyName', e.target.value)}
+                              />
                           </div>
                           <div className="space-y-2">
                             <Label>Job Title</Label>
@@ -754,27 +1289,15 @@ export default function ResumeEditorPage() {
                           <div className="space-y-2 md:col-span-2">
                             <Label>Description</Label>
                             <div className="flex flex-col gap-2">
-                              <Textarea 
-                                placeholder="Describe your role and achievements..."
-                                value={formData.experiences[exp.id]?.description || ''}
-                                onChange={(e) => handleInputChange('experiences', exp.id, 'description', e.target.value)}
-                              />
-                              <Button
-                                type="button"
-                                variant="outline"
-                                className="w-full"
+                            <Textarea 
+                              placeholder="Describe your role and achievements..."
+                              value={formData.experiences[exp.id]?.description || ''}
+                              onChange={(e) => handleInputChange('experiences', exp.id, 'description', e.target.value)}
+                            />
+                              <AIGenerateButton
                                 onClick={() => handleGenerateAI('experience_description', exp.id, 'description')}
-                                disabled={isGenerating[`experience_description-${exp.id}-description`]}
-                              >
-                                {isGenerating[`experience_description-${exp.id}-description`] ? (
-                                  <div className="animate-spin">⌛</div>
-                                ) : (
-                                  <div className="flex items-center gap-2">
-                                    <Sparkles className="h-4 w-4" />
-                                    Generate Description
-                                  </div>
-                                )}
-                              </Button>
+                                isLoading={isGeneratingAI[`experience_description-${exp.id}-description`]}
+                              />
                             </div>
                           </div>
                           <div className="space-y-2 md:col-span-2">
@@ -798,6 +1321,14 @@ export default function ResumeEditorPage() {
                     </Card>
                   ))}
                   {renderAddButton('experience', 'Add Experience')}
+                  <SectionNavigation
+                    currentTab="experience"
+                    onTabChange={setActiveTab}
+                    isValid={isCurrentSectionValid()}
+                    isSaving={isSaving}
+                    onSave={handleSaveExperience}
+                    validationErrors={validationErrors}
+                  />
                 </TabsContent>
 
                 {/* Projects Tab */}
@@ -820,15 +1351,28 @@ export default function ResumeEditorPage() {
                           </div>
                           <div className="space-y-2">
                             <Label>Project URL</Label>
-                            <Input type="url" placeholder="https://..." />
+                            <Input 
+                              type="url" 
+                              placeholder="https://..."
+                              value={formData.projects[project.id]?.url || ''}
+                              onChange={(e) => handleInputChange('projects', project.id, 'url', e.target.value)}
+                            />
                           </div>
                           <div className="space-y-2">
                             <Label>Start Date</Label>
-                            <Input type="date" />
+                            <Input 
+                              type="date" 
+                              value={formData.projects[project.id]?.startDate || ''}
+                              onChange={(e) => handleInputChange('projects', project.id, 'startDate', e.target.value)}
+                            />
                           </div>
                           <div className="space-y-2">
                             <Label>End Date</Label>
-                            <Input type="date" />
+                            <Input 
+                              type="date" 
+                              value={formData.projects[project.id]?.endDate || ''}
+                              onChange={(e) => handleInputChange('projects', project.id, 'endDate', e.target.value)}
+                            />
                           </div>
                           <div className="space-y-2 md:col-span-2">
                             <Label>Description</Label>
@@ -838,22 +1382,10 @@ export default function ResumeEditorPage() {
                                 value={formData.projects[project.id]?.description || ''}
                                 onChange={(e) => handleInputChange('projects', project.id, 'description', e.target.value)}
                               />
-                              <Button
-                                type="button"
-                                variant="outline"
-                                className="w-full"
+                              <AIGenerateButton
                                 onClick={() => handleGenerateAI('project_description', project.id, 'description')}
-                                disabled={isGenerating[`project_description-${project.id}-description`]}
-                              >
-                                {isGenerating[`project_description-${project.id}-description`] ? (
-                                  <div className="animate-spin">⌛</div>
-                                ) : (
-                                  <div className="flex items-center gap-2">
-                                    <Sparkles className="h-4 w-4" />
-                                    Generate Description
-                                  </div>
-                                )}
-                              </Button>
+                                isLoading={isGeneratingAI[`project_description-${project.id}-description`]}
+                              />
                             </div>
                           </div>
                           <div className="space-y-2 md:col-span-2">
@@ -877,6 +1409,14 @@ export default function ResumeEditorPage() {
                     </Card>
                   ))}
                   {renderAddButton('projects', 'Add Project')}
+                  <SectionNavigation
+                    currentTab="projects"
+                    onTabChange={setActiveTab}
+                    isValid={isCurrentSectionValid()}
+                    isSaving={isSaving}
+                    onSave={handleSaveProjects}
+                    validationErrors={validationErrors}
+                  />
                 </TabsContent>
 
                 {/* Education Tab */}
@@ -891,46 +1431,73 @@ export default function ResumeEditorPage() {
                         <div className="grid gap-6 md:grid-cols-2 w-full">
                           <div className="space-y-2">
                             <Label>School/University</Label>
-                            <div className="flex gap-2">
-                              <Input placeholder="Institution Name" />
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="icon"
-                                onClick={() => handleGenerateAI('education', edu.id, 'school')}
-                                disabled={isGenerating[`education-${edu.id}-school`]}
-                              >
-                                {isGenerating[`education-${edu.id}-school`] ? (
-                                  <div className="animate-spin">⌛</div>
-                                ) : (
-                                  <Sparkles className="h-4 w-4" />
-                                )}
-                              </Button>
-                            </div>
+                            <Input 
+                              placeholder="Institution Name"
+                              value={formData.education[edu.id]?.school || ''}
+                              onChange={(e) => handleInputChange('education', edu.id, 'school', e.target.value)}
+                            />
                           </div>
                           <div className="space-y-2">
                             <Label>Degree</Label>
-                            <Input placeholder="Bachelor of Science" />
+                            <select
+                              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                              value={formData.education[edu.id]?.degree || ''}
+                              onChange={(e) => handleInputChange('education', edu.id, 'degree', e.target.value)}
+                            >
+                              <option value="">Select Degree</option>
+                              {degreeOptions.map((degree) => (
+                                <option key={degree} value={degree}>{degree}</option>
+                              ))}
+                            </select>
                           </div>
                           <div className="space-y-2">
                             <Label>Field of Study</Label>
-                            <Input placeholder="Computer Science" />
+                            <Input 
+                              placeholder="Computer Science"
+                              value={formData.education[edu.id]?.fieldOfStudy || ''}
+                              onChange={(e) => handleInputChange('education', edu.id, 'fieldOfStudy', e.target.value)}
+                            />
                           </div>
                           <div className="space-y-2">
                             <Label>GPA</Label>
-                            <Input type="number" step="0.01" placeholder="3.8" />
+                            <Input 
+                              type="number" 
+                              step="0.01" 
+                              placeholder="3.8"
+                              value={formData.education[edu.id]?.gpa || ''}
+                              onChange={(e) => handleInputChange('education', edu.id, 'gpa', e.target.value)}
+                            />
                           </div>
                           <div className="space-y-2">
                             <Label>Start Date</Label>
-                            <Input type="date" />
+                            <Input 
+                              type="date"
+                              value={formData.education[edu.id]?.startDate || ''}
+                              onChange={(e) => handleInputChange('education', edu.id, 'startDate', e.target.value)}
+                            />
                           </div>
                           <div className="space-y-2">
                             <Label>End Date</Label>
-                            <Input type="date" />
+                            <Input 
+                              type="date"
+                              value={formData.education[edu.id]?.endDate || ''}
+                              onChange={(e) => handleInputChange('education', edu.id, 'endDate', e.target.value)}
+                            />
                           </div>
                           <div className="space-y-2 md:col-span-2">
                             <Label>Achievements</Label>
-                            <Textarea placeholder="List your academic achievements..." />
+                            <div className="flex flex-col gap-2">
+                              <Textarea 
+                                placeholder="List your academic achievements..."
+                                value={formData.education[edu.id]?.achievements || ''}
+                                onChange={(e) => handleInputChange('education', edu.id, 'achievements', e.target.value)}
+                              />
+                              <AIGenerateButton
+                                onClick={() => handleGenerateAI('achievement_description', edu.id, 'achievements')}
+                                isLoading={isGeneratingAI[`achievement_description-${edu.id}-achievements`]}
+                                label="Improve Achievement Text"
+                              />
+                            </div>
                           </div>
                         </div>
                         <Button
@@ -945,6 +1512,14 @@ export default function ResumeEditorPage() {
                     </Card>
                   ))}
                   {renderAddButton('education', 'Add Education')}
+                  <SectionNavigation
+                    currentTab="education"
+                    onTabChange={setActiveTab}
+                    isValid={isCurrentSectionValid()}
+                    isSaving={isSaving}
+                    onSave={handleSaveEducation}
+                    validationErrors={validationErrors}
+                  />
                 </TabsContent>
 
                 {/* Certifications Tab */}
@@ -960,15 +1535,19 @@ export default function ResumeEditorPage() {
                           <div className="space-y-2">
                             <Label>Certification Name</Label>
                             <div className="flex gap-2">
-                              <Input placeholder="Certification Name" />
+                              <Input 
+                                placeholder="Certification Name"
+                                value={formData.certifications[cert.id]?.name || ''}
+                                onChange={(e) => handleInputChange('certifications', cert.id, 'name', e.target.value)}
+                              />
                               <Button
                                 type="button"
                                 variant="outline"
                                 size="icon"
                                 onClick={() => handleGenerateAI('certifications', cert.id, 'name')}
-                                disabled={isGenerating[`certifications-${cert.id}-name`]}
+                                disabled={isGeneratingAI[`certifications-${cert.id}-name`]}
                               >
-                                {isGenerating[`certifications-${cert.id}-name`] ? (
+                                {isGeneratingAI[`certifications-${cert.id}-name`] ? (
                                   <div className="animate-spin">⌛</div>
                                 ) : (
                                   <Sparkles className="h-4 w-4" />
@@ -978,23 +1557,44 @@ export default function ResumeEditorPage() {
                           </div>
                           <div className="space-y-2">
                             <Label>Issuing Organization</Label>
-                            <Input placeholder="Organization Name" />
+                            <Input 
+                              placeholder="Organization Name"
+                              value={formData.certifications[cert.id]?.issuingOrg || ''}
+                              onChange={(e) => handleInputChange('certifications', cert.id, 'issuingOrg', e.target.value)}
+                            />
                           </div>
                           <div className="space-y-2">
                             <Label>Issue Date</Label>
-                            <Input type="date" />
+                            <Input 
+                              type="date"
+                              value={formData.certifications[cert.id]?.issueDate || ''}
+                              onChange={(e) => handleInputChange('certifications', cert.id, 'issueDate', e.target.value)}
+                            />
                           </div>
                           <div className="space-y-2">
                             <Label>Expiry Date</Label>
-                            <Input type="date" />
+                            <Input 
+                              type="date"
+                              value={formData.certifications[cert.id]?.expiryDate || ''}
+                              onChange={(e) => handleInputChange('certifications', cert.id, 'expiryDate', e.target.value)}
+                            />
                           </div>
                           <div className="space-y-2">
                             <Label>Credential ID</Label>
-                            <Input placeholder="ABC123" />
+                            <Input 
+                              placeholder="ABC123"
+                              value={formData.certifications[cert.id]?.credentialId || ''}
+                              onChange={(e) => handleInputChange('certifications', cert.id, 'credentialId', e.target.value)}
+                            />
                           </div>
                           <div className="space-y-2">
                             <Label>Credential URL</Label>
-                            <Input type="url" placeholder="https://..." />
+                            <Input 
+                              type="url" 
+                              placeholder="https://..."
+                              value={formData.certifications[cert.id]?.credentialUrl || ''}
+                              onChange={(e) => handleInputChange('certifications', cert.id, 'credentialUrl', e.target.value)}
+                            />
                           </div>
                         </div>
                         <Button
@@ -1009,6 +1609,14 @@ export default function ResumeEditorPage() {
                     </Card>
                   ))}
                   {renderAddButton('certifications', 'Add Certification')}
+                  <SectionNavigation
+                    currentTab="certifications"
+                    onTabChange={setActiveTab}
+                    isValid={isCurrentSectionValid()}
+                    isSaving={isSaving}
+                    onSave={handleSaveCertifications}
+                    validationErrors={validationErrors}
+                  />
                 </TabsContent>
 
                 {/* Achievements Tab */}
@@ -1031,7 +1639,11 @@ export default function ResumeEditorPage() {
                           </div>
                           <div className="space-y-2">
                             <Label>Date</Label>
-                            <Input type="date" />
+                            <Input 
+                              type="date"
+                              value={formData.achievements[achievement.id]?.date || ''}
+                              onChange={(e) => handleInputChange('achievements', achievement.id, 'date', e.target.value)}
+                            />
                           </div>
                           <div className="space-y-2 md:col-span-2">
                             <Label>Description</Label>
@@ -1041,22 +1653,10 @@ export default function ResumeEditorPage() {
                                 value={formData.achievements[achievement.id]?.description || ''}
                                 onChange={(e) => handleInputChange('achievements', achievement.id, 'description', e.target.value)}
                               />
-                              <Button
-                                type="button"
-                                variant="outline"
-                                className="w-full"
+                              <AIGenerateButton
                                 onClick={() => handleGenerateAI('achievement_description', achievement.id, 'description')}
-                                disabled={isGenerating[`achievement_description-${achievement.id}-description`]}
-                              >
-                                {isGenerating[`achievement_description-${achievement.id}-description`] ? (
-                                  <div className="animate-spin">⌛</div>
-                                ) : (
-                                  <div className="flex items-center gap-2">
-                                    <Sparkles className="h-4 w-4" />
-                                    Generate Description
-                                  </div>
-                                )}
-                              </Button>
+                                isLoading={isGeneratingAI[`achievement_description-${achievement.id}-description`]}
+                              />
                             </div>
                           </div>
                         </div>
@@ -1072,6 +1672,58 @@ export default function ResumeEditorPage() {
                     </Card>
                   ))}
                   {renderAddButton('achievements', 'Add Achievement')}
+                  <SectionNavigation
+                    currentTab="achievements"
+                    onTabChange={setActiveTab}
+                    isValid={isCurrentSectionValid()}
+                    isSaving={isSaving}
+                    onSave={handleSaveAchievements}
+                    validationErrors={validationErrors}
+                  />
+                </TabsContent>
+
+                {/* Skills Tab */}
+                <TabsContent value="skills" className="space-y-6">
+                  {renderSectionHeader(
+                    "Skills",
+                    "Add your technical skills, soft skills, and tools you're proficient with"
+                  )}
+                  <Card className="p-4">
+                    <div className="grid gap-6">
+                      <div className="space-y-2">
+                        <Label>Technical Skills</Label>
+                          <SkillsInput
+                            value={formData.skills.technical}
+                          onChange={(skills) => handleInputChange('skills', 0, 'technical', skills)}
+                          placeholder="Add programming languages, frameworks, etc."
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Soft Skills</Label>
+                          <SkillsInput
+                            value={formData.skills.soft}
+                          onChange={(skills) => handleInputChange('skills', 0, 'soft', skills)}
+                          placeholder="Add communication, leadership, etc."
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Tools & Technologies</Label>
+                          <SkillsInput
+                          value={formData.skills.languages}
+                          onChange={(skills) => handleInputChange('skills', 0, 'languages', skills)}
+                          placeholder="Add languages you're proficient with"
+                        />
+                        </div>
+                      </div>
+                  </Card>
+                  <SectionNavigation
+                    currentTab="skills"
+                    onTabChange={setActiveTab}
+                    isValid={isCurrentSectionValid()}
+                    isSaving={isSaving}
+                    onSave={handleSaveSkills}
+                    validationErrors={validationErrors}
+                  />
                 </TabsContent>
 
                 {/* Summary Tab */}
@@ -1087,274 +1739,21 @@ export default function ResumeEditorPage() {
                         value={formData.summary || ''}
                         onChange={(e) => setFormData({ ...formData, summary: e.target.value })}
                       />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="w-full"
+                      <AIGenerateButton
                         onClick={() => handleGenerateAI('summary', 0, 'content')}
-                        disabled={isGenerating[`summary-0-content`]}
-                      >
-                        {isGenerating[`summary-0-content`] ? (
-                          <div className="animate-spin">⌛</div>
-                        ) : (
-                          <div className="flex items-center gap-2">
-                            <Sparkles className="h-4 w-4" />
-                            Generate Professional Summary
-                          </div>
-                        )}
-                      </Button>
+                        isLoading={isGeneratingAI[`summary-0-content`]}
+                        label="Generate Professional Summary"
+                      />
                     </div>
                   </Card>
-                </TabsContent>
-
-                {/* Volunteering Tab */}
-                <TabsContent value="volunteering" className="space-y-6">
-                  {renderSectionHeader(
-                    "Volunteer Experience",
-                    "Add your volunteer work and community service"
-                  )}
-                  <div className="space-y-6">
-                    <AnimatePresence>
-                      {volunteering.map((vol, index) => (
-                        <motion.div
-                          key={vol.id}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -20 }}
-                          transition={{ duration: 0.2 }}
-                        >
-                          <Card className="p-4 group hover:shadow-md transition-all">
-                            <div className="flex justify-between items-start mb-4">
-                              <div className="flex items-center gap-2">
-                                <Heart className="h-5 w-5 text-muted-foreground" />
-                                <span className="font-medium">Volunteer Experience {index + 1}</span>
-                              </div>
-                              {volunteering.length > 1 && (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="opacity-0 group-hover:opacity-100 transition-opacity"
-                                  onClick={() => removeItem("volunteering", vol.id)}
-                                >
-                                  <Trash2 className="h-4 w-4 text-destructive" />
-                                </Button>
-                              )}
-                            </div>
-                            <div className="grid gap-6 md:grid-cols-2">
-                              <div className="space-y-2">
-                                <Label>Organization</Label>
-                                <Input 
-                                  placeholder="Organization Name"
-                                  value={formData.volunteering[vol.id]?.organization || ''}
-                                  onChange={(e) => handleInputChange('volunteering', vol.id, 'organization', e.target.value)}
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <Label>Role</Label>
-                                <Input 
-                                  placeholder="Volunteer Role"
-                                  value={formData.volunteering[vol.id]?.role || ''}
-                                  onChange={(e) => handleInputChange('volunteering', vol.id, 'role', e.target.value)}
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <Label>Start Date</Label>
-                                <Input type="date" />
-                              </div>
-                              <div className="space-y-2">
-                                <Label>End Date</Label>
-                                <Input type="date" />
-                              </div>
-                              <div className="space-y-2 md:col-span-2">
-                                <Label>Description</Label>
-                                <div className="flex flex-col gap-2">
-                                  <Textarea 
-                                    placeholder="Describe your volunteer work..."
-                                    value={formData.volunteering[vol.id]?.description || ''}
-                                    onChange={(e) => handleInputChange('volunteering', vol.id, 'description', e.target.value)}
-                                  />
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    className="w-full"
-                                    onClick={() => handleGenerateAI('volunteer_description', vol.id, 'description')}
-                                    disabled={isGenerating[`volunteer_description-${vol.id}-description`]}
-                                  >
-                                    {isGenerating[`volunteer_description-${vol.id}-description`] ? (
-                                      <div className="animate-spin">⌛</div>
-                                    ) : (
-                                      <div className="flex items-center gap-2">
-                                        <Sparkles className="h-4 w-4" />
-                                        Generate Description
-                                      </div>
-                                    )}
-                                  </Button>
-                                </div>
-                              </div>
-                            </div>
-                          </Card>
-                        </motion.div>
-                      ))}
-                    </AnimatePresence>
-                    {renderAddButton("volunteering", "Add Another Volunteer Experience")}
-                  </div>
-                </TabsContent>
-
-                {/* References Tab */}
-                <TabsContent value="references" className="space-y-6">
-                  {renderSectionHeader(
-                    "Professional References",
-                    "Add references who can vouch for your work"
-                  )}
-                  <div className="space-y-6">
-                    <AnimatePresence>
-                      {references.map((ref, index) => (
-                        <motion.div
-                          key={ref.id}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -20 }}
-                          transition={{ duration: 0.2 }}
-                        >
-                          <Card className="p-4 group hover:shadow-md transition-all">
-                            <div className="flex justify-between items-start mb-4">
-                              <div className="flex items-center gap-2">
-                                <Users className="h-5 w-5 text-muted-foreground" />
-                                <span className="font-medium">Reference {index + 1}</span>
-                              </div>
-                              {references.length > 1 && (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="opacity-0 group-hover:opacity-100 transition-opacity"
-                                  onClick={() => removeItem("references", ref.id)}
-                                >
-                                  <Trash2 className="h-4 w-4 text-destructive" />
-                                </Button>
-                              )}
-                            </div>
-                            <div className="grid gap-6 md:grid-cols-2">
-                              <div className="space-y-2">
-                                <Label>Full Name</Label>
-                                <Input placeholder="Reference's name" />
-                              </div>
-                              <div className="space-y-2">
-                                <Label>Position</Label>
-                                <Input placeholder="Current position" />
-                              </div>
-                              <div className="space-y-2">
-                                <Label>Company</Label>
-                                <Input placeholder="Company name" />
-                              </div>
-                              <div className="space-y-2">
-                                <Label>Relationship</Label>
-                                <Input placeholder="e.g., Former Manager" />
-                              </div>
-                              <div className="space-y-2">
-                                <Label>Email</Label>
-                                <Input type="email" placeholder="reference@company.com" />
-                              </div>
-                              <div className="space-y-2">
-                                <Label>Phone</Label>
-                                <Input placeholder="+1 234 567 8900" />
-                              </div>
-                            </div>
-                          </Card>
-                        </motion.div>
-                      ))}
-                    </AnimatePresence>
-                    {renderAddButton("references", "Add Another Reference")}
-                  </div>
-                </TabsContent>
-
-                {/* Skills Tab */}
-                <TabsContent value="skills" className="space-y-6">
-                  {renderSectionHeader(
-                    "Skills",
-                    "Add your technical and professional skills"
-                  )}
-                  <Card className="p-4">
-                    <div className="space-y-6">
-                      <div className="space-y-2">
-                        <Label>Technical Skills</Label>
-                        <div className="flex gap-2">
-                          <SkillsInput
-                            value={formData.skills.technical}
-                            onChange={(skills) => setFormData({
-                              ...formData,
-                              skills: { ...formData.skills, technical: skills }
-                            })}
-                            placeholder="Type technical skills and press Enter or comma"
-                          />
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="icon"
-                            onClick={() => handleGenerateAI('skills', 1, 'technical')}
-                            disabled={isGenerating['skills-1-technical']}
-                          >
-                            {isGenerating['skills-1-technical'] ? (
-                              <div className="animate-spin">⌛</div>
-                            ) : (
-                              <Sparkles className="h-4 w-4" />
-                            )}
-                          </Button>
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Soft Skills</Label>
-                        <div className="flex gap-2">
-                          <SkillsInput
-                            value={formData.skills.soft}
-                            onChange={(skills) => setFormData({
-                              ...formData,
-                              skills: { ...formData.skills, soft: skills }
-                            })}
-                            placeholder="Type soft skills and press Enter or comma"
-                          />
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="icon"
-                            onClick={() => handleGenerateAI('skills', 1, 'soft')}
-                            disabled={isGenerating['skills-1-soft']}
-                          >
-                            {isGenerating['skills-1-soft'] ? (
-                              <div className="animate-spin">⌛</div>
-                            ) : (
-                              <Sparkles className="h-4 w-4" />
-                            )}
-                          </Button>
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Tools & Technologies</Label>
-                        <div className="flex gap-2">
-                          <SkillsInput
-                            value={formData.skills.tools}
-                            onChange={(skills) => setFormData({
-                              ...formData,
-                              skills: { ...formData.skills, tools: skills }
-                            })}
-                            placeholder="Type tools/technologies and press Enter or comma"
-                          />
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="icon"
-                            onClick={() => handleGenerateAI('skills', 1, 'tools')}
-                            disabled={isGenerating['skills-1-tools']}
-                          >
-                            {isGenerating['skills-1-tools'] ? (
-                              <div className="animate-spin">⌛</div>
-                            ) : (
-                              <Sparkles className="h-4 w-4" />
-                            )}
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </Card>
+                  <SectionNavigation
+                    currentTab="summary"
+                    onTabChange={setActiveTab}
+                    isValid={isCurrentSectionValid()}
+                    isSaving={isSaving}
+                    onSave={handleSaveSummary}
+                    validationErrors={validationErrors}
+                  />
                 </TabsContent>
 
                 {/* Finish Tab */}
@@ -1364,28 +1763,22 @@ export default function ResumeEditorPage() {
                     "Review and generate your resume"
                   )}
                   <Card className="p-4">
-                    <div className="space-y-4">
+                    <div className="space-y-6">
                       <div className="space-y-2">
                         <Label>Resume Title</Label>
-                        <Input placeholder="My Professional Resume" />
+                        <Input 
+                          placeholder="My Professional Resume" 
+                          value={resumeTitle}
+                          onChange={(e) => setResumeTitle(e.target.value)}
+                        />
                       </div>
                       <div className="space-y-2">
                         <Label>Template Style</Label>
-                        <div className="grid grid-cols-3 gap-4">
-                          {["Modern", "Classic", "Creative"].map((style) => (
-                            <Card
-                              key={style}
-                              className="p-4 cursor-pointer hover:border-primary transition-colors group"
-                            >
-                              <div className="text-center space-y-2">
-                                <div className="w-full aspect-[3/4] bg-primary/10 rounded-lg flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                                  <FileText className="h-8 w-8 text-primary" />
-                                </div>
-                                <span className="text-sm font-medium">{style}</span>
-                              </div>
-                            </Card>
-                          ))}
-                        </div>
+                        <TemplateSelector
+                          selectedTemplate={selectedTemplate}
+                          onTemplateChange={setSelectedTemplate}
+                          className="mt-2"
+                        />
                       </div>
                     </div>
                   </Card>
@@ -1396,17 +1789,40 @@ export default function ResumeEditorPage() {
                       This will use 50 credits
                     </div>
                     <div className="flex gap-4">
-                      <Button variant="outline">
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          // Handle preview logic
+                        }}
+                      >
                         Preview
                       </Button>
-                      <Button>
+                      <Button
+                        onClick={handleGenerateResume}
+                        disabled={isGenerating}
+                      >
+                        {isGenerating ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Generating...
+                          </>
+                        ) : (
+                          <>
                         Generate Resume
                         <ArrowRight className="ml-2 h-4 w-4" />
+                          </>
+                        )}
                       </Button>
                     </div>
                   </div>
+                  <SectionNavigation
+                    currentTab="finish"
+                    onTabChange={setActiveTab}
+                    isValid={isCurrentSectionValid()}
+                    isSaving={isSaving}
+                    validationErrors={validationErrors}
+                  />
                 </TabsContent>
-
               </motion.div>
             </AnimatePresence>
           </div>

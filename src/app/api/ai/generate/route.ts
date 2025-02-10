@@ -21,7 +21,7 @@ function getPromptForSection(section: string, context: Record<string, any>): str
     Keep under 50 words and use plain text without special characters.`,
     
     experience_description: `Enhance this experience description (or write a new one if empty): "${context.description || ''}"
-    Context: ${context.title || ''} role at ${context.company || ''} using ${context.technologies || ''}.
+    Context: ${context.title || ''} role at ${context.company || ''}.
     Keep under 30 words and use plain text without special characters.`,
     
     project_description: `Enhance this project description (or write a new one if empty): "${context.description || ''}"

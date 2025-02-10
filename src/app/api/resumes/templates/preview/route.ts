@@ -26,8 +26,23 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     console.error('Error generating template preview:', error);
+    
+    // Check if the error is related to missing pdflatex
+    if (error instanceof Error && error.message.includes('pdflatex: command not found')) {
+      return NextResponse.json(
+        { 
+          error: 'LaTeX is not installed on the system. Please install TeX Live using your package manager.',
+          details: error.message
+        },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json(
-      { error: 'Failed to generate preview' },
+      { 
+        error: 'Failed to generate preview',
+        details: error instanceof Error ? error.message : 'Unknown error occurred'
+      },
       { status: 500 }
     );
   }

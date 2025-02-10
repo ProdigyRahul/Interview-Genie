@@ -12,7 +12,27 @@ export async function POST(req: Request) {
     }
 
     const data = await req.json();
-    const { fullName, email, phoneNumber, jobTitle, yearsOfExperience, keySkills } = data;
+    console.log('Received data:', data); // Debug log
+
+    const { 
+      fullName, 
+      email, 
+      phoneNumber, // Changed from phone to phoneNumber to match request
+      jobTitle, 
+      yearsOfExperience, 
+      keySkills, 
+      location = '',
+      linkedIn = '',
+      portfolio = ''
+    } = data;
+
+    // Validate required fields
+    if (!fullName || !email || !phoneNumber || !jobTitle) {
+      return NextResponse.json(
+        { error: 'Missing required fields: fullName, email, phoneNumber, and jobTitle are required' },
+        { status: 400 }
+      );
+    }
 
     const user = await prisma.user.findUnique({
       where: { email: session.user.email }
@@ -27,17 +47,15 @@ export async function POST(req: Request) {
       data: {
         userId: user.id,
         title: `${fullName}'s Resume`,
-        fileType: 'pdf',
         personalInfo: {
           create: {
             fullName,
             email,
-            phoneNumber,
+            phone: phoneNumber, // Map phoneNumber to phone in the database
             jobTitle,
-            location: '',
-            linkedIn: '',
-            portfolio: '',
-            github: ''
+            location,
+            linkedIn,
+            portfolio
           }
         }
       },
@@ -55,7 +73,7 @@ export async function POST(req: Request) {
 
     const summary = await generateResumeContent('summary', summaryContext);
     if (summary.content) {
-      await prisma.resumeSummary.create({
+      await prisma.summary.create({
         data: {
           resumeId: resume.id,
           content: summary.content
@@ -76,11 +94,12 @@ export async function POST(req: Request) {
         .filter(skill => skill.trim())
         .map(skill => skill.replace(/^-\s*/, '').trim());
 
-      await prisma.resumeSkill.create({
+      await prisma.skills.create({
         data: {
           resumeId: resume.id,
-          category: 'Technical Skills',
-          skills: skillsArray
+          technical: skillsArray,
+          soft: [],
+          tools: []
         }
       });
     }
@@ -130,9 +149,7 @@ export async function GET(req: Request) {
         projects: true,
         certifications: true,
         skills: true,
-        references: true,
-        achievements: true,
-        volunteering: true
+        achievements: true
       },
       orderBy: [
         { createdAt: 'desc' }

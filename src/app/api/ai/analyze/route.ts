@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { env } from "@/env";
+import { ATSAnalysisResponse } from "@/lib/gemini";
 
 // Initialize Gemini on the server side
 const genAI = new GoogleGenerativeAI(env.GOOGLE_GEMINI_API);
@@ -46,74 +47,74 @@ Scoring Criteria (Balanced but Strict):
 Please analyze the resume and provide a detailed response in the following JSON format:
 {
   "ats_analysis": {
-    "total_score": number,
+    "total_score": <number between 0-100>,
     "section_scores": {
-      "format": number,
-      "content": number,
-      "language": number,
-      "competencies": number,
-      "keywords": number
+      "format": <number between 0-20>,
+      "content": <number between 0-20>,
+      "language": <number between 0-20>,
+      "competencies": <number between 0-20>,
+      "keywords": <number between 0-20>
     },
     "detailed_breakdown": {
       "format_analysis": {
-        "length_depth_score": number,
-        "bullet_usage_score": number,
-        "bullet_length_score": number,
-        "page_density_score": number,
-        "formatting_score": number
+        "length_depth_score": <number>,
+        "bullet_usage_score": <number>,
+        "bullet_length_score": <number>,
+        "page_density_score": <number>,
+        "formatting_score": <number>
       },
       "content_analysis": {
-        "impact_score": number,
-        "achievements_score": number,
-        "relevance_score": number,
-        "technical_depth_score": number
+        "impact_score": <number>,
+        "achievements_score": <number>,
+        "relevance_score": <number>,
+        "technical_depth_score": <number>
       },
       "language_analysis": {
-        "verb_strength": number,
-        "tense_consistency": number,
-        "clarity": number,
-        "spelling_grammar": number,
-        "professional_tone": number
+        "verb_strength": <number>,
+        "tense_consistency": <number>,
+        "clarity": <number>,
+        "spelling_grammar": <number>,
+        "professional_tone": <number>
       },
       "competencies_analysis": {
-        "leadership_initiative": number,
-        "problem_solving": number,
-        "collaboration": number,
-        "results_orientation": number
+        "leadership_initiative": <number>,
+        "problem_solving": <number>,
+        "collaboration": <number>,
+        "results_orientation": <number>
       }
     },
-    "keyword_match_rate": string,
-    "missing_keywords": string[]
+    "keyword_match_rate": <string>,
+    "missing_keywords": <array of strings>
   },
   "improvement_suggestions": {
-    "high_priority": string[],
-    "content": string[],
-    "language": string[],
-    "format": string[],
-    "keywords": string[]
+    "high_priority": <array of most important improvements needed>,
+    "content": <array of specific content improvements>,
+    "language": <array of language improvements>,
+    "format": <array of formatting improvements>,
+    "keywords": <array of keyword suggestions>
   },
   "improvement_details": {
     "bullet_points": [
       {
-        "original": string,
-        "improved": string,
-        "reason": string
+        "original": <string>,
+        "improved": <string>,
+        "reason": <string>
       }
     ],
     "achievements": [
       {
-        "section": string,
-        "current": string,
-        "suggested": string,
-        "impact": string
+        "section": <string>,
+        "current": <string>,
+        "suggested": <string>,
+        "impact": <string>
       }
     ],
     "skills": [
       {
-        "skill_area": string,
-        "current": string,
-        "improved": string,
-        "explanation": string
+        "skill_area": <string>,
+        "current": <string>,
+        "improved": <string>,
+        "explanation": <string>
       }
     ]
   }
@@ -125,7 +126,16 @@ export async function POST(req: Request) {
     const result = await model.generateContent(ATS_ANALYSIS_PROMPT + "\n\nAnalyze this resume:\n" + resumeData);
     const response = result.response;
     
-    return NextResponse.json(JSON.parse(response.text()));
+    try {
+      const analysis = JSON.parse(response.text()) as ATSAnalysisResponse;
+      return NextResponse.json(analysis);
+    } catch (parseError) {
+      console.error('Error parsing Gemini response:', parseError);
+      return NextResponse.json(
+        { error: 'Failed to parse resume analysis' },
+        { status: 500 }
+      );
+    }
   } catch (error) {
     console.error('Error analyzing resume:', error);
     return NextResponse.json(

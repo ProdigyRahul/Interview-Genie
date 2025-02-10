@@ -265,7 +265,7 @@ export default function ResumeBuilderPage() {
                     </Button>
                     <Button 
                       className="w-full backdrop-blur-sm"
-                      onClick={() => router.push(`/document-preparation/resume-builder/view/${resume.id}`)}
+                      onClick={() => router.push(`/document-preparation/resume-builder/${resume.id}/view`)}
                     >
                       <Eye className="h-4 w-4 mr-2" />
                       View

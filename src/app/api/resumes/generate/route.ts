@@ -1,13 +1,197 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { generateLaTeX } from '@/lib/templates/latex/generator';
-import { generateResumePDF } from '@/lib/templates/latex/compiler';
-import { ResumeData, TemplateType } from '@/lib/templates/latex/types';
-import { analyzeResume } from '@/lib/gemini';
+import { ResumeData, TemplateType } from '@/lib/types/resume';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import { env } from "@/env";
+
+// Initialize Gemini on the server side
+const genAI = new GoogleGenerativeAI(env.GOOGLE_GEMINI_API);
+const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+
+const ATS_ANALYSIS_PROMPT = `You are an ATS resume analyzer. Analyze the given resume and provide a structured JSON response following this exact format:
+
+{
+  "ats_analysis": {
+    "total_score": number,
+    "section_scores": {
+      "format": number,
+      "content": number,
+      "language": number,
+      "competencies": number,
+      "keywords": number
+    },
+    "detailed_breakdown": {
+      "format_analysis": {
+        "length_depth_score": number,
+        "bullet_usage_score": number,
+        "bullet_length_score": number,
+        "page_density_score": number,
+        "formatting_score": number
+      },
+      "content_analysis": {
+        "impact_score": number,
+        "achievements_score": number,
+        "relevance_score": number,
+        "technical_depth_score": number
+      },
+      "language_analysis": {
+        "verb_strength": number,
+        "tense_consistency": number,
+        "clarity": number,
+        "spelling_grammar": number,
+        "professional_tone": number
+      },
+      "competencies_analysis": {
+        "leadership_initiative": number,
+        "problem_solving": number,
+        "collaboration": number,
+        "results_orientation": number
+      }
+    },
+    "keyword_match_rate": string,
+    "missing_keywords": string[]
+  },
+  "improvement_suggestions": {
+    "high_priority": string[],
+    "content": string[],
+    "language": string[],
+    "format": string[],
+    "keywords": string[]
+  },
+  "improvement_details": {
+    "bullet_points": [
+      {
+        "original": string,
+        "improved": string,
+        "reason": string
+      }
+    ],
+    "achievements": [
+      {
+        "section": string,
+        "current": string,
+        "suggested": string,
+        "impact": string
+      }
+    ],
+    "skills": [
+      {
+        "skill_area": string,
+        "current": string,
+        "improved": string,
+        "explanation": string
+      }
+    ]
+  }
+}
+
+Use these scoring criteria:
+
+1. Format & Structure (20 points):
+   - Length & depth (0-4): Standard 1-2 pages acceptable
+   - Use of bullets (0-4): Clear bullet points with action verbs
+   - Bullet lengths (0-4): 1-2 lines optimal, clear and concise
+   - Page density (0-4): Balanced white space and content
+   - Overall formatting (0-4): Consistent fonts and spacing
+
+2. Content Quality (20 points):
+   - Quantified impact (0-5): Numbers and metrics where applicable
+   - Specific achievements (0-5): Clear accomplishments over duties
+   - Relevance to field (0-5): Industry-aligned experience
+   - Technical depth (0-5): Appropriate technical detail
+
+3. Language & Communication (20 points):
+   - Verb strength (0-4): Strong action verbs
+   - Verb tense consistency (0-4): Proper past/present usage
+   - Clarity (0-4): Clear, professional language
+   - Spelling & grammar (0-4): Minimal errors acceptable
+   - Professional tone (0-4): Appropriate business language
+
+4. Core Competencies (20 points):
+   - Leadership/Initiative (0-5): Shows proactive approach
+   - Problem-solving (0-5): Demonstrates analytical thinking
+   - Collaboration (0-5): Shows team and communication skills
+   - Results-orientation (0-5): Focus on outcomes
+
+5. Keywords & Industry Alignment (20 points):
+   - Industry-specific terms (0-7): Relevant current technologies
+   - Role-specific keywords (0-7): Matching job requirements
+   - Soft skills alignment (0-6): Balanced technical and soft skills
+
+IMPORTANT: Respond ONLY with the JSON object. Do not include any additional text, markdown formatting, or explanations.`;
+
+interface ExperienceData {
+  company: string;
+  position: string;
+  location: string;
+  startDate: string;
+  endDate: string;
+  description: string[];
+}
+
+interface EducationData {
+  school: string;
+  degree: string;
+  location: string;
+  startDate: string;
+  endDate: string;
+  description?: string[];
+}
+
+interface ProjectData {
+  name: string;
+  technologies: string;
+  date: string;
+  description: string[];
+}
+
+interface CertificationData {
+  name: string;
+  issuer: string;
+  date: string;
+  description?: string;
+}
+
+interface AchievementData {
+  title: string;
+  date: string;
+  description: string;
+}
+
+async function analyzeResumeWithGemini(resumeData: string) {
+  try {
+    console.log('Analyzing resume with Gemini...');
+    console.log('Resume data:', JSON.stringify(resumeData, null, 2));
+    
+    const result = await model.generateContent(ATS_ANALYSIS_PROMPT + "\n\nAnalyze this resume:\n" + resumeData);
+    const response = result.response;
+    const text = response.text().trim();
+    
+    console.log('Raw Gemini response:', text);
+    
+    // Remove any markdown code block markers if present
+    const cleanedText = text.replace(/```json\n?|\n?```/g, '').trim();
+    console.log('Cleaned response:', cleanedText);
+    
+    try {
+      const parsedResponse = JSON.parse(cleanedText);
+      console.log('Successfully parsed response:', JSON.stringify(parsedResponse, null, 2));
+      return parsedResponse;
+    } catch (parseError) {
+      console.error('JSON parse error:', parseError);
+      throw new Error('Invalid JSON response from Gemini');
+    }
+  } catch (error) {
+    console.error('Error analyzing resume with Gemini:', error);
+    throw new Error('Failed to analyze resume');
+  }
+}
 
 export async function POST(req: NextRequest) {
   try {
+    console.log('Starting resume generation process...');
+    
     // Check authentication
     const session = await auth();
     if (!session?.user?.email) {
@@ -16,20 +200,36 @@ export async function POST(req: NextRequest) {
 
     // Parse request body
     const body = await req.json();
-    const { data, template } = body as { data: ResumeData; template: TemplateType };
+    console.log('Request body:', JSON.stringify(body, null, 2));
+    
+    const { data, template, resumeId, title: explicitTitle } = body as { 
+      data: ResumeData; 
+      template: TemplateType; 
+      resumeId: string;
+      title?: string;
+    };
+
+    // Get title from either explicit title or generate from personal info
+    const title = explicitTitle?.trim() || 
+                 `${data.personalInfo.name}'s ${data.personalInfo.title} Resume`.trim();
 
     // Validate request data
-    if (!data || !template) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    if (!data || !template || !resumeId) {
+      console.error('Missing required fields:', { data: !!data, template: !!template, resumeId: !!resumeId });
+      return NextResponse.json({ 
+        error: 'Missing required fields. Please provide data, template, and resumeId.' 
+      }, { status: 400 });
     }
 
-    // Generate LaTeX content
-    const latexContent = generateLaTeX(data, template);
-
-    // Generate PDF
-    const { buffer, error } = await generateResumePDF(latexContent);
-    if (error || !buffer.length) {
-      return NextResponse.json({ error: error || 'Failed to generate PDF' }, { status: 500 });
+    // Validate personal info
+    if (!data.personalInfo?.name || !data.personalInfo?.title) {
+      console.error('Missing required personal info:', { 
+        name: !!data.personalInfo?.name, 
+        title: !!data.personalInfo?.title 
+      });
+      return NextResponse.json({ 
+        error: 'Missing required personal information. Name and title are required.' 
+      }, { status: 400 });
     }
 
     // Get user
@@ -41,168 +241,93 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Analyze resume with Gemini
-    const analysis = await analyzeResume(latexContent);
-
-    // Convert ResumeData to a plain object for JSON storage
-    const parsedData = {
-      personalInfo: { ...data.personalInfo },
-      summary: data.summary,
-      experience: data.experience.map(exp => ({ ...exp })),
-      education: data.education.map(edu => ({ ...edu })),
-      projects: data.projects.map(proj => ({ ...proj })),
-      certifications: data.certifications.map(cert => ({ ...cert })),
-      skills: { ...data.skills },
-      achievements: data.achievements.map(ach => ({ ...ach }))
-    };
-
-    // Save resume to database
-    const resume = await prisma.resume.create({
-      data: {
-        userId: user.id,
-        title: data.personalInfo.name,
-        fileType: 'pdf',
-        parsedData,
-        atsScore: analysis.ats_analysis.total_score,
-        personalInfo: {
-          create: {
-            fullName: data.personalInfo.name,
-            email: data.personalInfo.email,
-            phoneNumber: data.personalInfo.phone,
-            jobTitle: data.personalInfo.title || '',
-            location: data.personalInfo.location,
-            linkedIn: data.personalInfo.linkedin,
-            portfolio: data.personalInfo.website,
-            github: data.personalInfo.github
-          }
-        },
-        summary: {
-          create: {
-            content: data.summary
-          }
-        },
-        experiences: {
-          create: data.experience.map(exp => ({
-            companyName: exp.company,
-            jobTitle: exp.position,
-            location: exp.location,
-            startDate: new Date(exp.startDate),
-            endDate: exp.endDate ? new Date(exp.endDate) : null,
-            current: !exp.endDate,
-            description: exp.description.join('\n'),
-            achievements: [],
-            technologies: []
-          }))
-        },
-        education: {
-          create: data.education.map(edu => ({
-            school: edu.school,
-            degree: edu.degree,
-            fieldOfStudy: '',
-            location: edu.location,
-            startDate: new Date(edu.startDate),
-            endDate: edu.endDate ? new Date(edu.endDate) : null,
-            current: !edu.endDate,
-            achievements: edu.description || []
-          }))
-        },
-        projects: {
-          create: data.projects.map(proj => ({
-            title: proj.name,
-            description: proj.description.join('\n'),
-            technologies: [proj.technologies],
-            link: ''
-          }))
-        },
-        certifications: {
-          create: data.certifications.map(cert => ({
-            name: cert.name,
-            issuingOrg: cert.issuer,
-            issueDate: new Date(cert.date),
-            credentialId: '',
-            credentialUrl: ''
-          }))
-        },
-        skills: {
-          create: [
-            {
-              category: 'Technical',
-              skills: data.skills.technical
-            },
-            {
-              category: 'Soft',
-              skills: data.skills.soft
-            },
-            {
-              category: 'Languages',
-              skills: data.skills.languages
-            }
-          ]
-        },
-        achievements: {
-          create: data.achievements.map(ach => ({
-            title: ach.title,
-            description: ach.description,
-            date: new Date(ach.date)
-          }))
-        }
-      }
+    // Update resume title
+    console.log('Updating resume with title:', title);
+    await prisma.resume.update({
+      where: { id: resumeId },
+      data: { title }
     });
 
-    // Return PDF buffer, resume ID, and ATS analysis
+    console.log('Updated resume title:', title);
+
+    // Analyze resume with Gemini
+    const analysis = await analyzeResumeWithGemini(JSON.stringify(data));
+    console.log('Resume analysis completed');
+
+    // Store the ATS score and analysis in the database
+    if (analysis?.ats_analysis?.total_score) {
+      console.log('Updating ATS score:', analysis.ats_analysis.total_score);
+      
+      await prisma.resume.update({
+        where: { id: resumeId },
+        data: {
+          atsScore: analysis.ats_analysis.total_score,
+          atsAnalysis: {
+            ats_analysis: {
+              total_score: analysis.ats_analysis.total_score,
+              section_scores: analysis.ats_analysis.section_scores,
+              detailed_breakdown: analysis.ats_analysis.detailed_breakdown,
+              keyword_match_rate: analysis.ats_analysis.keyword_match_rate,
+              missing_keywords: analysis.ats_analysis.missing_keywords
+            },
+            improvement_suggestions: analysis.improvement_suggestions,
+            improvement_details: analysis.improvement_details
+          }
+        }
+      });
+      
+      console.log('ATS analysis stored in database');
+    }
+
+    // Calculate resume score
+    console.log('Calculating resume score...');
+    
+    const expScore = data.experience.reduce((acc: number, exp: ExperienceData) => 
+      acc + Math.min(exp.description.length / 3, 1), 0);
+
+    const eduScore = data.education.reduce((acc: number, edu: EducationData) => 
+      acc + (edu.description ? edu.description.length : 0), 0);
+
+    const projScore = data.projects.reduce((acc: number, proj: ProjectData) => 
+      acc + Math.min(proj.description.length / 2, 1), 0);
+
+    const certScore = data.certifications.reduce((acc: number, cert: CertificationData) => 
+      acc + (cert.description ? 2 : 1), 0);
+
+    const achScore = data.achievements.reduce((acc: number, ach: AchievementData) => 
+      acc + (ach.description ? 1 : 0), 0);
+
+    const totalScore = Math.min(
+      (expScore * 0.3 + 
+       eduScore * 0.2 + 
+       projScore * 0.2 + 
+       certScore * 0.15 + 
+       achScore * 0.15) * 100,
+      100
+    );
+
+    console.log('Score calculation completed:', {
+      expScore,
+      eduScore,
+      projScore,
+      certScore,
+      achScore,
+      totalScore: Math.round(totalScore)
+    });
+
+    // Return success response with data for client-side PDF generation
     return NextResponse.json({
-      resumeId: resume.id,
-      pdf: buffer.toString('base64'),
-      ats_analysis: analysis.ats_analysis,
-      improvement_suggestions: analysis.improvement_suggestions,
-      improvement_details: analysis.improvement_details
+      success: true,
+      data,
+      template,
+      analysis,
+      score: Math.round(totalScore)
     });
   } catch (error) {
     console.error('Error generating resume:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: error instanceof Error ? error.message : 'Unknown error occurred' },
       { status: 500 }
     );
   }
 }
-
-function calculateResumeScore(data: ResumeData): number {
-  let score = 0;
-  const maxScore = 100;
-
-  // Personal Info (10 points)
-  const personalInfoFields = Object.values(data.personalInfo).filter(Boolean).length;
-  score += (personalInfoFields / 8) * 10;
-
-  // Summary (10 points)
-  if (data.summary) {
-    const words = data.summary.split(' ').length;
-    score += Math.min(words / 50, 1) * 10;
-  }
-
-  // Experience (30 points)
-  const expScore = Math.min(data.experience.length / 3, 1) * 15;
-  const expDetailScore = data.experience.reduce((acc, exp) => 
-    acc + Math.min(exp.description.length / 3, 1), 0) / Math.max(data.experience.length, 1) * 15;
-  score += expScore + expDetailScore;
-
-  // Education (15 points)
-  score += Math.min(data.education.length / 2, 1) * 15;
-
-  // Projects (15 points)
-  const projScore = Math.min(data.projects.length / 3, 1) * 7.5;
-  const projDetailScore = data.projects.reduce((acc, proj) => 
-    acc + Math.min(proj.description.length / 2, 1), 0) / Math.max(data.projects.length, 1) * 7.5;
-  score += projScore + projDetailScore;
-
-  // Skills (10 points)
-  const skillsCount = data.skills.technical.length + data.skills.soft.length + data.skills.languages.length;
-  score += Math.min(skillsCount / 10, 1) * 10;
-
-  // Certifications and Achievements (10 points)
-  const certScore = Math.min(data.certifications.length / 2, 1) * 5;
-  const achScore = Math.min(data.achievements.length / 2, 1) * 5;
-  score += certScore + achScore;
-
-  return Math.round(Math.min(score, maxScore));
-} 

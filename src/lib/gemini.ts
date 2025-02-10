@@ -73,6 +73,42 @@ export interface ATSAnalysisResponse {
   };
 }
 
+export const ATS_ANALYSIS_PROMPT = `Analyze this resume with balanced but strict scoring criteria. Provide constructive feedback while acknowledging strengths.
+A well-crafted resume should be able to achieve a score between 70-85%, with exceptional resumes potentially scoring higher.
+
+Scoring Criteria (Balanced but Strict):
+
+1. Format & Structure (20 points):
+   - Length & depth (0-4): Standard 1-2 pages acceptable, -1 for excess
+   - Use of bullets (0-4): Clear bullet points with action verbs
+   - Bullet lengths (0-4): 1-2 lines optimal, clear and concise
+   - Page density (0-4): Balanced white space and content
+   - Overall formatting (0-4): Consistent fonts and spacing
+
+2. Content Quality (20 points):
+   - Quantified impact (0-5): Numbers and metrics where applicable
+   - Specific achievements (0-5): Clear accomplishments over duties
+   - Relevance to field (0-5): Industry-aligned experience
+   - Technical depth (0-5): Appropriate technical detail
+
+3. Language & Communication (20 points):
+   - Verb strength (0-4): Strong action verbs
+   - Verb tense consistency (0-4): Proper past/present usage
+   - Clarity (0-4): Clear, professional language
+   - Spelling & grammar (0-4): Minimal errors acceptable
+   - Professional tone (0-4): Appropriate business language
+
+4. Core Competencies (20 points):
+   - Leadership/Initiative (0-5): Shows proactive approach
+   - Problem-solving (0-5): Demonstrates analytical thinking
+   - Collaboration (0-5): Shows team and communication skills
+   - Results-orientation (0-5): Focus on outcomes
+
+5. Keywords & Industry Alignment (20 points):
+   - Industry-specific terms (0-7): Relevant current technologies
+   - Role-specific keywords (0-7): Matching job requirements
+   - Soft skills alignment (0-6): Balanced technical and soft skills`;
+
 export const generateResumeContent = async (
   section: string,
   context: Record<string, any>
@@ -111,7 +147,8 @@ export const analyzeResume = async (resumeData: string): Promise<ATSAnalysisResp
       throw new Error('Failed to analyze resume');
     }
 
-    return await response.json();
+    const result = await response.json();
+    return result;
   } catch (error) {
     console.error('Error analyzing resume:', error);
     throw new Error('Failed to analyze resume');

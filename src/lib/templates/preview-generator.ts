@@ -1,8 +1,7 @@
-import { ResumeData, TemplateType } from './latex/types';
-import { generateLaTeX } from './latex/generator';
-import { generateResumePDF } from './latex/compiler';
+import { ResumeData, TemplateType } from '../types/resume';
+import { ReactElement } from 'react';
 
-const sampleData: ResumeData = {
+export const sampleData: ResumeData = {
   personalInfo: {
     name: "John Doe",
     email: "john.doe@example.com",
@@ -89,16 +88,20 @@ const sampleData: ResumeData = {
   ]
 };
 
-export async function generateTemplatePreview(template: TemplateType): Promise<Buffer> {
+export async function generateTemplatePreview(template: TemplateType): Promise<ReactElement | null> {
   try {
-    const latexContent = generateLaTeX(sampleData, template);
-    const { buffer, error } = await generateResumePDF(latexContent);
-    
-    if (error || !buffer.length) {
-      throw new Error(error || 'Failed to generate preview');
-    }
+    const { ModernResume } = await import('@/components/resume/templates/modern');
+    const { ClassicResume } = await import('@/components/resume/templates/classic');
+    const { MinimalistResume } = await import('@/components/resume/templates/minimalist');
 
-    return buffer;
+    const templates = {
+      modern: ModernResume,
+      classic: ClassicResume,
+      minimalist: MinimalistResume
+    };
+
+    const TemplateComponent = templates[template];
+    return TemplateComponent ? TemplateComponent({ data: sampleData }) : null;
   } catch (error) {
     console.error('Error generating template preview:', error);
     throw error;

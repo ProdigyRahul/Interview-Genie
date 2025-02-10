@@ -1,8 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { TemplateType } from "@/lib/templates/latex/types";
-import { X, Loader2 } from "lucide-react";
+import { X } from "lucide-react";
+import { ModernResume } from "./templates/modern";
+import { ClassicResume } from "./templates/classic";
+import { MinimalistResume } from "./templates/minimalist";
+import { sampleData } from "@/lib/templates/preview-generator";
 
 interface TemplatePreviewDialogProps {
   template: TemplateType;
@@ -11,22 +15,11 @@ interface TemplatePreviewDialogProps {
 }
 
 export function TemplatePreviewDialog({ template, isOpen, onClose }: TemplatePreviewDialogProps) {
-  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (isOpen) {
-      setPdfUrl(null);
-      setLoading(true);
-      setError(null);
-
-      // Generate preview URL
-      const previewUrl = `/api/resumes/templates/preview?template=${template}`;
-      setPdfUrl(previewUrl);
-      setLoading(false);
-    }
-  }, [isOpen, template]);
+  const TemplateComponent = {
+    modern: ModernResume,
+    classic: ClassicResume,
+    minimalist: MinimalistResume
+  }[template];
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -43,22 +36,8 @@ export function TemplatePreviewDialog({ template, isOpen, onClose }: TemplatePre
           </Button>
 
           {/* Preview Content */}
-          <div className="aspect-[210/297] bg-muted">
-            {loading ? (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-              </div>
-            ) : error ? (
-              <div className="absolute inset-0 flex items-center justify-center text-destructive">
-                {error}
-              </div>
-            ) : pdfUrl ? (
-              <iframe
-                src={pdfUrl}
-                className="w-full h-full"
-                title={`${template} template preview`}
-              />
-            ) : null}
+          <div className="max-h-[80vh] overflow-y-auto">
+            <TemplateComponent data={sampleData} />
           </div>
         </div>
       </DialogContent>

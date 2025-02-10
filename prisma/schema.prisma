@@ -8,113 +8,159 @@ datasource db {
 }
 
 model User {
-  id                 String    @id @default(cuid())
-  name               String?
-  email              String    @unique
+  id                 String   @id @default(cuid())
+  email              String   @unique
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
   emailVerified      DateTime?
+  isVerified         Boolean  @default(false)
   image              String?
-  firstName          String?
-  lastName           String?
-  phoneNumber        String?
-  gender             String?
-  country            String?
-  state              String?
-  city               String?
-  pinCode            String?
-  workStatus         String?
-  experience         String?
-  education          String?
-  industry           String?
-  ageGroup           String?
-  aspiration         String?
-  hardSkills         Json?
-  isProfileComplete  Boolean   @default(false)
-  profileProgress    Int       @default(0)
-  subscriptionStatus String    @default("free")
-  isVerified        Boolean   @default(false)
-  credits           Int       @default(100)
-  xpPoints          Int       @default(0)
-  level             Int       @default(1)
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-  lastLogin         DateTime?
-  hashedPassword    String?
-
-  // Profile fields
-  companyName        String?
-  branchName         String?
-  cgpa               String?
-  passoutYear        String?
-  collegeName        String?
-  resumeUrl          String?
-  cookieConsent      Boolean?
-  jobPreference      String?
-  preferredJobLocations Json?
-  preferredIndustries  Json?
-  preferredRoles       Json?
-  bio                 String?  @db.Text
-  socialLinks         Json?
-
-  // Relations
+  name               String?
+  subscriptionStatus String   @default("FREE")
+  credits            Int      @default(100)
+  resumes            Resume[]
   accounts           Account[]
   sessions           Session[]
-  resumes           Resume[]
-  mockInterviews    MockInterview[]
-  interviewNotes    InterviewNote[]
-  interviewHistory  InterviewHistory[]
-  passwordResetTokens PasswordResetToken[]
-  otpVerifications  OTPVerification[]
-  education_details UserEducation?
+}
 
-  @@index([email])
-  @@index([isProfileComplete, profileProgress])
-  @@index([subscriptionStatus])
+model Resume {
+  id             String          @id @default(cuid())
+  userId         String
+  createdAt      DateTime        @default(now())
+  title          String
+  updatedAt      DateTime        @updatedAt
+  achievements   Achievement[]
+  certifications Certification[]
+  education      Education[]
+  experiences    Experience[]
+  personalInfo   PersonalInfo?
+  projects       Project[]
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skills         Skills?
+  summary        Summary?
+  atsScore       Int?
+  atsAnalysis    Json?
+
+  @@index([userId])
   @@index([createdAt])
-  @@index([lastLogin])
-  @@index([workStatus, industry])
-  @@index([experience, education])
-  @@index([jobPreference, isVerified])
-  @@index([level, xpPoints])
-  @@index([isVerified, email])
   @@index([updatedAt])
 }
 
-model UserEducation {
-  id          String   @id @default(cuid())
-  userId      String   @unique
-  course      String?
-  result      String?
-  passoutYear String?
-  collegeName String?
-  branchName  String?
-  cgpa        String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+model PersonalInfo {
+  id        String  @id @default(cuid())
+  resumeId  String  @unique
+  fullName  String
+  jobTitle  String
+  email     String
+  phone     String
+  location  String
+  linkedIn  String?
+  portfolio String?
+  resume    Resume  @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+}
 
-  @@index([userId])
-  @@index([passoutYear])
+model Experience {
+  id           String   @id @default(cuid())
+  resumeId     String
+  companyName  String
+  jobTitle     String
+  startDate    String
+  endDate      String
+  description  String
+  technologies String[]
+  resume       Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+
+  @@index([resumeId])
+}
+
+model Project {
+  id           String   @id @default(cuid())
+  resumeId     String
+  name         String
+  description  String
+  url          String?
+  technologies String[]
+  startDate    String?
+  endDate      String?
+  resume       Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+
+  @@index([resumeId])
+}
+
+model Education {
+  id           String  @id @default(cuid())
+  resumeId     String
+  school       String
+  degree       String
+  fieldOfStudy String
+  startDate    String
+  endDate      String
+  gpa          String?
+  achievements String?
+  resume       Resume  @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+
+  @@index([resumeId])
+}
+
+model Certification {
+  id            String  @id @default(cuid())
+  resumeId      String
+  name          String
+  issuingOrg    String
+  issueDate     String
+  expiryDate    String?
+  credentialId  String?
+  credentialUrl String?
+  resume        Resume  @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+
+  @@index([resumeId])
+}
+
+model Achievement {
+  id          String  @id @default(cuid())
+  resumeId    String
+  title       String?
+  date        String?
+  description String?
+  resume      Resume  @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+
+  @@index([resumeId])
+}
+
+model Skills {
+  id        String   @id @default(cuid())
+  resumeId  String   @unique
+  technical String[]
+  soft      String[]
+  tools     String[]
+  resume    Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+}
+
+model Summary {
+  id       String @id @default(cuid())
+  resumeId String @unique
+  content  String
+  resume   Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
 }
 
 model Account {
-  id                       String  @id @default(cuid())
-  userId                   String
-  type                     String
-  provider                 String
-  providerAccountId        String
-  refresh_token            String?
-  access_token            String?
-  expires_at              Int?
-  token_type              String?
-  scope                   String?
-  id_token                String?
-  session_state           String?
-  refresh_token_expires_in Int?
-  user                    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
   @@index([userId])
-  @@index([provider])
 }
 
 model Session {
@@ -125,7 +171,6 @@ model Session {
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
-  @@index([expires])
 }
 
 model VerificationToken {
@@ -135,436 +180,3 @@ model VerificationToken {
 
   @@unique([identifier, token])
 }
-
-model Resume {
-  id            String   @id @default(cuid())
-  userId        String
-  title         String   @default("Untitled Resume")
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  isDefault     Boolean  @default(false)
-  resumeUrl     String?
-  fileType      String?
-  parsedData    Json?
-  atsScore      Int?
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  // Resume sections
-  personalInfo  ResumePersonalInfo?
-  experiences   ResumeExperience[]
-  education     ResumeEducation[]
-  projects      ResumeProject[]
-  certifications ResumeCertification[]
-  skills        ResumeSkill[]
-  references    ResumeReference[]
-  summary       ResumeSummary?
-  achievements  ResumeAchievement[]
-  volunteering  ResumeVolunteering[]
-
-  @@index([userId])
-  @@index([createdAt])
-  @@index([updatedAt])
-}
-
-model ResumePersonalInfo {
-  id            String   @id @default(cuid())
-  resumeId      String   @unique
-  fullName      String
-  email         String
-  phoneNumber   String
-  jobTitle      String
-  location      String?
-  linkedIn      String?
-  portfolio     String?
-  github        String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  resume        Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
-
-  @@index([resumeId])
-}
-
-model ResumeExperience {
-  id            String   @id @default(cuid())
-  resumeId      String
-  companyName   String
-  jobTitle      String
-  location      String?
-  startDate     DateTime
-  endDate       DateTime?
-  current       Boolean  @default(false)
-  description   String   @db.Text
-  achievements  String[] @db.Text
-  technologies  String[]
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  resume        Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
-
-  @@index([resumeId])
-}
-
-model ResumeProject {
-  id            String   @id @default(cuid())
-  resumeId      String
-  title         String
-  description   String   @db.Text
-  technologies  String[]
-  startDate     DateTime?
-  endDate       DateTime?
-  current       Boolean  @default(false)
-  link          String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  resume        Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
-
-  @@index([resumeId])
-}
-
-model ResumeEducation {
-  id            String   @id @default(cuid())
-  resumeId      String
-  school        String
-  degree        String
-  fieldOfStudy  String
-  location      String?
-  startDate     DateTime
-  endDate       DateTime?
-  current       Boolean  @default(false)
-  gpa          Float?
-  achievements String[]  @db.Text
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  resume       Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
-
-  @@index([resumeId])
-}
-
-model ResumeCertification {
-  id            String   @id @default(cuid())
-  resumeId      String
-  name          String
-  issuingOrg    String
-  issueDate     DateTime
-  expiryDate    DateTime?
-  credentialId  String?
-  credentialUrl String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  resume        Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
-
-  @@index([resumeId])
-}
-
-model ResumeSkill {
-  id            String   @id @default(cuid())
-  resumeId      String
-  category      String
-  skills        String[]
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  resume        Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
-
-  @@index([resumeId])
-}
-
-model ResumeReference {
-  id            String   @id @default(cuid())
-  resumeId      String
-  name          String
-  company       String
-  position      String
-  email         String
-  phone         String?
-  relationship  String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  resume        Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
-
-  @@index([resumeId])
-}
-
-model ResumeSummary {
-  id            String   @id @default(cuid())
-  resumeId      String   @unique
-  content       String   @db.Text
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  resume        Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
-
-  @@index([resumeId])
-}
-
-model ResumeAchievement {
-  id            String   @id @default(cuid())
-  resumeId      String
-  title         String
-  description   String   @db.Text
-  date          DateTime?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  resume        Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
-
-  @@index([resumeId])
-}
-
-model ResumeVolunteering {
-  id            String   @id @default(cuid())
-  resumeId      String
-  organization  String
-  role          String
-  startDate     DateTime
-  endDate       DateTime?
-  current       Boolean  @default(false)
-  description   String   @db.Text
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  resume        Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
-
-  @@index([resumeId])
-}
-
-model JobRole {
-  id              String           @id @default(cuid())
-  domainId        String
-  title           String
-  level           String
-  description     String?
-  requiredSkills  Json?
-  experienceYears Int
-  isActive        Boolean          @default(true)
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  createdById     String
-  jobDescriptions JobDescription[]
-  createdBy       Admin            @relation(fields: [createdById], references: [id])
-  domain          CareerDomain     @relation(fields: [domainId], references: [id])
-  mockInterviews  MockInterview[]
-
-  @@index([domainId])
-  @@index([isActive])
-  @@index([experienceYears])
-  @@index([domainId, isActive])
-  @@index([experienceYears, isActive])
-}
-
-model JobDescription {
-  id              String          @id @default(cuid())
-  roleId          String
-  title           String
-  company         String
-  description     String
-  requirements    Json
-  industry        String
-  experienceLevel String
-  isActive        Boolean         @default(true)
-  createdAt       DateTime        @default(now())
-  createdById     String
-  createdBy       Admin           @relation(fields: [createdById], references: [id])
-  role            JobRole         @relation(fields: [roleId], references: [id])
-  mockInterviews  MockInterview[]
-
-  @@index([roleId])
-  @@index([industry])
-  @@index([experienceLevel])
-  @@index([isActive])
-  @@index([roleId, isActive])
-  @@index([industry, experienceLevel, isActive])
-}
-
-model MockInterview {
-  id                 String             @id @default(cuid())
-  userId             String
-  jobId              String
-  roleId             String
-  scenarioId         String
-  startTime          DateTime
-  endTime            DateTime?
-  interviewType      String
-  status             String
-  score              Int?
-  feedback           Json?
-  duration           Int?
-  technicalScore     Float?
-  behavioralScore    Float?
-  communicationScore Float?
-  createdAt          DateTime           @default(now())
-  updatedAt          DateTime           @updatedAt
-  history            InterviewHistory[]
-  notes              InterviewNote[]
-  recordings         MediaRecording[]
-  job                JobDescription     @relation(fields: [jobId], references: [id])
-  role               JobRole            @relation(fields: [roleId], references: [id])
-  scenario           InterviewScenario  @relation(fields: [scenarioId], references: [id])
-  user               User               @relation(fields: [userId], references: [id])
-
-  @@index([userId])
-  @@index([status])
-  @@index([startTime])
-  @@index([interviewType])
-  @@index([userId, status])
-  @@index([userId, startTime])
-  @@index([technicalScore, behavioralScore, communicationScore])
-}
-
-model InterviewHistory {
-  id          String        @id @default(cuid())
-  userId      String
-  interviewId String
-  action      String
-  timestamp   DateTime
-  metadata    Json?
-  createdAt   DateTime      @default(now())
-  interview   MockInterview @relation(fields: [interviewId], references: [id])
-  user        User          @relation(fields: [userId], references: [id])
-
-  @@index([createdAt])
-  @@index([userId, createdAt])
-  @@index([userId])
-  @@index([interviewId])
-}
-
-model InterviewNote {
-  id          String        @id @default(cuid())
-  interviewId String
-  userId      String
-  content     String
-  timestamp   Int?
-  noteType    String
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  interview   MockInterview @relation(fields: [interviewId], references: [id])
-  user        User          @relation(fields: [userId], references: [id])
-
-  @@index([userId])
-  @@index([interviewId])
-}
-
-model Admin {
-  id                 String              @id @default(cuid())
-  email              String              @unique
-  firstName          String
-  lastName           String
-  role               String
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
-  careerDomains      CareerDomain[]
-  interviewScenarios InterviewScenario[]
-  jobDescriptions    JobDescription[]
-  jobRoles           JobRole[]
-}
-
-model CareerDomain {
-  id                 String              @id @default(cuid())
-  name               String
-  description        String?
-  isActive           Boolean             @default(true)
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
-  createdById        String
-  createdBy          Admin               @relation(fields: [createdById], references: [id])
-  interviewScenarios InterviewScenario[]
-  jobRoles           JobRole[]
-}
-
-model InterviewScenario {
-  id             String          @id @default(cuid())
-  domainId       String
-  title          String
-  description    String
-  questions      Json
-  difficulty     String
-  duration       Int
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-  createdById    String
-  createdBy      Admin           @relation(fields: [createdById], references: [id])
-  domain         CareerDomain    @relation(fields: [domainId], references: [id])
-  mockInterviews MockInterview[]
-}
-
-model MediaRecording {
-  id           String              @id @default(cuid())
-  interviewId  String
-  mediaType    String
-  fileUrl      String
-  thumbnailUrl String?
-  duration     Int
-  fileSize     BigInt
-  format       String
-  quality      String
-  status       String
-  createdAt    DateTime            @default(now())
-  archivedAt   DateTime?
-  interview    MockInterview       @relation(fields: [interviewId], references: [id])
-  analysis     RecordingAnalysis[]
-  segments     RecordingSegment[]
-
-  @@index([status])
-  @@index([createdAt])
-  @@index([interviewId, status])
-  @@index([interviewId])
-}
-
-model RecordingSegment {
-  id          String         @id @default(cuid())
-  recordingId String
-  startTime   Int
-  endTime     Int
-  segmentUrl  String
-  transcript  String?
-  highlights  Json?
-  createdAt   DateTime       @default(now())
-  recording   MediaRecording @relation(fields: [recordingId], references: [id])
-
-  @@index([recordingId])
-}
-
-model RecordingAnalysis {
-  id                 String         @id @default(cuid())
-  recordingId        String
-  analysisType       String
-  confidenceScore    Float
-  clarityScore       Float
-  paceScore          Float
-  voiceToneAnalysis  Json?
-  fillerWordsCount   Int
-  silencePeriods     Json?
-  volumeVariance     Json?
-  languageConfidence Float
-  facialExpressions  Json?
-  eyeContactScore    Float?
-  postureAnalysis    Json?
-  gestureMetrics     Json?
-  createdAt          DateTime       @default(now())
-  recording          MediaRecording @relation(fields: [recordingId], references: [id])
-
-  @@index([recordingId])
-}
-
-model PasswordResetToken {
-  id        String   @id @default(cuid())
-  token     String   @unique
-  userId    String
-  expires   DateTime
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([token])
-  @@index([expires])
-  @@index([userId])
-}
-
-model OTPVerification {
-  id        String   @id @default(cuid())
-  userId    String
-  otp       String
-  expires   DateTime
-  used      Boolean  @default(false)
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([expires])
-  @@index([userId, expires])
-}
-
