@@ -233,7 +233,7 @@ export function OTPVerificationForm() {
                       className={`w-11 h-12 text-center text-2xl font-bold border rounded-lg
                         focus:border-primary focus:ring-2 focus:ring-primary/20 
                         transition-all duration-200
-                        mx-1 first:ml-0 last:mr-0
+                        mx-2 first:ml-0 last:mr-0
                         ${activeInput === index ? "border-primary shadow-sm" : "border-input"}
                         ${isLoading ? "opacity-50 cursor-not-allowed" : ""}
                         hover:border-primary/50

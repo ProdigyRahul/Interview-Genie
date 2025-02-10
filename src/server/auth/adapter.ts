@@ -18,48 +18,55 @@ export function CustomPrismaAdapter(p: PrismaClient): Adapter {
           subscriptionStatus: "free", // Default subscription status
           isVerified: false, // Default verification status
         },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          emailVerified: true,
+          image: true,
+          credits: true,
+          subscriptionStatus: true,
+          isVerified: true,
+        },
       });
 
-      return {
-        id: user.id,
-        email: user.email ?? "",
-        name: user.name ?? "",
-        emailVerified: user.emailVerified,
-        image: user.image ?? "",
-        credits: user.credits,
-        subscriptionStatus: user.subscriptionStatus,
-        isVerified: user.isVerified,
-      } as AdapterUser;
+      return user as AdapterUser;
     },
     getUser: async (id) => {
-      const user = await p.user.findUnique({ where: { id } });
+      const user = await p.user.findUnique({
+        where: { id },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          emailVerified: true,
+          image: true,
+          credits: true,
+          subscriptionStatus: true,
+          isVerified: true,
+        },
+      });
       if (!user) return null;
 
-      return {
-        id: user.id,
-        email: user.email ?? "",
-        name: user.name ?? "",
-        emailVerified: user.emailVerified,
-        image: user.image ?? "",
-        credits: user.credits,
-        subscriptionStatus: user.subscriptionStatus,
-        isVerified: user.isVerified,
-      } as AdapterUser;
+      return user as AdapterUser;
     },
     getUserByEmail: async (email) => {
-      const user = await p.user.findUnique({ where: { email } });
+      const user = await p.user.findUnique({
+        where: { email },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          emailVerified: true,
+          image: true,
+          credits: true,
+          subscriptionStatus: true,
+          isVerified: true,
+        },
+      });
       if (!user) return null;
 
-      return {
-        id: user.id,
-        email: user.email ?? "",
-        name: user.name ?? "",
-        emailVerified: user.emailVerified,
-        image: user.image ?? "",
-        credits: user.credits,
-        subscriptionStatus: user.subscriptionStatus,
-        isVerified: user.isVerified,
-      } as AdapterUser;
+      return user as AdapterUser;
     },
     getUserByAccount: async ({ provider, providerAccountId }) => {
       const account = await p.account.findUnique({
@@ -69,21 +76,24 @@ export function CustomPrismaAdapter(p: PrismaClient): Adapter {
             providerAccountId,
           },
         },
-        include: { user: true },
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              name: true,
+              emailVerified: true,
+              image: true,
+              credits: true,
+              subscriptionStatus: true,
+              isVerified: true,
+            },
+          },
+        },
       });
       if (!account) return null;
 
-      const { user } = account;
-      return {
-        id: user.id,
-        email: user.email ?? "",
-        name: user.name ?? "",
-        emailVerified: user.emailVerified,
-        image: user.image ?? "",
-        credits: user.credits,
-        subscriptionStatus: user.subscriptionStatus,
-        isVerified: user.isVerified,
-      } as AdapterUser;
+      return account.user as AdapterUser;
     },
   };
 } 

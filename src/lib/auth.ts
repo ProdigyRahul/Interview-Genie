@@ -7,6 +7,7 @@ import { credentialsProvider } from "@/server/auth/credentials";
 import type { NextAuthConfig } from "next-auth";
 import type { JWT } from "next-auth/jwt";
 import type { User } from "next-auth";
+import { env } from "@/env";
 
 // Extend the User type to include our custom fields
 interface CustomUser extends User {
@@ -46,15 +47,20 @@ export const authConfig = {
   providers: [
     credentialsProvider,
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      authorization: {
-        params: {
-          access_type: "offline",
-          response_type: "code",
-          prompt: "consent",
-        }
-      }
+      clientId: env.GOOGLE_CLIENT_ID,
+      clientSecret: env.GOOGLE_CLIENT_SECRET,
+      profile(profile) {
+        return {
+          id: profile.sub,
+          name: profile.name,
+          email: profile.email,
+          image: profile.picture,
+          emailVerified: profile.email_verified ? new Date() : null,
+          credits: 100,
+          subscriptionStatus: "free",
+          isVerified: true,
+        };
+      },
     }),
     GitHubProvider({
       clientId: process.env.GITHUB_ID!,
@@ -186,6 +192,7 @@ export const authConfig = {
       }
     },
   },
+  secret: env.NEXTAUTH_SECRET,
 } satisfies NextAuthConfig;
 
 export const { handlers, auth, signIn, signOut } = NextAuth(authConfig);

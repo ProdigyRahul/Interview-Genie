@@ -60,6 +60,11 @@ export async function POST(req: Request): Promise<NextResponse> {
     // Check if user exists
     const existingUser = await db.user.findUnique({
       where: { email },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+      }
     });
 
     if (existingUser) {
@@ -82,6 +87,11 @@ export async function POST(req: Request): Promise<NextResponse> {
         subscriptionStatus: "free",
         isVerified: false,
       },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+      }
     });
 
     // Generate OTP
