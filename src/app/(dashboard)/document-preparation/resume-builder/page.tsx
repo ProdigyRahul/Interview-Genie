@@ -170,7 +170,7 @@ export default function ResumeBuilderPage() {
         <div className="text-center space-y-4 max-w-lg">
           <h2 className="text-2xl font-bold tracking-tight">Creating Your Professional Resume</h2>
           <p className="text-muted-foreground">
-            We're setting up your resume with AI-powered features. This will just take a moment...
+            We&apos;re setting up your resume with AI-powered features. This will just take a moment...
           </p>
         </div>
         <div className="w-full max-w-lg">
