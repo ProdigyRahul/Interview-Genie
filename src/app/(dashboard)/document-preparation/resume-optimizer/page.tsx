@@ -7,7 +7,6 @@ import { MultiStepLoader } from "@/components/ui/multi-step-loader";
 import { 
   FileText, 
   Upload, 
-  XCircle,
   Sparkles,
   BarChart3,
   AlertCircle,
@@ -17,7 +16,6 @@ import {
   Languages,
   Layout,
   Target,
-  Award,
   Lightbulb,
   ScrollText,
   Pencil,
@@ -149,7 +147,7 @@ export default function ResumeOptimizerPage() {
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
 
   useEffect(() => {
-    fetchResumeHistory();
+    void fetchResumeHistory();
   }, []);
 
   const fetchResumeHistory = async () => {
