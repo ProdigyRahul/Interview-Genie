@@ -1,125 +1,38 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { generateResumeContent } from '@/lib/gemini';
+import { generateResumeContent, analyzeResume } from '@/lib/gemini';
+import pdfParse from 'pdf-parse';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+const API_URL = 'http://23.94.74.248:5000/api/v1/ats-score';
+
+export const maxDuration = 60;
+export const fetchCache = 'force-no-store';
 
 export async function POST(req: Request) {
   try {
+    // Check authentication
     const session = await auth();
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!session?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const data = await req.json();
-    console.log('Received data:', data); // Debug log
-
-    const { 
-      fullName, 
-      email, 
-      phoneNumber, // Changed from phone to phoneNumber to match request
-      jobTitle, 
-      yearsOfExperience, 
-      keySkills, 
-      location = '',
-      linkedIn = '',
-      portfolio = ''
-    } = data;
-
-    // Validate required fields
-    if (!fullName || !email || !phoneNumber || !jobTitle) {
-      return NextResponse.json(
-        { error: 'Missing required fields: fullName, email, phoneNumber, and jobTitle are required' },
-        { status: 400 }
-      );
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email }
+    const formData = await req.formData();
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      body: formData
     });
 
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
-
-    // Create the resume with personal info
-    const resume = await prisma.resume.create({
-      data: {
-        userId: user.id,
-        title: `${fullName}'s Resume`,
-        personalInfo: {
-          create: {
-            fullName,
-            email,
-            phone: phoneNumber, // Map phoneNumber to phone in the database
-            jobTitle,
-            location,
-            linkedIn,
-            portfolio
-          }
-        }
-      },
-      include: {
-        personalInfo: true
-      }
-    });
-
-    // Generate AI summary based on the provided information
-    const summaryContext = {
-      jobTitle,
-      experience: yearsOfExperience,
-      skills: keySkills
-    };
-
-    const summary = await generateResumeContent('summary', summaryContext);
-    if (summary.content) {
-      await prisma.summary.create({
-        data: {
-          resumeId: resume.id,
-          content: summary.content
-        }
-      });
-    }
-
-    // Generate AI skills suggestions
-    const skillsContext = {
-      jobTitle,
-      experience: yearsOfExperience
-    };
-
-    const skillsSuggestions = await generateResumeContent('skills', skillsContext);
-    if (skillsSuggestions.content) {
-      const skillsArray = skillsSuggestions.content
-        .split('\n')
-        .filter(skill => skill.trim())
-        .map(skill => skill.replace(/^-\s*/, '').trim());
-
-      await prisma.skills.create({
-        data: {
-          resumeId: resume.id,
-          technical: skillsArray,
-          soft: [],
-          tools: []
-        }
-      });
-    }
-
-    // Fetch the complete resume with all relations
-    const completeResume = await prisma.resume.findUnique({
-      where: { id: resume.id },
-      include: {
-        personalInfo: true,
-        summary: true,
-        skills: true
-      }
-    });
-
-    return NextResponse.json(completeResume);
+    const data = await response.json();
+    return NextResponse.json(data, { status: response.status });
   } catch (error) {
-    console.error('Error creating resume:', error);
-    return NextResponse.json(
-      { error: 'Failed to create resume' },
-      { status: 500 }
-    );
+    console.error("Error:", error);
+    return NextResponse.json({ 
+      error: "Failed to analyze resume" 
+    }, { status: 500 });
   }
 }
 
@@ -218,4 +131,15 @@ export async function DELETE(req: Request) {
       { status: 500 }
     );
   }
+}
+
+// Handle preflight requests
+export async function OPTIONS(req: Request) {
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      'Allow': 'POST, OPTIONS',
+      'Content-Type': 'application/json',
+    },
+  });
 } 
