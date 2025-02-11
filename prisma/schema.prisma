@@ -10,6 +10,7 @@ datasource db {
 model User {
   id                 String   @id @default(cuid())
   email              String   @unique
+  hashedPassword     String?
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
   emailVerified      DateTime?
@@ -21,6 +22,10 @@ model User {
   resumes            Resume[]
   accounts           Account[]
   sessions           Session[]
+  practiceSessions   PracticeSession[]
+  practiceStats      PracticeStats?
+  passwordResetTokens PasswordResetToken[]
+  otpVerifications   OTPVerification[]
 }
 
 model Resume {
@@ -179,4 +184,52 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model PracticeSession {
+  id          String   @id @default(cuid())
+  userId      String
+  startTime   DateTime @default(now())
+  endTime     DateTime?
+  duration    Int?     // Duration in seconds
+  sessionType String   // e.g., "interview", "document", "learning"
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([startTime])
+}
+
+model PracticeStats {
+  id                String   @id @default(cuid())
+  userId           String   @unique
+  totalDuration    Int      @default(0)  // Total duration in seconds
+  weeklyDuration   Int      @default(0)  // Weekly duration in seconds
+  lastWeekDuration Int      @default(0)  // Last week's duration in seconds
+  lastUpdated      DateTime @default(now())
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model PasswordResetToken {
+  id      String   @id @default(cuid())
+  token   String   @unique
+  email   String
+  expires DateTime
+  userId  String
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([email])
+  @@index([userId])
+}
+
+model OTPVerification {
+  id        String   @id @default(cuid())
+  userId    String
+  otp       String
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }

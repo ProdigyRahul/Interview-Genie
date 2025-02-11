@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { env } from "@/env";
-import { ATSAnalysisResponse } from "@/lib/gemini";
+import type { ATSAnalysisResponse } from "@/lib/gemini";
 
 // Initialize Gemini on the server side
 const genAI = new GoogleGenerativeAI(env.GOOGLE_GEMINI_API);

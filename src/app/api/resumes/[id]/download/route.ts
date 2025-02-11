@@ -65,29 +65,29 @@ export async function GET(
         fieldOfStudy: edu.fieldOfStudy || '',
         startDate: edu.startDate || '',
         endDate: edu.endDate || '',
-        gpa: edu.gpa || undefined,
-        achievements: edu.achievements || undefined,
+        gpa: edu.gpa ?? undefined,
+        achievements: edu.achievements ?? undefined,
       })),
       projects: (resume.projects || []).map(proj => ({
         name: proj.name || '',
         description: proj.description || '',
         technologies: Array.isArray(proj.technologies) ? proj.technologies : [],
-        startDate: proj.startDate || undefined,
-        endDate: proj.endDate || undefined,
-        url: proj.url || undefined,
+        startDate: proj.startDate ?? undefined,
+        endDate: proj.endDate ?? undefined,
+        url: proj.url ?? undefined,
       })),
       certifications: (resume.certifications || []).map(cert => ({
         name: cert.name || '',
         issuingOrg: cert.issuingOrg || '',
         issueDate: cert.issueDate || '',
-        expiryDate: cert.expiryDate || undefined,
-        credentialId: cert.credentialId || undefined,
-        credentialUrl: cert.credentialUrl || undefined,
+        expiryDate: cert.expiryDate ?? undefined,
+        credentialId: cert.credentialId ?? undefined,
+        credentialUrl: cert.credentialUrl ?? undefined,
       })),
       achievements: (resume.achievements || []).map(ach => ({
-        title: ach.title || undefined,
-        date: ach.date || undefined,
-        description: ach.description || undefined,
+        title: ach.title ?? undefined,
+        date: ach.date ?? undefined,
+        description: ach.description ?? undefined,
       })),
       skills: {
         technical: Array.isArray(resume.skills?.technical) ? resume.skills.technical : [],
@@ -95,7 +95,7 @@ export async function GET(
         tools: Array.isArray(resume.skills?.tools) ? resume.skills.tools : [],
       },
       summary: resume.summary ? {
-        content: resume.summary.content || '',
+        content: resume.summary.content ?? '',
       } : undefined
     };
 

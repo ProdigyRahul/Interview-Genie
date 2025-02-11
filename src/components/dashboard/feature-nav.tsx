@@ -20,7 +20,7 @@ interface FeatureNavProps {
 const features = [
   {
     title: "Document Preparation",
-    description: "Create and optimize your resume, LinkedIn profile, and more",
+    description: "Create and optimize your Resume, LinkedIn Profile, and more",
     icon: FileText,
     href: "/document-preparation",
     color: "text-blue-500",
@@ -29,7 +29,7 @@ const features = [
     items: [
       "AI Resume Builder",
       "Resume Optimizer",
-      "LinkedIn Profile Creator",
+      "LinkedIn Optimizer",
       "Cover Letter Generator",
     ],
     type: 'document'

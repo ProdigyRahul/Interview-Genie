@@ -16,9 +16,7 @@ import {
   BriefcaseIcon,
   GraduationCap,
   Award,
-  Heart,
   Brain,
-  Users,
   Star,
   FileText,
   ArrowRight,
@@ -37,8 +35,7 @@ import { isSectionComplete } from "@/lib/validations/resume";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SectionNavigation } from "@/components/resume/section-navigation";
 import { TemplateSelector } from "@/components/resume/template-selector";
-import { ResumeData, TemplateType } from '@/lib/types/resume';
-import { generateResumePDF } from '@/lib/templates/pdf-generator';
+import { TemplateType } from '@/lib/types/resume';
 
 // Animation variants
 const fadeIn = {
@@ -103,49 +100,6 @@ const tabs = [
     required: true,
   },
 ];
-
-interface ExperienceData {
-  companyName: string;
-  jobTitle: string;
-  startDate: string;
-  endDate: string;
-  description: string;
-  technologies: string[];
-}
-
-interface ProjectData {
-  name: string;
-  url: string;
-  startDate: string;
-  endDate: string;
-  description: string;
-  technologies: string[];
-}
-
-interface EducationData {
-  school: string;
-  degree: string;
-  fieldOfStudy: string;
-  gpa: string;
-  startDate: string;
-  endDate: string;
-  achievements: string;
-}
-
-interface CertificationData {
-  name: string;
-  issuingOrg: string;
-  issueDate: string;
-  expiryDate: string;
-  credentialId: string;
-  credentialUrl: string;
-}
-
-interface AchievementData {
-  title: string;
-  date: string;
-  description: string;
-}
 
 interface FormState {
   name: string;
@@ -343,7 +297,6 @@ export default function ResumeEditorPage() {
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateType>("modern");
   const [resumeTitle, setResumeTitle] = useState("");
   const router = useRouter();
-  const [atsScore, setAtsScore] = useState<any>(null);
 
   // Add form data state for each section
   const [formData, setFormData] = useState<FormState>({
@@ -501,7 +454,7 @@ export default function ResumeEditorPage() {
     };
 
     if (resumeId) {
-      fetchResumeData();
+      void fetchResumeData();
     }
   }, [resumeId]);
 
@@ -524,15 +477,15 @@ export default function ResumeEditorPage() {
           context = {
             title: formData.experiences[id]?.jobTitle,
             company: formData.experiences[id]?.companyName,
-            technologies: formData.experiences[id]?.technologies?.join(', ') || '',
-            description: formData.experiences[id]?.description || ''
+            technologies: formData.experiences[id]?.technologies?.join(', ') ?? '',
+            description: formData.experiences[id]?.description ?? ''
           };
           break;
         case 'project_description':
           context = {
             title: formData.projects[id]?.name,
-            technologies: formData.projects[id]?.technologies?.join(', ') || '',
-            description: formData.projects[id]?.description || ''
+            technologies: formData.projects[id]?.technologies?.join(', ') ?? '',
+            description: formData.projects[id]?.description ?? ''
           };
           break;
         case 'achievement_description':
@@ -542,13 +495,13 @@ export default function ResumeEditorPage() {
               school: formData.education[id]?.school,
               degree: formData.education[id]?.degree,
               fieldOfStudy: formData.education[id]?.fieldOfStudy,
-              description: formData.education[id]?.achievements || ''
+              description: formData.education[id]?.achievements ?? ''
             };
           } else {
             context = {
               title: formData.achievements[id]?.title,
               company: formData.experiences ? Object.values(formData.experiences)[0]?.companyName : undefined,
-              description: formData.achievements[id]?.description || ''
+              description: formData.achievements[id]?.description ?? ''
             };
           }
           break;
@@ -1297,7 +1250,7 @@ export default function ResumeEditorPage() {
                               <AIGenerateButton
                                 onClick={() => handleGenerateAI('experience_description', exp.id, 'description')}
                                 isLoading={isGeneratingAI[`experience_description-${exp.id}-description`]}
-                              />
+                            />
                             </div>
                           </div>
                           <div className="space-y-2 md:col-span-2">

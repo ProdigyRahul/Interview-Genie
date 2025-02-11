@@ -29,6 +29,7 @@ export async function generateResetToken(user: User): Promise<string> {
   await db.passwordResetToken.create({
     data: {
       userId: user.id,
+      email: user.email,
       token: hashedToken,
       expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
     },

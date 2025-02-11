@@ -8,6 +8,7 @@ import { Search, ArrowRight, Plus, Briefcase } from "lucide-react";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 const DUMMY_DATA = [
   {
@@ -59,17 +60,26 @@ export default function JobDescriptionsPage() {
       job.company.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+  };
+
   return (
-    <div className="container mx-auto py-6 space-y-8">
+    <div className="space-y-8">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         className="flex flex-col gap-4"
       >
         <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-4xl font-bold tracking-tight">Job Descriptions</h1>
-            <p className="text-muted-foreground mt-2">
+          <div className="space-y-2">
+            <h1 className="text-3xl font-bold tracking-tight">Job Descriptions</h1>
+            <p className="text-muted-foreground">
               Manage your job descriptions and prepare for interviews
             </p>
           </div>
@@ -118,36 +128,43 @@ export default function JobDescriptionsPage() {
         ) : (
           filteredJobs.map((job) => (
             <motion.div key={job.id} variants={item}>
-              <Card className="group relative overflow-hidden border bg-card hover:shadow-xl transition-all duration-300">
-                <div className="relative z-10 p-6">
-                  <div className="flex flex-col gap-4">
-                    <div className="flex items-start gap-4">
-                      <div className="bg-primary/10 w-12 h-12 rounded-lg flex items-center justify-center transition-transform duration-300 group-hover:scale-110 relative z-10">
-                        <Briefcase className="w-6 h-6 text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="text-2xl font-semibold tracking-tight text-primary transition-colors duration-300">
-                          {job.title}
-                        </h3>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          {job.company}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-2">
-                          Added on {new Date(job.createdAt).toLocaleDateString()}
-                        </p>
+              <Card className="group h-full transition-all hover:border-primary hover:shadow-lg">
+                <div className="relative h-full p-6">
+                  {/* Animated gradient background */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-lg" />
+                  
+                  <div className="relative space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className={cn(
+                        "p-2.5 w-fit rounded-lg transition-colors duration-300",
+                        "bg-primary/10",
+                        "group-hover:bg-primary/20"
+                      )}>
+                        <Briefcase className="h-6 w-6 text-primary transition-transform group-hover:scale-110" />
                       </div>
                     </div>
+
+                    <div>
+                      <h3 className="text-2xl font-semibold mb-2">{job.title}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {job.company}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Added on {formatDate(job.createdAt)}
+                      </p>
+                    </div>
+
                     <div className="space-y-3 pt-4">
                       <Button
                         variant="outline"
-                        className="w-full group/button relative z-10 hover:bg-background/80 hover:border-primary/50 transition-all duration-300"
+                        className="w-full group/button relative hover:bg-background/80 hover:border-primary/50 transition-all duration-300"
                         onClick={() => router.push(`/interview-preparation/questions/${job.id}`)}
                       >
                         Practice Interview Questions
                         <ArrowRight className="w-4 h-4 ml-2 transition-transform duration-300 group-hover/button:translate-x-1" />
                       </Button>
                       <Button
-                        className="w-full relative z-10 bg-primary hover:bg-primary/90 transition-all duration-300"
+                        className="w-full relative bg-primary hover:bg-primary/90 transition-all duration-300"
                         onClick={() => router.push(`/interview-preparation/questions/${job.id}/practice`)}
                       >
                         Start Mock Interview
@@ -155,12 +172,6 @@ export default function JobDescriptionsPage() {
                       </Button>
                     </div>
                   </div>
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-br from-transparent to-transparent transition-all duration-300 ease-in-out group-hover:opacity-100 group-hover:scale-110 blur-sm">
-                  <div className="absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity duration-300 group-hover:from-primary/5 group-hover:via-purple-500/5 group-hover:to-blue-500/5" />
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-br from-transparent to-transparent transition-all duration-300 group-hover:scale-105">
-                  <div className="absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity duration-300 group-hover:from-primary/5 group-hover:via-purple-500/5 group-hover:to-blue-500/5" />
                 </div>
               </Card>
             </motion.div>

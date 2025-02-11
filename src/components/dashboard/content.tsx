@@ -25,9 +25,12 @@ export function DashboardContent({
   user,
 }: DashboardContentProps) {
   return (
-    <div className="flex-1 space-y-6 p-8 pt-6">
-      <div className="flex items-center justify-between">
+    <div className="flex-1 space-y-8">
+      <div className="space-y-2">
         <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+        <p className="text-muted-foreground">
+          Track your progress and manage your interview preparation
+        </p>
       </div>
 
       <Suspense 
@@ -38,7 +41,7 @@ export function DashboardContent({
         <Statistics />
       </Suspense>
 
-      <div className="space-y-6">
+      <div className="space-y-8">
         {/* Document Preparation and Interview Preparation */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Suspense

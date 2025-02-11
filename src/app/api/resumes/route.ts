@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { generateResumeContent } from '@/lib/gemini';
-import { Prisma } from '@prisma/client';
 
 export async function POST(req: Request) {
   try {
@@ -124,7 +123,7 @@ export async function POST(req: Request) {
   }
 }
 
-export async function GET(req: Request) {
+export async function GET(_req: Request) {
   try {
     const session = await auth();
     if (!session?.user?.email) {
