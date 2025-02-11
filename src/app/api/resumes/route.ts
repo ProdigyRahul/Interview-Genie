@@ -16,69 +16,65 @@ export async function POST(req: Request) {
   try {
     // Check authentication
     const session = await auth();
-    if (!session?.user) {
+    if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const formData = await req.formData();
-    const response = await fetch(API_URL, {
-      method: 'POST',
-      body: formData
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email }
     });
 
-    const data = await response.json();
-    
-    if (data.success) {
-      // Store the analysis in the database
-      const user = await prisma.user.findUnique({
-        where: { email: session.user.email }
-      });
-
-      if (!user) {
-        return NextResponse.json({ error: "User not found" }, { status: 404 });
-      }
-
-      try {
-        // Create resume analysis record
-        await prisma.resumeAnalysis.create({
-          data: {
-            userId: user.id,
-            originalFilename: data.metadata.filename,
-            fileUrl: data.metadata.file_url,
-            totalScore: data.ats_analysis.total_score,
-            sectionScores: data.ats_analysis.section_scores,
-            detailedBreakdown: data.ats_analysis.detailed_breakdown,
-            keywordMatchRate: data.ats_analysis.keyword_match_rate,
-            missingKeywords: data.ats_analysis.missing_keywords,
-            improvements: {
-              high_priority: data.improvement_suggestions.high_priority,
-              content: data.improvement_suggestions.content,
-              format: data.improvement_suggestions.format,
-              language: data.improvement_suggestions.language,
-              keywords: data.improvement_suggestions.keywords,
-              details: data.improvement_details
-            }
-          }
-        });
-      } catch (dbError) {
-        console.error('Database error:', dbError);
-        // Continue even if saving to database fails
-      }
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Return the exact format from the ML API
+    const data = await req.json();
+    
+    // Create resume and personal info in a transaction
+    const result = await prisma.$transaction(async (tx) => {
+      // Create the resume with proper user relation
+      const resume = await tx.resume.create({
+        data: {
+          userId: user.id,
+          title: `${data.fullName}'s Resume`,
+          atsScore: null,
+          personalInfo: {
+            create: {
+              fullName: data.fullName,
+              jobTitle: data.jobTitle,
+              email: data.email,
+              phone: data.phoneNumber,
+              location: data.location || "",
+              linkedIn: data.linkedIn || "",
+              portfolio: data.portfolio || "",
+            }
+          },
+          skills: data.keySkills ? {
+            create: {
+              technical: data.keySkills.split(',').map((s: string) => s.trim()),
+              soft: [],
+              tools: [],
+            }
+          } : undefined
+        },
+        include: {
+          personalInfo: true,
+          skills: true
+        }
+      });
+
+      return resume;
+    });
+
     return NextResponse.json({
-      success: data.success,
-      ats_analysis: data.ats_analysis,
-      improvement_suggestions: data.improvement_suggestions,
-      improvement_details: data.improvement_details,
-      metadata: data.metadata
+      success: true,
+      id: result.id,
     });
   } catch (error) {
-    console.error("Error:", error);
+    console.error("Error creating resume:", error);
     return NextResponse.json({ 
       success: false,
-      error: error instanceof Error ? error.message : "Failed to analyze resume"
+      error: error instanceof Error ? error.message : "Failed to create resume"
     }, { status: 500 });
   }
 }
@@ -90,7 +86,7 @@ export async function GET(req: Request) {
       return NextResponse.json({ 
         success: false,
         error: 'Unauthorized',
-        analyses: [] 
+        resumes: [] 
       }, { status: 401 });
     }
 
@@ -102,48 +98,42 @@ export async function GET(req: Request) {
       return NextResponse.json({ 
         success: false,
         error: 'User not found',
-        analyses: [] 
+        resumes: [] 
       }, { status: 404 });
     }
 
     try {
-      // Get resume analyses history
-      const analyses = await prisma.resumeAnalysis.findMany({
+      // Get resumes
+      const resumes = await prisma.resume.findMany({
         where: { userId: user.id },
-        orderBy: { createdAt: 'desc' },
-        take: 10, // Limit to last 10 analyses
+        orderBy: { updatedAt: 'desc' },
         select: {
           id: true,
-          originalFilename: true,
-          fileUrl: true,
-          totalScore: true,
-          sectionScores: true,
-          keywordMatchRate: true,
-          missingKeywords: true,
-          improvements: true,
+          title: true,
           createdAt: true,
-          updatedAt: true
+          updatedAt: true,
+          atsScore: true
         }
       });
 
       return NextResponse.json({ 
         success: true,
-        analyses: analyses || [] 
+        resumes: resumes || [] 
       });
     } catch (dbError) {
       console.error('Database error:', dbError);
       return NextResponse.json({ 
         success: false,
-        error: 'Failed to fetch resume analyses',
-        analyses: [] 
+        error: 'Failed to fetch resumes',
+        resumes: [] 
       }, { status: 500 });
     }
   } catch (error) {
-    console.error('Error fetching resume analyses:', error);
+    console.error('Error fetching resumes:', error);
     return NextResponse.json({
       success: false,
-      error: 'Failed to fetch resume analyses',
-      analyses: []
+      error: 'Failed to fetch resumes',
+      resumes: []
     }, { status: 500 });
   }
 }

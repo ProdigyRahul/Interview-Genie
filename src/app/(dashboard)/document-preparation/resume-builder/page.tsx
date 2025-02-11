@@ -23,10 +23,20 @@ interface Resume {
 }
 
 const loadingStates = [
-  { text: "Fetching your resume collection..." },
-  { text: "Loading resume templates..." },
-  { text: "Preparing your workspace..." },
-  { text: "Almost ready..." },
+  { text: "Fetching your resume collection...", duration: 2000 },
+  { text: "Loading resume templates...", duration: 2000 },
+  { text: "Preparing your workspace...", duration: 2000 },
+  { text: "Almost ready...", duration: 2000 }
+];
+
+const creatingResumeStates = [
+  { text: "Creating your professional resume...", duration: 2000 },
+  { text: "Setting up personal information...", duration: 2000 },
+  { text: "Configuring skills and expertise...", duration: 2000 },
+  { text: "Preparing resume sections...", duration: 2000 },
+  { text: "Initializing AI assistance...", duration: 2000 },
+  { text: "Setting up the editor...", duration: 2000 },
+  { text: "Almost ready...", duration: 2000 }
 ];
 
 interface FormData {
@@ -47,6 +57,7 @@ export default function ResumeBuilderPage() {
   const [showDialog, setShowDialog] = useState(false);
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [isLoadingResumes, setIsLoadingResumes] = useState(true);
+  const [isCreatingResume, setIsCreatingResume] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     name: "",
     email: "",
@@ -93,7 +104,7 @@ export default function ResumeBuilderPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setShowDialog(false);
-    setLoading(true);
+    setIsCreatingResume(true);
     
     try {
       const response = await fetch('/api/resumes', {
@@ -122,8 +133,7 @@ export default function ResumeBuilderPage() {
     } catch (error) {
       console.error('Error creating resume:', error);
       toast.error('Failed to create resume. Please try again.');
-    } finally {
-      setLoading(false);
+      setIsCreatingResume(false);
     }
   };
 
@@ -150,6 +160,27 @@ export default function ResumeBuilderPage() {
           duration={2000}
           loop={true}
         />
+      </div>
+    );
+  }
+
+  if (isCreatingResume) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[80vh] space-y-8">
+        <div className="text-center space-y-4 max-w-lg">
+          <h2 className="text-2xl font-bold tracking-tight">Creating Your Professional Resume</h2>
+          <p className="text-muted-foreground">
+            We're setting up your resume with AI-powered features. This will just take a moment...
+          </p>
+        </div>
+        <div className="w-full max-w-lg">
+          <MultiStepLoader 
+            loadingStates={creatingResumeStates}
+            loading={true}
+            duration={2000}
+            loop={false}
+          />
+        </div>
       </div>
     );
   }
