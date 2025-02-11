@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { env } from "@/env";
-import type { ATSAnalysisResponse } from "@/lib/gemini";
+import type { ResumeAnalysisResult } from "@/lib/gemini";
 
 // Initialize Gemini on the server side
 const genAI = new GoogleGenerativeAI(env.GOOGLE_GEMINI_API);
-const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
 const ATS_ANALYSIS_PROMPT = `
 Analyze this resume with balanced but strict scoring criteria. Provide constructive feedback while acknowledging strengths.
@@ -122,25 +121,22 @@ Please analyze the resume and provide a detailed response in the following JSON 
 
 export async function POST(req: Request) {
   try {
-    const { resumeData } = await req.json();
-    const result = await model.generateContent(ATS_ANALYSIS_PROMPT + "\n\nAnalyze this resume:\n" + resumeData);
+    const { resumeData } = (await req.json()) as { resumeData: string };
+
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const result = await model.generateContent(resumeData);
     const response = result.response;
-    
+    const text = response.text();
+
     try {
-      const analysis = JSON.parse(response.text()) as ATSAnalysisResponse;
+      const analysis = JSON.parse(text) as ResumeAnalysisResult;
       return NextResponse.json(analysis);
-    } catch (parseError) {
-      console.error('Error parsing Gemini response:', parseError);
-      return NextResponse.json(
-        { error: 'Failed to parse resume analysis' },
-        { status: 500 }
-      );
+    } catch (error) {
+      console.error("Failed to parse Gemini response:", error);
+      return new NextResponse("Invalid response format from Gemini", { status: 500 });
     }
   } catch (error) {
-    console.error('Error analyzing resume:', error);
-    return NextResponse.json(
-      { error: 'Failed to analyze resume' },
-      { status: 500 }
-    );
+    console.error("Error analyzing resume:", error);
+    return new NextResponse("Failed to analyze resume", { status: 500 });
   }
 } 
