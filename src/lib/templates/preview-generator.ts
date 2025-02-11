@@ -1,5 +1,4 @@
-import { ResumeData, TemplateType } from '../types/resume';
-import { ReactElement } from 'react';
+import { ResumeData, TemplateType } from '@/lib/types/resume';
 
 export const sampleData: ResumeData = {
   personalInfo: {
@@ -88,20 +87,10 @@ export const sampleData: ResumeData = {
   ]
 };
 
-export async function generateTemplatePreview(template: TemplateType): Promise<ReactElement | null> {
+export async function generateTemplatePreview(template: TemplateType): Promise<ResumeData> {
   try {
-    const { ModernResume } = await import('@/components/resume/templates/modern');
-    const { ClassicResume } = await import('@/components/resume/templates/classic');
-    const { MinimalistResume } = await import('@/components/resume/templates/minimalist');
-
-    const templates = {
-      modern: ModernResume,
-      classic: ClassicResume,
-      minimalist: MinimalistResume
-    };
-
-    const TemplateComponent = templates[template];
-    return TemplateComponent ? TemplateComponent({ data: sampleData }) : null;
+    // Return sample data for preview
+    return sampleData;
   } catch (error) {
     console.error('Error generating template preview:', error);
     throw error;

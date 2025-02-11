@@ -1,29 +1,31 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { generateTemplatePreview } from '@/lib/templates/preview-generator';
-import { renderToString } from 'react-dom/server';
+import type { TemplateType } from '@/lib/types/resume';
 
 export async function POST(req: NextRequest) {
   try {
     const { template } = await req.json();
 
-    if (!template) {
+    if (!template || !['modern', 'classic', 'minimalist'].includes(template)) {
       return NextResponse.json(
-        { error: 'Template type is required' },
+        { error: 'Invalid template type' },
         { status: 400 }
       );
     }
 
-    const previewComponent = await generateTemplatePreview(template);
-    if (!previewComponent) {
+    const previewData = await generateTemplatePreview(template);
+    if (!previewData) {
       return NextResponse.json(
         { error: 'Failed to generate preview' },
         { status: 500 }
       );
     }
 
-    const html = renderToString(previewComponent);
-    return new NextResponse(html, {
-      headers: { 'Content-Type': 'text/html' },
+    // Return the preview data as JSON
+    return NextResponse.json({ 
+      success: true, 
+      data: previewData 
     });
   } catch (error) {
     console.error('Error generating preview:', error);

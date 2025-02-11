@@ -1,4 +1,4 @@
-import { ResumeData } from "@/lib/templates/latex/types";
+import { ResumeData } from "@/lib/types/resume";
 import { cn } from "@/lib/utils";
 
 interface MinimalistResumeProps {
