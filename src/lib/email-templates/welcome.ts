@@ -88,7 +88,7 @@ export function generateWelcomeEmail(name: string): string {
             
             <div style="text-align: center;">
               <p>Ready to start practicing?</p>
-              <a href="${process.env.NEXTAUTH_URL}/interview-preparation" class="cta-button">
+              <a href="${process.env.NEXT_PUBLIC_APP_URL}/interview-preparation" class="cta-button">
                 Start Your First Interview
               </a>
             </div>
