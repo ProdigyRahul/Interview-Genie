@@ -63,8 +63,8 @@ export const authConfig = {
       },
     }),
     GitHubProvider({
-      clientId: process.env.GITHUB_ID!,
-      clientSecret: process.env.GITHUB_SECRET!,
+      clientId: env.AUTH_GITHUB_ID!,
+      clientSecret: env.AUTH_GITHUB_SECRET!,
       authorization: {
         params: {
           // Request user's email and profile data

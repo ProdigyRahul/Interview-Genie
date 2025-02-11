@@ -99,7 +99,7 @@ export function generateLoginAttemptEmail(name: string, attempts: number, locati
             </ul>
             
             <div style="text-align: center;">
-              <a href="${process.env.NEXTAUTH_URL}/reset-password" class="cta-button">
+              <a href="${process.env.NEXT_PUBLIC_APP_URL}/reset-password" class="cta-button">
                 Reset Your Password
               </a>
             </div>
