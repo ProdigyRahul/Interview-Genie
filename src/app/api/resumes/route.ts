@@ -1,133 +1,93 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { generateResumeContent } from '@/lib/gemini';
+import { generateResumeContent, analyzeResume } from '@/lib/gemini';
+import pdfParse from 'pdf-parse';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+const API_URL = 'http://23.94.74.248:5000/api/v1/ats-score';
+
+export const maxDuration = 60;
+export const fetchCache = 'force-no-store';
 
 export async function POST(req: Request) {
   try {
+    // Check authentication
     const session = await auth();
     if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email }
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     const data = await req.json();
-    console.log('Received data:', data); // Debug log
-
-    const { 
-      fullName, 
-      email, 
-      phoneNumber, // Changed from phone to phoneNumber to match request
-      jobTitle, 
-      yearsOfExperience, 
-      keySkills, 
-      location = '',
-      linkedIn = '',
-      portfolio = ''
-    } = data;
-
-    // Validate required fields
-    if (!fullName || !email || !phoneNumber || !jobTitle) {
-      return NextResponse.json(
-        { error: 'Missing required fields: fullName, email, phoneNumber, and jobTitle are required' },
-        { status: 400 }
-      );
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email }
-    });
-
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
-
-    // Create the resume with personal info
-    const resume = await prisma.resume.create({
-      data: {
-        userId: user.id,
-        title: `${fullName}'s Resume`,
-        personalInfo: {
-          create: {
-            fullName,
-            email,
-            phone: phoneNumber, // Map phoneNumber to phone in the database
-            jobTitle,
-            location,
-            linkedIn,
-            portfolio
-          }
-        }
-      },
-      include: {
-        personalInfo: true
-      }
-    });
-
-    // Generate AI summary based on the provided information
-    const summaryContext = {
-      jobTitle,
-      experience: yearsOfExperience,
-      skills: keySkills
-    };
-
-    const summary = await generateResumeContent('summary', summaryContext);
-    if (summary.content) {
-      await prisma.summary.create({
+    
+    // Create resume and personal info in a transaction
+    const result = await prisma.$transaction(async (tx) => {
+      // Create the resume with proper user relation
+      const resume = await tx.resume.create({
         data: {
-          resumeId: resume.id,
-          content: summary.content
+          userId: user.id,
+          title: `${data.fullName}'s Resume`,
+          atsScore: null,
+          personalInfo: {
+            create: {
+              fullName: data.fullName,
+              jobTitle: data.jobTitle,
+              email: data.email,
+              phone: data.phoneNumber,
+              location: data.location || "",
+              linkedIn: data.linkedIn || "",
+              portfolio: data.portfolio || "",
+            }
+          },
+          skills: data.keySkills ? {
+            create: {
+              technical: data.keySkills.split(',').map((s: string) => s.trim()),
+              soft: [],
+              tools: [],
+            }
+          } : undefined
+        },
+        include: {
+          personalInfo: true,
+          skills: true
         }
       });
-    }
 
-    // Generate AI skills suggestions
-    const skillsContext = {
-      jobTitle,
-      experience: yearsOfExperience
-    };
-
-    const skillsSuggestions = await generateResumeContent('skills', skillsContext);
-    if (skillsSuggestions.content) {
-      const skillsArray = skillsSuggestions.content
-        .split('\n')
-        .filter(skill => skill.trim())
-        .map(skill => skill.replace(/^-\s*/, '').trim());
-
-      await prisma.skills.create({
-        data: {
-          resumeId: resume.id,
-          technical: skillsArray,
-          soft: [],
-          tools: []
-        }
-      });
-    }
-
-    // Fetch the complete resume with all relations
-    const completeResume = await prisma.resume.findUnique({
-      where: { id: resume.id },
-      include: {
-        personalInfo: true,
-        summary: true,
-        skills: true
-      }
+      return resume;
     });
 
-    return NextResponse.json(completeResume);
+    return NextResponse.json({
+      success: true,
+      id: result.id,
+    });
   } catch (error) {
-    console.error('Error creating resume:', error);
-    return NextResponse.json(
-      { error: 'Failed to create resume' },
-      { status: 500 }
-    );
+    console.error("Error creating resume:", error);
+    return NextResponse.json({ 
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to create resume"
+    }, { status: 500 });
   }
 }
 
-export async function GET(_req: Request) {
+export async function GET(req: Request) {
   try {
     const session = await auth();
     if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ 
+        success: false,
+        error: 'Unauthorized',
+        resumes: [] 
+      }, { status: 401 });
     }
 
     const user = await prisma.user.findUnique({
@@ -135,33 +95,46 @@ export async function GET(_req: Request) {
     });
 
     if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      return NextResponse.json({ 
+        success: false,
+        error: 'User not found',
+        resumes: [] 
+      }, { status: 404 });
     }
 
-    const resumes = await prisma.resume.findMany({
-      where: { userId: user.id },
-      include: {
-        personalInfo: true,
-        summary: true,
-        experiences: true,
-        education: true,
-        projects: true,
-        certifications: true,
-        skills: true,
-        achievements: true
-      },
-      orderBy: [
-        { createdAt: 'desc' }
-      ]
-    });
+    try {
+      // Get resumes
+      const resumes = await prisma.resume.findMany({
+        where: { userId: user.id },
+        orderBy: { updatedAt: 'desc' },
+        select: {
+          id: true,
+          title: true,
+          createdAt: true,
+          updatedAt: true,
+          atsScore: true
+        }
+      });
 
-    return NextResponse.json(resumes);
+      return NextResponse.json({ 
+        success: true,
+        resumes: resumes || [] 
+      });
+    } catch (dbError) {
+      console.error('Database error:', dbError);
+      return NextResponse.json({ 
+        success: false,
+        error: 'Failed to fetch resumes',
+        resumes: [] 
+      }, { status: 500 });
+    }
   } catch (error) {
     console.error('Error fetching resumes:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch resumes' },
-      { status: 500 }
-    );
+    return NextResponse.json({
+      success: false,
+      error: 'Failed to fetch resumes',
+      resumes: []
+    }, { status: 500 });
   }
 }
 
@@ -218,4 +191,15 @@ export async function DELETE(req: Request) {
       { status: 500 }
     );
   }
+}
+
+// Handle preflight requests
+export async function OPTIONS(req: Request) {
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      'Allow': 'POST, OPTIONS',
+      'Content-Type': 'application/json',
+    },
+  });
 } 
