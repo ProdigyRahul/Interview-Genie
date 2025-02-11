@@ -125,24 +125,24 @@ export default function ResumeOptimizerPage() {
     setIsDragging(false);
   };
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
     
     const droppedFile = e.dataTransfer.files[0];
     if (droppedFile && droppedFile.type === "application/pdf") {
       setFile(droppedFile);
-      handleAnalyze(droppedFile); // Start analysis immediately
+      await handleAnalyze(droppedFile); // Await the promise
     } else {
       toast.error("Please upload a PDF file");
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile && selectedFile.type === "application/pdf") {
       setFile(selectedFile);
-      handleAnalyze(selectedFile); // Start analysis immediately
+      await handleAnalyze(selectedFile); // Await the promise
       // Clear the input
       e.target.value = '';
     } else {
@@ -153,7 +153,7 @@ export default function ResumeOptimizerPage() {
   const handleAnalyze = async (fileToAnalyze: File) => {
     try {
       setIsAnalyzing(true);
-      // Simulate API call
+      // Simulate API call with the file
       await new Promise(resolve => setTimeout(resolve, 3000));
       setResult(mockAnalysisResult);
       toast.success("Analysis completed successfully!");
