@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { TemplateType } from "@/lib/types/resume";
@@ -24,7 +24,7 @@ export function TemplatePreviewDialog({ template, isOpen, onClose }: TemplatePre
     minimalist: MinimalistResume
   }[template];
 
-  const fetchPreviewData = async () => {
+  const fetchPreviewData = useCallback(async () => {
     try {
       setIsLoading(true);
       const response = await fetch('/api/resumes/preview', {
@@ -46,14 +46,14 @@ export function TemplatePreviewDialog({ template, isOpen, onClose }: TemplatePre
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [template]);
 
   // Fetch preview data when dialog opens
   useEffect(() => {
     if (isOpen) {
       void fetchPreviewData();
     }
-  }, [isOpen, template, fetchPreviewData]);
+  }, [isOpen, fetchPreviewData]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
