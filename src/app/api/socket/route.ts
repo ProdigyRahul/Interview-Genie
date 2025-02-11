@@ -7,7 +7,7 @@ import { prisma } from '@/lib/prisma';
 interface ExtendedIncomingMessage extends IncomingMessage {
   _query: Record<string, string>;
   res?: ServerResponse<IncomingMessage>;
-  cleanup?: Function;
+  cleanup?: () => void;
   websocket?: any;
 }
 

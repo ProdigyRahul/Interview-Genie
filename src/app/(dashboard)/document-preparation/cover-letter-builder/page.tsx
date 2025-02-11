@@ -8,7 +8,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { MultiStepLoader } from "@/components/ui/multi-step-loader";
 import { FileText, Sparkles, Download, Eye, ArrowRight, Loader2 } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 const loadingStates = [
@@ -154,7 +153,7 @@ export default function CoverLetterBuilderPage() {
             </div>
 
             <div className="space-y-2">
-              <Label>Hiring Manager's Name</Label>
+              <Label>Hiring Manager&apos;s Name</Label>
               <Input
                 placeholder="Jane Smith"
                 value={formData.hiringManager}

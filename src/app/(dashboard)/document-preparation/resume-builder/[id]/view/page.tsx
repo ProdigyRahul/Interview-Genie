@@ -93,7 +93,7 @@ export default function ResumeViewPage() {
     };
 
     if (params.id) {
-      fetchResume();
+      void fetchResume();
     }
   }, [params.id]);
 
