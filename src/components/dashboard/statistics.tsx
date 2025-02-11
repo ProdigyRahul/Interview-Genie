@@ -55,7 +55,7 @@ const statConfig = {
 
 export function Statistics() {
   const [stats, setStats] = useState<Stats | null>(null);
-  const { isConnected } = usePracticeTime();
+  const { isActive } = usePracticeTime();
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -70,12 +70,15 @@ export function Statistics() {
     };
 
     void fetchStats();
-    // Fetch every minute
-    const interval = setInterval(() => {
-      void fetchStats();
-    }, 60000);
-    return () => clearInterval(interval);
-  }, []);
+
+    // If practice is active, refresh stats every minute
+    if (isActive) {
+      const interval = setInterval(() => {
+        void fetchStats();
+      }, 60000);
+      return () => clearInterval(interval);
+    }
+  }, [isActive]);
 
   if (!stats) return null;
 

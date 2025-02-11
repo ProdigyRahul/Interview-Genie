@@ -1,236 +1,131 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
-import { io, Socket } from 'socket.io-client';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSession } from 'next-auth/react';
+import type { PracticeSession, PracticeStats } from '@prisma/client';
 
-interface PracticeSession {
-  id: string;
-  userId: string;
-  sessionType: string;
-  startTime: Date;
-  endTime?: Date;
-  duration?: number;
+interface UsePracticeTimeProps {
+  onSessionStart?: (session: PracticeSession) => void;
+  onSessionEnd?: (data: { session: PracticeSession; stats: PracticeStats }) => void;
 }
 
-interface PracticeStats {
-  id: string;
-  userId: string;
-  totalDuration: number;
-  weeklyDuration: number;
-  lastWeekDuration: number;
-  lastUpdated: Date;
-}
-
-interface UseSessionTimeReturn {
-  startSession: (sessionType: string) => void;
-  endSession: () => void;
-  isConnected: boolean;
-  isSessionActive: boolean;
-  currentSession: PracticeSession | null;
-  practiceStats: PracticeStats | null;
-  connectionStatus: 'connecting' | 'connected' | 'disconnected' | 'error';
-  error: string | null;
-}
-
-export function usePracticeTime(): UseSessionTimeReturn {
+export function usePracticeTime({ onSessionStart, onSessionEnd }: UsePracticeTimeProps = {}) {
   const { data: session } = useSession();
-  const [isConnected, setIsConnected] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected' | 'error'>('connecting');
   const [error, setError] = useState<string | null>(null);
-  const [isSessionActive, setIsSessionActive] = useState(false);
   const [currentSession, setCurrentSession] = useState<PracticeSession | null>(null);
-  const [practiceStats, setPracticeStats] = useState<PracticeStats | null>(null);
-  
-  const socketRef = useRef<Socket | null>(null);
-  const reconnectAttempts = useRef(0);
-  const maxReconnectAttempts = 5;
-  const reconnectDelay = 2000;
-  const pingInterval = useRef<NodeJS.Timeout | null>(null);
-  const lastPingTime = useRef<number>(0);
-  const pingTimeout = useRef<NodeJS.Timeout | null>(null);
-
-  const initializeSocket = useCallback(() => {
-    if (!session?.user?.id) return;
-
-    try {
-      if (socketRef.current?.connected) {
-        console.log('Socket already connected');
-        return;
-      }
-
-      setConnectionStatus('connecting');
-      setError(null);
-
-      socketRef.current = io(process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000', {
-        path: '/api/socket',
-        transports: ['websocket'],
-        reconnection: true,
-        reconnectionAttempts: maxReconnectAttempts,
-        reconnectionDelay: reconnectDelay,
-        timeout: 10000,
-      });
-
-      socketRef.current.on('connect', () => {
-        console.log('Socket connected');
-        setIsConnected(true);
-        setConnectionStatus('connected');
-        setError(null);
-        reconnectAttempts.current = 0;
-        startPingInterval();
-      });
-
-      socketRef.current.on('disconnect', (reason) => {
-        console.log('Socket disconnected:', reason);
-        setIsConnected(false);
-        setConnectionStatus('disconnected');
-        clearPingInterval();
-        
-        if (reason === 'io server disconnect') {
-          // Server initiated disconnect, attempt to reconnect
-          socketRef.current?.connect();
-        }
-      });
-
-      socketRef.current.on('connect_error', (error) => {
-        console.error('Connection error:', error);
-        setConnectionStatus('error');
-        setError(`Connection error: ${error.message}`);
-        handleReconnect();
-      });
-
-      socketRef.current.on('error', (error: any) => {
-        console.error('Socket error:', error);
-        setError(`Socket error: ${error.message}`);
-      });
-
-      socketRef.current.on('sessionStarted', (session: PracticeSession) => {
-        setCurrentSession(session);
-        setIsSessionActive(true);
-        setError(null);
-      });
-
-      socketRef.current.on('sessionEnded', ({ session, stats }: { session: PracticeSession; stats: PracticeStats }) => {
-        setCurrentSession(session);
-        setPracticeStats(stats);
-        setIsSessionActive(false);
-        setError(null);
-      });
-
-      socketRef.current.on('pong', () => {
-        lastPingTime.current = Date.now();
-        if (pingTimeout.current) {
-          clearTimeout(pingTimeout.current);
-        }
-      });
-
-    } catch (error) {
-      console.error('Socket initialization error:', error);
-      setConnectionStatus('error');
-      setError(`Failed to initialize socket: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      handleReconnect();
-    }
-  }, [session?.user?.id]);
-
-  const handleReconnect = useCallback(() => {
-    if (reconnectAttempts.current >= maxReconnectAttempts) {
-      setError('Maximum reconnection attempts reached. Please refresh the page.');
-      return;
-    }
-
-    reconnectAttempts.current += 1;
-    console.log(`Attempting to reconnect (${reconnectAttempts.current}/${maxReconnectAttempts})...`);
-    
-    setTimeout(() => {
-      initializeSocket();
-    }, reconnectDelay * reconnectAttempts.current);
-  }, [initializeSocket]);
-
-  const startPingInterval = useCallback(() => {
-    if (pingInterval.current) {
-      clearInterval(pingInterval.current);
-    }
-
-    pingInterval.current = setInterval(() => {
-      if (!socketRef.current?.connected) return;
-
-      socketRef.current.emit('ping');
-      lastPingTime.current = Date.now();
-
-      // Set timeout for pong response
-      if (pingTimeout.current) {
-        clearTimeout(pingTimeout.current);
-      }
-      pingTimeout.current = setTimeout(() => {
-        console.log('Ping timeout - no pong received');
-        socketRef.current?.disconnect();
-        handleReconnect();
-      }, 5000); // 5 second timeout for pong response
-    }, 25000); // Ping every 25 seconds
-  }, [handleReconnect]);
+  const [isActive, setIsActive] = useState(false);
+  const pingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const clearPingInterval = useCallback(() => {
-    if (pingInterval.current) {
-      clearInterval(pingInterval.current);
-      pingInterval.current = null;
-    }
-    if (pingTimeout.current) {
-      clearTimeout(pingTimeout.current);
-      pingTimeout.current = null;
+    if (pingIntervalRef.current) {
+      clearInterval(pingIntervalRef.current);
+      pingIntervalRef.current = null;
     }
   }, []);
 
-  useEffect(() => {
-    initializeSocket();
+  const startPingInterval = useCallback(() => {
+    clearPingInterval();
+    // Ping every 25 seconds to keep the session alive
+    pingIntervalRef.current = setInterval(() => {
+      if (!currentSession?.id) return;
+      
+      void (async () => {
+        try {
+          const response = await fetch('/api/practice/ping', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              sessionId: currentSession.id,
+            }),
+          });
 
+          if (!response.ok) {
+            throw new Error('Failed to ping session');
+          }
+        } catch (error) {
+          console.error('Ping error:', error);
+          setError(error instanceof Error ? error.message : 'Failed to ping session');
+        }
+      })();
+    }, 25000);
+  }, [clearPingInterval, currentSession?.id]);
+
+  const startSession = useCallback(async (sessionType: string) => {
+    if (!session?.user?.id) {
+      setError('User not authenticated');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/practice/start', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: session.user.id,
+          sessionType,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to start session');
+      }
+
+      const data = await response.json();
+      setCurrentSession(data.session);
+      setIsActive(true);
+      onSessionStart?.(data.session);
+      startPingInterval();
+    } catch (error) {
+      console.error('Failed to start session:', error);
+      setError(error instanceof Error ? error.message : 'Failed to start session');
+    }
+  }, [session?.user?.id, onSessionStart, startPingInterval]);
+
+  const endSession = useCallback(async () => {
+    if (!currentSession?.id) {
+      setError('No active session');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/practice/end', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          sessionId: currentSession.id,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to end session');
+      }
+
+      const data = await response.json();
+      setCurrentSession(null);
+      setIsActive(false);
+      onSessionEnd?.(data);
+      clearPingInterval();
+    } catch (error) {
+      console.error('Failed to end session:', error);
+      setError(error instanceof Error ? error.message : 'Failed to end session');
+    }
+  }, [currentSession?.id, onSessionEnd, clearPingInterval]);
+
+  useEffect(() => {
     return () => {
       clearPingInterval();
-      if (socketRef.current) {
-        socketRef.current.disconnect();
-        socketRef.current = null;
-      }
     };
-  }, [initializeSocket, clearPingInterval]);
-
-  const startSession = useCallback((sessionType: string) => {
-    if (!socketRef.current?.connected || !session?.user?.id) {
-      setError('Not connected to server');
-      return;
-    }
-
-    try {
-      socketRef.current.emit('startSession', {
-        userId: session.user.id,
-        sessionType,
-      });
-    } catch (error) {
-      console.error('Error starting session:', error);
-      setError(`Failed to start session: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-  }, [session?.user?.id]);
-
-  const endSession = useCallback(() => {
-    if (!socketRef.current?.connected || !currentSession?.id) {
-      setError('Not connected to server or no active session');
-      return;
-    }
-
-    try {
-      socketRef.current.emit('endSession', {
-        sessionId: currentSession.id,
-      });
-    } catch (error) {
-      console.error('Error ending session:', error);
-      setError(`Failed to end session: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-  }, [currentSession?.id]);
+  }, [clearPingInterval]);
 
   return {
     startSession,
     endSession,
-    isConnected,
-    isSessionActive,
-    currentSession,
-    practiceStats,
-    connectionStatus,
+    isActive,
     error,
+    currentSession,
   };
 }
