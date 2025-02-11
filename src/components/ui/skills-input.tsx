@@ -39,7 +39,10 @@ export function SkillsInput({
       e.preventDefault();
       addSkill(inputValue);
     } else if (e.key === "Backspace" && !inputValue && skills.length > 0) {
-      removeSkill(skills[skills.length - 1]);
+      const lastSkill = skills[skills.length - 1];
+      if (lastSkill) {
+        removeSkill(lastSkill);
+      }
     }
   };
 

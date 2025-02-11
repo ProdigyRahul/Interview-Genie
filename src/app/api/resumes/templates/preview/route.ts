@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateTemplatePreview } from '@/lib/templates/preview-generator';
-import { TemplateType } from '@/lib/templates/latex/types';
+import { TemplateType } from '@/lib/types/resume';
 
 export async function GET(req: NextRequest) {
   try {
@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
     const pdfBuffer = await generateTemplatePreview(template);
 
     // Return PDF with appropriate headers
-    return new NextResponse(pdfBuffer, {
+    return new NextResponse(Buffer.from(JSON.stringify(pdfBuffer)), {
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `inline; filename="${template}-preview.pdf"`,

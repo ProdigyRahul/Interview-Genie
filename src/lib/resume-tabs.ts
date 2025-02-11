@@ -111,20 +111,28 @@ export interface Tab {
 
 export const isFieldRequired = <T extends TabId>(tabId: T, fieldName: keyof FieldMap[T]): boolean => {
   const tab = tabs.find(t => t.id === tabId);
-  return tab?.requiredFields.includes(fieldName as string) || false;
+  if (!tab) return false;
+  const fields = tab.requiredFields as ReadonlyArray<string>;
+  return fields.includes(fieldName as string);
 };
 
 export const isFieldOptional = <T extends TabId>(tabId: T, fieldName: keyof FieldMap[T]): boolean => {
   const tab = tabs.find(t => t.id === tabId);
-  return tab?.optionalFields.includes(fieldName as string) || false;
+  if (!tab) return false;
+  const fields = tab.optionalFields as ReadonlyArray<string>;
+  return fields.includes(fieldName as string);
 };
 
 export const getNextTab = (currentTab: TabId): TabId | null => {
   const currentIndex = tabs.findIndex(tab => tab.id === currentTab);
-  return currentIndex < tabs.length - 1 ? tabs[currentIndex + 1].id : null;
+  if (currentIndex === -1) return null;
+  const nextTab = tabs[currentIndex + 1];
+  return currentIndex < tabs.length - 1 ? nextTab?.id ?? null : null;
 };
 
 export const getPreviousTab = (currentTab: TabId): TabId | null => {
   const currentIndex = tabs.findIndex(tab => tab.id === currentTab);
-  return currentIndex > 0 ? tabs[currentIndex - 1].id : null;
+  if (currentIndex === -1) return null;
+  const prevTab = tabs[currentIndex - 1];
+  return currentIndex > 0 ? prevTab?.id ?? null : null;
 }; 

@@ -37,7 +37,7 @@ function getPromptForSection(section: string, context: Record<string, any>): str
     Keep under 25 words and use plain text without special characters.`
   };
 
-  return prompts[section] || 'Please provide content for this section.';
+  return prompts[section] ?? 'Please provide content for this section.';
 }
 
 export async function POST(req: Request) {

@@ -32,7 +32,7 @@ export async function POST(req: Request): Promise<NextResponse> {
       where: {
         userId,
         otp,
-        expires: {
+        expiresAt: {
           gt: new Date(),
         },
       },

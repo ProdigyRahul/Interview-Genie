@@ -2,8 +2,9 @@
 
 import { Card } from "@/components/ui/card";
 import { motion } from "framer-motion";
-import { Video, Mic, Brain, Users, FileText } from "lucide-react";
+import { Video, Mic, Brain, Users, FileText, Sparkles } from "lucide-react";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 const container = {
   hidden: { opacity: 0 },
@@ -28,8 +29,8 @@ const interviewTypes = [
     href: "/interview-preparation/job-descriptions",
     color: "text-blue-500",
     bgColor: "bg-blue-500/10",
-    gradientFrom: "group-hover:from-blue-500/5",
-    gradientTo: "group-hover:to-purple-500/5",
+    hoverColor: "group-hover:bg-blue-500/20",
+    cost: "50 credits",
   },
   {
     icon: Video,
@@ -38,8 +39,8 @@ const interviewTypes = [
     href: "/interview-preparation/video",
     color: "text-purple-500",
     bgColor: "bg-purple-500/10",
-    gradientFrom: "group-hover:from-purple-500/5",
-    gradientTo: "group-hover:to-pink-500/5",
+    hoverColor: "group-hover:bg-purple-500/20",
+    cost: "100 credits",
   },
   {
     icon: Mic,
@@ -48,8 +49,8 @@ const interviewTypes = [
     href: "/interview-preparation/audio",
     color: "text-pink-500",
     bgColor: "bg-pink-500/10",
-    gradientFrom: "group-hover:from-pink-500/5",
-    gradientTo: "group-hover:to-rose-500/5",
+    hoverColor: "group-hover:bg-pink-500/20",
+    cost: "80 credits",
   },
   {
     icon: Brain,
@@ -58,8 +59,8 @@ const interviewTypes = [
     href: "/interview-preparation/technical",
     color: "text-green-500",
     bgColor: "bg-green-500/10",
-    gradientFrom: "group-hover:from-green-500/5",
-    gradientTo: "group-hover:to-emerald-500/5",
+    hoverColor: "group-hover:bg-green-500/20",
+    cost: "120 credits",
   },
   {
     icon: Users,
@@ -68,20 +69,20 @@ const interviewTypes = [
     href: "/interview-preparation/behavioral",
     color: "text-orange-500",
     bgColor: "bg-orange-500/10",
-    gradientFrom: "group-hover:from-orange-500/5",
-    gradientTo: "group-hover:to-yellow-500/5",
+    hoverColor: "group-hover:bg-orange-500/20",
+    cost: "60 credits",
   },
 ];
 
 export default function InterviewPreparationPage() {
   return (
-    <div className="container mx-auto py-8 space-y-8">
+    <div className="space-y-8">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         className="space-y-2"
       >
-        <h1 className="text-4xl font-bold tracking-tight">Interview Preparation</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Interview Preparation</h1>
         <p className="text-muted-foreground text-lg">
           Choose an interview type to practice
         </p>
@@ -98,27 +99,40 @@ export default function InterviewPreparationPage() {
           return (
             <motion.div key={type.title} variants={item}>
               <Link href={type.href} className="block">
-                <Card className="group relative overflow-hidden border bg-card hover:shadow-xl transition-all duration-300">
-                  <div className="relative z-10 p-6">
-                    <div className="flex flex-col space-y-4">
-                      <div className={`${type.bgColor} w-12 h-12 rounded-lg flex items-center justify-center transition-transform duration-300 group-hover:scale-110 relative z-10`}>
-                        <Icon className={`w-6 h-6 ${type.color}`} />
+                <Card className="group h-full transition-all hover:border-primary hover:shadow-lg">
+                  <div className="relative h-full p-6">
+                    {/* Animated gradient background */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-lg" />
+                    
+                    <div className="relative space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className={cn(
+                          "p-2.5 w-fit rounded-lg transition-colors duration-300",
+                          type.bgColor,
+                          type.hoverColor
+                        )}>
+                          <Icon className={cn(
+                            "h-6 w-6 transition-transform group-hover:scale-110",
+                            type.color
+                          )} />
+                        </div>
+                        <div className="flex items-center text-sm text-muted-foreground">
+                          <Sparkles className="h-4 w-4 mr-1" />
+                          {type.cost}
+                        </div>
                       </div>
-                      <div className="space-y-2">
-                        <h2 className={`text-2xl font-semibold tracking-tight transition-colors duration-300 ${type.color}`}>
-                          {type.title}
-                        </h2>
-                        <p className="text-muted-foreground">
+
+                      <div>
+                        <h3 className="text-lg font-semibold mb-2">{type.title}</h3>
+                        <p className="text-sm text-muted-foreground">
                           {type.description}
                         </p>
                       </div>
+
+                      <div className="flex items-center text-sm text-primary">
+                        <span className="group-hover:underline">Get Started</span>
+                      </div>
                     </div>
-                  </div>
-                  <div className="absolute inset-0 bg-gradient-to-br from-transparent to-transparent transition-all duration-300 ease-in-out group-hover:opacity-100 group-hover:scale-110 blur-sm">
-                    <div className={`absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${type.gradientFrom} ${type.gradientTo}`} />
-                  </div>
-                  <div className="absolute inset-0 bg-gradient-to-br from-transparent to-transparent transition-all duration-300 group-hover:scale-105">
-                    <div className={`absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${type.gradientFrom} ${type.gradientTo}`} />
                   </div>
                 </Card>
               </Link>

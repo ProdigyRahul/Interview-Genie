@@ -1,7 +1,6 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { generateTemplatePreview } from '@/lib/templates/preview-generator';
-import type { TemplateType } from '@/lib/types/resume';
 
 export async function POST(req: NextRequest) {
   try {

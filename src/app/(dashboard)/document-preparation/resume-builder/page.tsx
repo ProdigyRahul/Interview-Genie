@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { MultiStepLoader } from "@/components/ui/multi-step-loader";
-import { FileText, Plus, Upload, Clock, Star, Eye, Sparkles } from "lucide-react";
+import { FileText, Plus, Upload, Clock, Star, Eye } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { generateResumeContent } from "@/lib/gemini";
 import { toast } from "sonner";
@@ -23,11 +23,10 @@ interface Resume {
 }
 
 const loadingStates = [
-  { text: "Analyzing your information..." },
-  { text: "Preparing resume structure..." },
-  { text: "Optimizing for ATS..." },
-  { text: "Applying professional formatting..." },
-  { text: "Finalizing your resume..." },
+  { text: "Fetching your resume collection..." },
+  { text: "Loading resume templates..." },
+  { text: "Preparing your workspace..." },
+  { text: "Almost ready..." },
 ];
 
 interface FormData {
@@ -46,7 +45,6 @@ export default function ResumeBuilderPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
-  const [isGenerating, setIsGenerating] = useState<Record<string, boolean>>({});
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [isLoadingResumes, setIsLoadingResumes] = useState(true);
   const [formData, setFormData] = useState<FormData>({
@@ -62,52 +60,28 @@ export default function ResumeBuilderPage() {
   });
 
   useEffect(() => {
-    const fetchResumes = async () => {
-      try {
-        setIsLoadingResumes(true);
-        const response = await fetch('/api/resumes');
-        if (!response.ok) {
-          throw new Error('Failed to fetch resumes');
-        }
-        const data = await response.json();
-        setResumes(data);
-      } catch (error) {
-        console.error('Error fetching resumes:', error);
-        toast.error('Failed to load resumes');
-      } finally {
-        setIsLoadingResumes(false);
-      }
-    };
-
-    fetchResumes();
+    void fetchResumes();
   }, []);
+
+  const fetchResumes = async () => {
+    try {
+      setIsLoadingResumes(true);
+      const response = await fetch("/api/resumes");
+      if (!response.ok) {
+        throw new Error("Failed to fetch resumes");
+      }
+      const data = await response.json();
+      setResumes(data);
+    } catch (error) {
+      console.error("Error fetching resumes:", error);
+      toast.error("Failed to load resumes");
+    } finally {
+      setIsLoadingResumes(false);
+    }
+  };
 
   const handleCreateNew = () => {
     setShowDialog(true);
-  };
-
-  const handleGenerateAI = async (field: string) => {
-    try {
-      setIsGenerating({ ...isGenerating, [field]: true });
-      const context = {
-        jobTitle: field === 'jobTitle' ? '' : formData.jobTitle,
-        experience: formData.experience,
-        skills: formData.skills
-      };
-
-      const response = await generateResumeContent(field, context);
-      if (response.content) {
-        setFormData({ ...formData, [field]: response.content });
-        toast.success('Content generated successfully!');
-      } else {
-        toast.error('Failed to generate content. Please try again.');
-      }
-    } catch (error) {
-      console.error('Error generating content:', error);
-      toast.error('Failed to generate content. Please try again.');
-    } finally {
-      setIsGenerating({ ...isGenerating, [field]: false });
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -161,6 +135,19 @@ export default function ResumeBuilderPage() {
     return `${Math.floor(days / 365)} years ago`;
   };
 
+  if (isLoadingResumes) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[80vh] p-4">
+        <MultiStepLoader 
+          loadingStates={loadingStates}
+          loading={true}
+          duration={2000}
+          loop={true}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -204,13 +191,7 @@ export default function ResumeBuilderPage() {
         </Card>
 
         {/* Previous Resumes */}
-        {isLoadingResumes ? (
-          <Card className="p-8 flex items-center justify-center">
-            <div className="animate-spin">
-              <FileText className="h-8 w-8 text-muted-foreground/50" />
-            </div>
-          </Card>
-        ) : resumes.length === 0 ? (
+        {!isLoadingResumes && (resumes.length === 0 ? (
           <Card className="p-8 flex items-center justify-center">
             <div className="text-center text-muted-foreground">
               <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
@@ -275,7 +256,7 @@ export default function ResumeBuilderPage() {
               </div>
             </Card>
           ))
-        )}
+        ))}
       </div>
 
       {/* Create Resume Dialog */}
@@ -389,12 +370,6 @@ export default function ResumeBuilderPage() {
           </form>
         </DialogContent>
       </Dialog>
-
-      <MultiStepLoader 
-        loadingStates={loadingStates} 
-        loading={loading} 
-        duration={800}
-      />
     </div>
   );
 } 

@@ -100,7 +100,7 @@ export async function POST(req: Request): Promise<NextResponse> {
       data: {
         userId: user.id,
         otp,
-        expires: new Date(Date.now() + 5 * 60 * 1000), // 5 minutes
+        expiresAt: new Date(Date.now() + 5 * 60 * 1000), // 5 minutes
       },
     });
 

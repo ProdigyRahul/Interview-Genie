@@ -184,7 +184,7 @@ export default function ResumeViewPage() {
               </Button>
             </Link>
             <h1 className="text-2xl font-bold">
-              {resumeData.personalInfo.fullName}'s Resume
+              {resumeData.personalInfo.fullName}&apos;s Resume
             </h1>
           </div>
           <div className="flex gap-2">
@@ -331,7 +331,7 @@ export default function ResumeViewPage() {
                     <h4 className="font-medium">{project.name}</h4>
                     {project.startDate && (
                       <span className="text-sm text-gray-500">
-                        {project.startDate} - {project.endDate || 'Present'}
+                        {project.startDate} - {project.endDate ?? 'Present'}
                       </span>
                     )}
                   </div>
@@ -501,7 +501,7 @@ export default function ResumeViewPage() {
                         <h3 className="text-base font-semibold">{project.name}</h3>
                         {project.startDate && (
                           <span className="text-sm text-gray-600">
-                            {project.startDate} - {project.endDate || 'Present'}
+                            {project.startDate} - {project.endDate ?? 'Present'}
                           </span>
                         )}
                       </div>

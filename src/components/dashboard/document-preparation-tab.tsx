@@ -16,10 +16,10 @@ const features = [
     href: "/document-preparation/resume-optimizer",
   },
   {
-    title: "LinkedIn Builder",
-    description: "Create an impressive LinkedIn profile that stands out",
+    title: "LinkedIn Optimizer",
+    description: "Optimize your LinkedIn profile for ATS",
     icon: LinkedinIcon,
-    href: "/document-preparation/linkedin-builder",
+    href: "/document-preparation/linkedin-optimizer",
   },
   {
     title: "Resume Upload",

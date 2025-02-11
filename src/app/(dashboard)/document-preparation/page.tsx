@@ -3,7 +3,7 @@
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { FileText, Upload, Linkedin, FileEdit, Sparkles } from "lucide-react";
+import { FileText, Linkedin, FileEdit, Sparkles } from "lucide-react";
 
 const features = [
   {
@@ -27,20 +27,20 @@ const features = [
     cost: "30 credits",
   },
   {
-    title: "LinkedIn Builder",
+    title: "LinkedIn Optimizer",
     description: "Create an impressive LinkedIn profile that stands out",
     icon: Linkedin,
-    href: "/document-preparation/linkedin-builder",
+    href: "/document-preparation/linkedin-optimizer",
     color: "text-green-500",
     bgColor: "bg-green-500/10",
     hoverColor: "group-hover:bg-green-500/20",
     cost: "40 credits",
   },
   {
-    title: "Resume Upload",
-    description: "Upload your resume for AI analysis and optimization",
-    icon: Upload,
-    href: "/document-preparation/resume-upload",
+    title: "Cover Letter Builder",
+    description: "Create a compelling cover letter tailored to your job application",
+    icon: FileEdit,
+    href: "/document-preparation/cover-letter-builder",
     color: "text-orange-500",
     bgColor: "bg-orange-500/10",
     hoverColor: "group-hover:bg-orange-500/20",
@@ -50,8 +50,8 @@ const features = [
 
 export default function DocumentPreparationPage() {
   return (
-    <div className="space-y-6">
-      <div>
+    <div className="space-y-8">
+      <div className="space-y-2">
         <h2 className="text-3xl font-bold tracking-tight">Document Preparation</h2>
         <p className="text-muted-foreground">
           Create and optimize your professional documents with AI assistance

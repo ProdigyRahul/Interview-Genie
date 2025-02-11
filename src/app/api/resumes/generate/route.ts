@@ -210,7 +210,7 @@ export async function POST(req: NextRequest) {
     };
 
     // Get title from either explicit title or generate from personal info
-    const title = explicitTitle?.trim() || 
+    const title = explicitTitle?.trim() ?? 
                  `${data.personalInfo.name}'s ${data.personalInfo.title} Resume`.trim();
 
     // Validate request data
