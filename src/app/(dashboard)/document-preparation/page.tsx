@@ -90,10 +90,6 @@ export default function DocumentPreparationPage() {
                       {feature.description}
                     </p>
                   </div>
-
-                  <div className="flex items-center text-sm text-primary">
-                    <span className="group-hover:underline">Get Started</span>
-                  </div>
                 </div>
               </div>
             </Card>
