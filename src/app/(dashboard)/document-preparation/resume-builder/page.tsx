@@ -71,10 +71,16 @@ export default function ResumeBuilderPage() {
         throw new Error("Failed to fetch resumes");
       }
       const data = await response.json();
-      setResumes(data);
+      if (data.success && Array.isArray(data.resumes)) {
+        setResumes(data.resumes);
+      } else {
+        setResumes([]);
+        console.warn("Unexpected response format:", data);
+      }
     } catch (error) {
       console.error("Error fetching resumes:", error);
       toast.error("Failed to load resumes");
+      setResumes([]);
     } finally {
       setIsLoadingResumes(false);
     }
