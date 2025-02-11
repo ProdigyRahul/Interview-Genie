@@ -112,7 +112,7 @@ export const credentialsProvider = CredentialsProvider({
       return null;
     }
 
-    const req = new Request(request.url ?? env.NEXTAUTH_URL, {
+    const req = new Request(request.url ?? env.NEXT_PUBLIC_APP_URL, {
       headers: request.headers,
       method: request.method,
     });

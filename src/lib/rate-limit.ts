@@ -86,7 +86,7 @@ export async function rateLimit(
   const ip = getClientIp(req);
   
   // Get deployment URL from env
-  const deploymentUrl = new URL(env.NEXTAUTH_URL).hostname;
+  const deploymentUrl = new URL(env.NEXT_PUBLIC_APP_URL).hostname;
   
   // Create a unique key that includes the deployment URL
   const key = `${deploymentUrl}:${ip}:${identifier}`;
