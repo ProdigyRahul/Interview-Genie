@@ -27,20 +27,71 @@ export async function POST(req: Request) {
     });
 
     const data = await response.json();
-    return NextResponse.json(data, { status: response.status });
+    
+    if (data.success) {
+      // Store the analysis in the database
+      const user = await prisma.user.findUnique({
+        where: { email: session.user.email }
+      });
+
+      if (!user) {
+        return NextResponse.json({ error: "User not found" }, { status: 404 });
+      }
+
+      try {
+        // Create resume analysis record
+        await prisma.resumeAnalysis.create({
+          data: {
+            userId: user.id,
+            originalFilename: data.metadata.filename,
+            fileUrl: data.metadata.file_url,
+            totalScore: data.ats_analysis.total_score,
+            sectionScores: data.ats_analysis.section_scores,
+            detailedBreakdown: data.ats_analysis.detailed_breakdown,
+            keywordMatchRate: data.ats_analysis.keyword_match_rate,
+            missingKeywords: data.ats_analysis.missing_keywords,
+            improvements: {
+              high_priority: data.improvement_suggestions.high_priority,
+              content: data.improvement_suggestions.content,
+              format: data.improvement_suggestions.format,
+              language: data.improvement_suggestions.language,
+              keywords: data.improvement_suggestions.keywords,
+              details: data.improvement_details
+            }
+          }
+        });
+      } catch (dbError) {
+        console.error('Database error:', dbError);
+        // Continue even if saving to database fails
+      }
+    }
+
+    // Return the exact format from the ML API
+    return NextResponse.json({
+      success: data.success,
+      ats_analysis: data.ats_analysis,
+      improvement_suggestions: data.improvement_suggestions,
+      improvement_details: data.improvement_details,
+      metadata: data.metadata
+    });
   } catch (error) {
     console.error("Error:", error);
     return NextResponse.json({ 
-      error: "Failed to analyze resume" 
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to analyze resume"
     }, { status: 500 });
   }
 }
 
-export async function GET(_req: Request) {
+export async function GET(req: Request) {
   try {
     const session = await auth();
     if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ 
+        success: false,
+        error: 'Unauthorized',
+        analyses: [] 
+      }, { status: 401 });
     }
 
     const user = await prisma.user.findUnique({
@@ -48,33 +99,52 @@ export async function GET(_req: Request) {
     });
 
     if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      return NextResponse.json({ 
+        success: false,
+        error: 'User not found',
+        analyses: [] 
+      }, { status: 404 });
     }
 
-    const resumes = await prisma.resume.findMany({
-      where: { userId: user.id },
-      include: {
-        personalInfo: true,
-        summary: true,
-        experiences: true,
-        education: true,
-        projects: true,
-        certifications: true,
-        skills: true,
-        achievements: true
-      },
-      orderBy: [
-        { createdAt: 'desc' }
-      ]
-    });
+    try {
+      // Get resume analyses history
+      const analyses = await prisma.resumeAnalysis.findMany({
+        where: { userId: user.id },
+        orderBy: { createdAt: 'desc' },
+        take: 10, // Limit to last 10 analyses
+        select: {
+          id: true,
+          originalFilename: true,
+          fileUrl: true,
+          totalScore: true,
+          sectionScores: true,
+          keywordMatchRate: true,
+          missingKeywords: true,
+          improvements: true,
+          createdAt: true,
+          updatedAt: true
+        }
+      });
 
-    return NextResponse.json(resumes);
+      return NextResponse.json({ 
+        success: true,
+        analyses: analyses || [] 
+      });
+    } catch (dbError) {
+      console.error('Database error:', dbError);
+      return NextResponse.json({ 
+        success: false,
+        error: 'Failed to fetch resume analyses',
+        analyses: [] 
+      }, { status: 500 });
+    }
   } catch (error) {
-    console.error('Error fetching resumes:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch resumes' },
-      { status: 500 }
-    );
+    console.error('Error fetching resume analyses:', error);
+    return NextResponse.json({
+      success: false,
+      error: 'Failed to fetch resume analyses',
+      analyses: []
+    }, { status: 500 });
   }
 }
 

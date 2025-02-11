@@ -20,9 +20,81 @@ export interface ResumeAnalysisResult {
       competencies: number;
       keywords: number;
     };
+    detailed_breakdown: {
+      format_analysis: {
+        length_depth_score: number;
+        bullet_usage_score: number;
+        bullet_length_score: number;
+        page_density_score: number;
+        formatting_score: number;
+      };
+      content_analysis: {
+        impact_score: number;
+        achievements_score: number;
+        relevance_score: number;
+        technical_depth_score: number;
+      };
+      language_analysis: {
+        verb_strength: number;
+        tense_consistency: number;
+        clarity: number;
+        spelling_grammar: number;
+        professional_tone: number;
+      };
+      competencies_analysis: {
+        leadership_initiative: number;
+        problem_solving: number;
+        collaboration: number;
+        results_orientation: number;
+      };
+    };
+    keyword_match_rate: string;
+    missing_keywords: string[];
   };
   improvement_suggestions: {
     high_priority: string[];
+    content: Array<{
+      current: string;
+      suggested: string;
+      impact: string;
+      section: string;
+    }>;
+    format: Array<{
+      current?: string;
+      suggested?: string;
+      reason?: string;
+    }>;
+    language: Array<{
+      original: string;
+      improved: string;
+      reason: string;
+    }>;
+    keywords: string[];
+  };
+  improvement_details: {
+    bullet_points: Array<{
+      original: string;
+      improved: string;
+      reason: string;
+    }>;
+    achievements: Array<{
+      section: string;
+      current: string;
+      suggested: string;
+      impact: string;
+    }>;
+    skills: Array<{
+      skill_area: string;
+      current: string;
+      improved: string;
+      explanation: string;
+    }>;
+  };
+  metadata: {
+    filename: string;
+    file_url: string;
+    job_description_provided: boolean;
+    timestamp: string;
   };
 }
 

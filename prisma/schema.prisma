@@ -26,6 +26,7 @@ model User {
   practiceStats      PracticeStats?
   passwordResetTokens PasswordResetToken[]
   otpVerifications   OTPVerification[]
+  resumeAnalyses     ResumeAnalysis[]
 }
 
 model Resume {
@@ -232,4 +233,23 @@ model OTPVerification {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+model ResumeAnalysis {
+  id                String   @id @default(cuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  originalFilename String
+  fileUrl          String
+  totalScore       Int
+  sectionScores    Json     // Store section scores as JSON
+  improvements     Json     // Store improvement suggestions as JSON
+  detailedBreakdown Json    // Store detailed breakdown as JSON
+  keywordMatchRate String?  // Store keyword match rate
+  missingKeywords  Json?    // Store missing keywords as JSON array
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([userId])
+  @@index([createdAt])
 }
