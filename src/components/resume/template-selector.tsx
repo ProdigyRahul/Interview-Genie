@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { TemplateType } from "@/lib/templates/latex/types";
+import { TemplateType } from "@/lib/types/resume";
 import { TemplatePreview } from "./template-preview";
 import { TemplatePreviewDialog } from "./template-preview-dialog";
 
