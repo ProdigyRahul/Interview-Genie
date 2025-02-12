@@ -18,7 +18,7 @@ export function SkillsInput({
 }: SkillsInputProps) {
   const [inputValue, setInputValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
-  
+
   // Ensure value is always an array
   const skills = Array.isArray(value) ? value : [];
 
@@ -47,7 +47,7 @@ export function SkillsInput({
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value || '';
+    const newValue = e.target.value || "";
     if (newValue.includes(",")) {
       const skills = newValue.split(",");
       skills.forEach((skill) => addSkill(skill));
@@ -59,9 +59,9 @@ export function SkillsInput({
   return (
     <div
       className={cn(
-        "flex flex-wrap gap-2 p-2 min-h-[42px] rounded-md border border-input bg-background ring-offset-background",
+        "flex min-h-[42px] flex-wrap gap-2 rounded-md border border-input bg-background p-2 ring-offset-background",
         "focus-within:outline-none focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2",
-        className
+        className,
       )}
       onClick={() => inputRef.current?.focus()}
     >
@@ -69,9 +69,9 @@ export function SkillsInput({
         <span
           key={skill}
           className={cn(
-            "inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-sm font-medium",
+            "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-sm font-medium",
             "bg-gradient-to-br from-primary/10 via-primary/20 to-transparent",
-            "border border-primary/20 hover:border-primary/40 transition-colors"
+            "border border-primary/20 transition-colors hover:border-primary/40",
           )}
         >
           {skill}
@@ -81,7 +81,7 @@ export function SkillsInput({
               e.stopPropagation();
               removeSkill(skill);
             }}
-            className="hover:text-destructive rounded-full p-0.5 hover:bg-background/80 transition-colors"
+            className="rounded-full p-0.5 transition-colors hover:bg-background/80 hover:text-destructive"
           >
             <X className="h-3 w-3" />
           </button>
@@ -94,8 +94,8 @@ export function SkillsInput({
         onChange={handleInputChange}
         onKeyDown={handleKeyDown}
         placeholder={skills.length === 0 ? placeholder : ""}
-        className="flex-1 !border-0 !ring-0 !ring-offset-0 focus-visible:ring-0 min-w-[200px] bg-transparent"
+        className="min-w-[200px] flex-1 !border-0 bg-transparent !ring-0 !ring-offset-0 focus-visible:ring-0"
       />
     </div>
   );
-} 
+}

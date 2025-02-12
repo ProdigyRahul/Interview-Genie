@@ -20,17 +20,15 @@ export const authCache = {
       {
         ttl: AUTH_CACHE_TTL,
         staleWhileRevalidate: true,
-        tags: ['session']
-      }
+        tags: ["session"],
+      },
     );
   },
 
   async setSession(sessionToken: string, data: AuthCache): Promise<void> {
-    await redis.set(
-      `${CACHE_KEYS.SESSION}:${sessionToken}`,
-      data,
-      { ex: AUTH_CACHE_TTL }
-    );
+    await redis.set(`${CACHE_KEYS.SESSION}:${sessionToken}`, data, {
+      ex: AUTH_CACHE_TTL,
+    });
   },
 
   async removeSession(sessionToken: string): Promise<void> {
@@ -47,17 +45,15 @@ export const authCache = {
       {
         ttl: AUTH_CACHE_TTL,
         staleWhileRevalidate: true,
-        tags: ['user']
-      }
+        tags: ["user"],
+      },
     );
   },
 
   async setUser(userId: string, user: User): Promise<void> {
-    await redis.set(
-      `${CACHE_KEYS.USER}:${userId}`,
-      user,
-      { ex: AUTH_CACHE_TTL }
-    );
+    await redis.set(`${CACHE_KEYS.USER}:${userId}`, user, {
+      ex: AUTH_CACHE_TTL,
+    });
   },
 
   async removeUser(userId: string): Promise<void> {
@@ -79,7 +75,7 @@ export const authCache = {
   async checkRateLimit(
     key: string,
     maxAttempts: number = 5,
-    windowSeconds: number = 300 // 5 minutes
+    windowSeconds: number = 300, // 5 minutes
   ): Promise<boolean> {
     const attempts = await redis.incr(`${CACHE_KEYS.RATE_LIMIT}:${key}`);
     if (attempts === 1) {
@@ -91,7 +87,7 @@ export const authCache = {
   // Get remaining attempts
   async getRemainingAttempts(
     key: string,
-    maxAttempts: number = 5
+    maxAttempts: number = 5,
   ): Promise<number> {
     const attempts = await redis.get<number>(`${CACHE_KEYS.RATE_LIMIT}:${key}`);
     return Math.max(0, maxAttempts - (attempts ?? 0));
@@ -100,5 +96,5 @@ export const authCache = {
   // Clear rate limit
   async clearRateLimit(key: string): Promise<void> {
     await redis.del(`${CACHE_KEYS.RATE_LIMIT}:${key}`);
-  }
-}; 
+  },
+};

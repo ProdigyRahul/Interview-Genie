@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
     console.error("Error starting practice session:", error);
     return Response.json(
       { error: "Failed to start practice session" },
-      { status: 500 }
+      { status: 500 },
     );
   }
-} 
+}

@@ -4,4 +4,4 @@ export default function InterviewHistoryPage() {
       <h1 className="text-3xl font-bold">Interview History</h1>
     </div>
   );
-} 
+}

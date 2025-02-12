@@ -38,7 +38,8 @@ const features = [
   },
   {
     title: "Cover Letter Builder",
-    description: "Create a compelling cover letter tailored to your job application",
+    description:
+      "Create a compelling cover letter tailored to your job application",
     icon: FileEdit,
     href: "/document-preparation/cover-letter-builder",
     color: "text-orange-500",
@@ -52,40 +53,48 @@ export default function DocumentPreparationPage() {
   return (
     <div className="space-y-8">
       <div className="space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight">Document Preparation</h2>
+        <h2 className="text-3xl font-bold tracking-tight">
+          Document Preparation
+        </h2>
         <p className="text-muted-foreground">
           Create and optimize your professional documents with AI assistance
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-2">
         {features.map((feature) => (
           <Link key={feature.title} href={feature.href} className="block">
             <Card className="group h-full transition-all hover:border-primary hover:shadow-lg">
               <div className="relative h-full p-6">
                 {/* Animated gradient background */}
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-lg" />
-                
+                <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-primary/5 via-primary/10 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+
                 <div className="relative space-y-4">
                   <div className="flex items-center justify-between">
-                    <div className={cn(
-                      "p-2.5 w-fit rounded-lg transition-colors duration-300",
-                      feature.bgColor,
-                      feature.hoverColor
-                    )}>
-                      <feature.icon className={cn(
-                        "h-6 w-6 transition-transform group-hover:scale-110",
-                        feature.color
-                      )} />
+                    <div
+                      className={cn(
+                        "w-fit rounded-lg p-2.5 transition-colors duration-300",
+                        feature.bgColor,
+                        feature.hoverColor,
+                      )}
+                    >
+                      <feature.icon
+                        className={cn(
+                          "h-6 w-6 transition-transform group-hover:scale-110",
+                          feature.color,
+                        )}
+                      />
                     </div>
                     <div className="flex items-center text-sm text-muted-foreground">
-                      <Sparkles className="h-4 w-4 mr-1" />
+                      <Sparkles className="mr-1 h-4 w-4" />
                       {feature.cost}
                     </div>
                   </div>
 
                   <div>
-                    <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
+                    <h3 className="mb-2 text-lg font-semibold">
+                      {feature.title}
+                    </h3>
                     <p className="text-sm text-muted-foreground">
                       {feature.description}
                     </p>
@@ -98,4 +107,4 @@ export default function DocumentPreparationPage() {
       </div>
     </div>
   );
-} 
+}

@@ -8,21 +8,21 @@ import { cn } from "@/lib/utils";
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen w-full dark:bg-background flex flex-col items-center justify-center relative overflow-hidden">
+    <div className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden dark:bg-background">
       {/* Animated gradient background */}
-      <div className="absolute inset-0 w-full h-full dark:opacity-20 opacity-10 pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 animate-gradient-x" />
+      <div className="pointer-events-none absolute inset-0 h-full w-full opacity-10 dark:opacity-20">
+        <div className="animate-gradient-x absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background to-background" />
       </div>
 
-      <div className="relative z-10 container flex flex-col items-center justify-center gap-6 px-4 text-center max-w-3xl mx-auto">
+      <div className="container relative z-10 mx-auto flex max-w-3xl flex-col items-center justify-center gap-6 px-4 text-center">
         {/* Animated 404 text */}
-        <motion.h1 
+        <motion.h1
           className={cn(
-            "text-8xl font-bold bg-clip-text text-transparent",
+            "bg-clip-text text-8xl font-bold text-transparent",
             "bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600",
             "dark:from-blue-400 dark:via-purple-400 dark:to-pink-400",
-            "select-none cursor-default"
+            "cursor-default select-none",
           )}
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
@@ -41,35 +41,26 @@ export default function NotFound() {
           <h2 className="text-2xl font-semibold tracking-tight">
             Page not found
           </h2>
-          <p className="text-muted-foreground max-w-prose">
-            Sorry, we couldn&apos;t find the page you&apos;re looking for. It might have been moved, deleted, or never existed.
+          <p className="max-w-prose text-muted-foreground">
+            Sorry, we couldn&apos;t find the page you&apos;re looking for. It
+            might have been moved, deleted, or never existed.
           </p>
         </motion.div>
 
         {/* Animated buttons */}
-        <motion.div 
+        <motion.div
           className="flex flex-wrap items-center justify-center gap-4"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.4, ease: "easeOut" }}
         >
-          <Button
-            variant="default"
-            size="lg"
-            asChild
-            className="gap-2"
-          >
+          <Button variant="default" size="lg" asChild className="gap-2">
             <Link href="/">
               <Home className="h-4 w-4" />
               Back to Home
             </Link>
           </Button>
-          <Button
-            variant="outline"
-            size="lg"
-            asChild
-            className="gap-2"
-          >
+          <Button variant="outline" size="lg" asChild className="gap-2">
             <Link href="/dashboard">
               <ArrowLeft className="h-4 w-4" />
               Go to Dashboard
@@ -79,15 +70,15 @@ export default function NotFound() {
       </div>
 
       {/* Animated shapes */}
-      <div className="absolute inset-0 w-full h-full pointer-events-none overflow-hidden">
+      <div className="pointer-events-none absolute inset-0 h-full w-full overflow-hidden">
         {[...Array(20)].map((_, i) => (
           <motion.div
             key={i}
             className={cn(
-              "absolute w-2 h-2 rounded-full",
+              "absolute h-2 w-2 rounded-full",
               "bg-gradient-to-r from-blue-500 to-purple-500",
               "dark:from-blue-400 dark:to-purple-400",
-              "opacity-30 dark:opacity-20"
+              "opacity-30 dark:opacity-20",
             )}
             style={{
               left: `${Math.random() * 100}%`,

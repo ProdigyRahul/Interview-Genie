@@ -1,8 +1,15 @@
-'use client';
+"use client";
 
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 
 type Alert = {
@@ -19,43 +26,43 @@ export function AlertHistory() {
 
     const fetchAlerts = async () => {
       try {
-        const res = await fetch('/api/health');
+        const res = await fetch("/api/health");
         const health = await res.json();
-        
+
         if (!mounted) return;
 
         // Generate alerts based on health check results
         const newAlerts: Alert[] = [];
-        
+
         if (!health.redis.ok) {
           newAlerts.push({
             timestamp: new Date().toLocaleString(),
-            message: 'Redis connection issue detected',
-            type: 'error'
+            message: "Redis connection issue detected",
+            type: "error",
           });
         }
 
         if (health.latency > 1000) {
           newAlerts.push({
             timestamp: new Date().toLocaleString(),
-            message: 'High API latency detected',
-            type: 'warning'
+            message: "High API latency detected",
+            type: "warning",
           });
         }
 
         if (!health.database.ok) {
           newAlerts.push({
             timestamp: new Date().toLocaleString(),
-            message: 'Database connection issue detected',
-            type: 'error'
+            message: "Database connection issue detected",
+            type: "error",
           });
         }
 
         if (newAlerts.length > 0) {
-          setAlerts(prev => [...newAlerts, ...prev].slice(0, 10)); // Keep last 10 alerts
+          setAlerts((prev) => [...newAlerts, ...prev].slice(0, 10)); // Keep last 10 alerts
         }
       } catch (error) {
-        console.error('Failed to fetch health data:', error);
+        console.error("Failed to fetch health data:", error);
       }
     };
 
@@ -97,7 +104,11 @@ export function AlertHistory() {
                   <TableCell>{alert.timestamp}</TableCell>
                   <TableCell>{alert.message}</TableCell>
                   <TableCell>
-                    <Badge variant={alert.type === "error" ? "destructive" : "secondary"}>
+                    <Badge
+                      variant={
+                        alert.type === "error" ? "destructive" : "secondary"
+                      }
+                    >
                       {alert.type}
                     </Badge>
                   </TableCell>
@@ -109,4 +120,4 @@ export function AlertHistory() {
       </CardContent>
     </Card>
   );
-} 
+}

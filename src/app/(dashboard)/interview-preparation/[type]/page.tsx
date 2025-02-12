@@ -19,17 +19,16 @@ export default function InterviewTypePage() {
 
       <div className="grid gap-4 md:grid-cols-2">
         {dummyRoles.map((role) => (
-          <Link 
-            key={role.id} 
-            href={`/interview-preparation/any/${role.id}`}
-          >
+          <Link key={role.id} href={`/interview-preparation/any/${role.id}`}>
             <Card className="p-6 hover:bg-muted/50">
               <h3 className="font-semibold">{role.title}</h3>
-              <p className="text-sm text-muted-foreground">Duration: {role.duration}</p>
+              <p className="text-sm text-muted-foreground">
+                Duration: {role.duration}
+              </p>
             </Card>
           </Link>
         ))}
       </div>
     </div>
   );
-} 
+}

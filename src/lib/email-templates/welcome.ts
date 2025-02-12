@@ -112,4 +112,4 @@ export function generateWelcomeEmail(name: string): string {
       </body>
     </html>
   `;
-} 
+}

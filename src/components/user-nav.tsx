@@ -77,4 +77,4 @@ export function UserNav({ user, credits, subscriptionStatus }: UserNavProps) {
       </DropdownMenuContent>
     </DropdownMenu>
   );
-} 
+}

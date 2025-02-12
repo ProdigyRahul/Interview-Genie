@@ -4,7 +4,7 @@ import { OTPVerificationForm } from "./otp-verification-form";
 
 export default async function VerifyOTPPage() {
   const session = await auth();
-  
+
   if (session?.user) {
     redirect("/dashboard");
   }
@@ -20,4 +20,4 @@ export default async function VerifyOTPPage() {
       <OTPVerificationForm />
     </div>
   );
-} 
+}

@@ -1,5 +1,11 @@
 import Link from "next/link";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { BookOpen, Compass, GraduationCap, Library } from "lucide-react";
 
 const resources = [
@@ -67,14 +73,14 @@ export function ResourcesTab() {
             <CardContent>
               <div className="space-y-2">
                 <div className="text-sm font-medium">Featured Topics:</div>
-                <ul className="text-sm text-muted-foreground space-y-1">
+                <ul className="space-y-1 text-sm text-muted-foreground">
                   {resource.topics.map((topic, index) => (
-                    <li key={index} className="list-disc list-inside">
+                    <li key={index} className="list-inside list-disc">
                       {topic}
                     </li>
                   ))}
                 </ul>
-                <div className="text-sm text-primary mt-2">
+                <div className="mt-2 text-sm text-primary">
                   Explore resources →
                 </div>
               </div>
@@ -84,4 +90,4 @@ export function ResourcesTab() {
       ))}
     </div>
   );
-} 
+}

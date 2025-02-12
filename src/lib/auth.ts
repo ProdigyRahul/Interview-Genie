@@ -95,7 +95,7 @@ export const authConfig = {
       if (token?.jti && (trigger === "signIn" || trigger === "update")) {
         await redis.del(`session:${token.jti}`);
       }
-      
+
       // If this is a sign in or we have an email in the token
       if ((trigger === "signIn" && user) || token?.email) {
         try {
@@ -150,7 +150,7 @@ export const authConfig = {
       }
 
       const customToken = token as CustomJWT;
-      
+
       if (customToken && session.user) {
         // Ensure all token data is properly synced to session
         session.user = {
@@ -189,12 +189,12 @@ export const authConfig = {
             { email: user.email },
             {
               credits: 100,
-              subscriptionStatus: 'free',
+              subscriptionStatus: "free",
               isVerified: true,
               emailVerified: new Date(),
-              ...(typeof user.name === 'string' ? { name: user.name } : {}),
-              ...(typeof user.image === 'string' ? { image: user.image } : {}),
-            }
+              ...(typeof user.name === "string" ? { name: user.name } : {}),
+              ...(typeof user.image === "string" ? { image: user.image } : {}),
+            },
           );
           // Cache is already invalidated by updateUser
         } else if (account?.provider === "google") {
@@ -202,9 +202,9 @@ export const authConfig = {
             { email: user.email },
             {
               emailVerified: new Date(),
-              ...(typeof user.name === 'string' ? { name: user.name } : {}),
-              ...(typeof user.image === 'string' ? { image: user.image } : {}),
-            }
+              ...(typeof user.name === "string" ? { name: user.name } : {}),
+              ...(typeof user.image === "string" ? { image: user.image } : {}),
+            },
           );
           // Cache is already invalidated by updateUser
         }
@@ -212,8 +212,12 @@ export const authConfig = {
         console.error("[AUTH_SIGNIN_ERROR]", error);
       }
     },
-    async signOut(message: { session: void | AdapterSession | null | undefined } | { token: JWT | null }) {
-      if ('token' in message && message.token?.jti) {
+    async signOut(
+      message:
+        | { session: void | AdapterSession | null | undefined }
+        | { token: JWT | null },
+    ) {
+      if ("token" in message && message.token?.jti) {
         await redis.del(`session:${message.token.jti}`);
       }
     },

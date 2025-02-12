@@ -7,13 +7,17 @@ interface RequiredFieldLabelProps<T extends TabId> {
   children: React.ReactNode;
 }
 
-export function RequiredFieldLabel<T extends TabId>({ tabId, fieldName, children }: RequiredFieldLabelProps<T>) {
+export function RequiredFieldLabel<T extends TabId>({
+  tabId,
+  fieldName,
+  children,
+}: RequiredFieldLabelProps<T>) {
   const required = isFieldRequired(tabId, fieldName);
 
   return (
     <Label>
       {children}
-      {required && <span className="text-red-500 ml-1">*</span>}
+      {required && <span className="ml-1 text-red-500">*</span>}
     </Label>
   );
-} 
+}

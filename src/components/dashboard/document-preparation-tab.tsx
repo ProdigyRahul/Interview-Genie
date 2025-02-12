@@ -1,5 +1,11 @@
 import Link from "next/link";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { FileText, FileUp, LinkedinIcon, Zap } from "lucide-react";
 
 const features = [
@@ -50,4 +56,4 @@ export function DocumentPreparationTab() {
       ))}
     </div>
   );
-} 
+}

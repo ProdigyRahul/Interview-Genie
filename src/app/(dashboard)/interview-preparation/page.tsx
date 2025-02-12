@@ -11,14 +11,14 @@ const container = {
   show: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.1
-    }
-  }
+      staggerChildren: 0.1,
+    },
+  },
 };
 
 const item = {
   hidden: { y: 20, opacity: 0 },
-  show: { y: 0, opacity: 1 }
+  show: { y: 0, opacity: 1 },
 };
 
 const interviewTypes = [
@@ -82,8 +82,10 @@ export default function InterviewPreparationPage() {
         animate={{ opacity: 1, y: 0 }}
         className="space-y-2"
       >
-        <h1 className="text-3xl font-bold tracking-tight">Interview Preparation</h1>
-        <p className="text-muted-foreground text-lg">
+        <h1 className="text-3xl font-bold tracking-tight">
+          Interview Preparation
+        </h1>
+        <p className="text-lg text-muted-foreground">
           Choose an interview type to practice
         </p>
       </motion.div>
@@ -102,28 +104,34 @@ export default function InterviewPreparationPage() {
                 <Card className="group h-full transition-all hover:border-primary hover:shadow-lg">
                   <div className="relative h-full p-6">
                     {/* Animated gradient background */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-lg" />
-                    
+                    <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-primary/5 via-primary/10 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+
                     <div className="relative space-y-4">
                       <div className="flex items-center justify-between">
-                        <div className={cn(
-                          "p-2.5 w-fit rounded-lg transition-colors duration-300",
-                          type.bgColor,
-                          type.hoverColor
-                        )}>
-                          <Icon className={cn(
-                            "h-6 w-6 transition-transform group-hover:scale-110",
-                            type.color
-                          )} />
+                        <div
+                          className={cn(
+                            "w-fit rounded-lg p-2.5 transition-colors duration-300",
+                            type.bgColor,
+                            type.hoverColor,
+                          )}
+                        >
+                          <Icon
+                            className={cn(
+                              "h-6 w-6 transition-transform group-hover:scale-110",
+                              type.color,
+                            )}
+                          />
                         </div>
                         <div className="flex items-center text-sm text-muted-foreground">
-                          <Sparkles className="h-4 w-4 mr-1" />
+                          <Sparkles className="mr-1 h-4 w-4" />
                           {type.cost}
                         </div>
                       </div>
 
                       <div>
-                        <h3 className="text-lg font-semibold mb-2">{type.title}</h3>
+                        <h3 className="mb-2 text-lg font-semibold">
+                          {type.title}
+                        </h3>
                         <p className="text-sm text-muted-foreground">
                           {type.description}
                         </p>
@@ -138,4 +146,4 @@ export default function InterviewPreparationPage() {
       </motion.div>
     </div>
   );
-} 
+}

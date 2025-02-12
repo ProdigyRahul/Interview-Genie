@@ -13,4 +13,4 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
       </div>
     </div>
   );
-} 
+}

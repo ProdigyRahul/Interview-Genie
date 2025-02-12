@@ -21,10 +21,7 @@ interface DashboardContentProps {
   user: User;
 }
 
-export function DashboardContent({ 
-  children,
-  user,
-}: DashboardContentProps) {
+export function DashboardContent({ children, user }: DashboardContentProps) {
   return (
     <div className="flex-1 space-y-8">
       <Suspense fallback={<DashboardLoadingSkeleton />}>
@@ -39,13 +36,13 @@ export function DashboardContent({
 
         <div className="space-y-8">
           {/* Document Preparation and Interview Preparation */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <FeatureNav type="document" />
             <FeatureNav type="interview" />
           </div>
 
           {/* Resources and Progress & Analytics */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <FeatureNav type="resources" />
             <FeatureNav type="progress" />
           </div>
@@ -58,4 +55,4 @@ export function DashboardContent({
       </Suspense>
     </div>
   );
-} 
+}

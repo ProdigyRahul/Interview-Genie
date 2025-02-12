@@ -2,7 +2,7 @@
 import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
 import { useState, useEffect } from "react";
- 
+
 const CheckIcon = ({ className }: { className?: string }) => {
   return (
     <svg
@@ -11,20 +11,20 @@ const CheckIcon = ({ className }: { className?: string }) => {
       viewBox="0 0 24 24"
       strokeWidth={1.5}
       stroke="currentColor"
-      className={cn("w-6 h-6 ", className)}
+      className={cn("h-6 w-6", className)}
     >
       <path d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
     </svg>
   );
 };
- 
+
 const CheckFilled = ({ className }: { className?: string }) => {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 24 24"
       fill="currentColor"
-      className={cn("w-6 h-6 ", className)}
+      className={cn("h-6 w-6", className)}
     >
       <path
         fillRule="evenodd"
@@ -34,11 +34,11 @@ const CheckFilled = ({ className }: { className?: string }) => {
     </svg>
   );
 };
- 
+
 type LoadingState = {
   text: string;
 };
- 
+
 const LoaderCore = ({
   loadingStates,
   value = 0,
@@ -47,29 +47,26 @@ const LoaderCore = ({
   value?: number;
 }) => {
   return (
-    <div className="flex relative justify-start max-w-xl mx-auto flex-col mt-40">
+    <div className="relative mx-auto mt-40 flex max-w-xl flex-col justify-start">
       {loadingStates.map((loadingState, index) => {
         const distance = Math.abs(index - value);
         const opacity = Math.max(1 - distance * 0.2, 0);
- 
+
         return (
           <motion.div
             key={index}
-            className={cn("text-left flex gap-2 mb-4")}
+            className={cn("mb-4 flex gap-2 text-left")}
             initial={{ opacity: 0, y: -(value * 40) }}
             animate={{ opacity: opacity, y: -(value * 40) }}
             transition={{ duration: 0.5 }}
           >
             <div>
-              {index > value && (
-                <CheckIcon className="text-foreground" />
-              )}
+              {index > value && <CheckIcon className="text-foreground" />}
               {index <= value && (
                 <CheckFilled
                   className={cn(
                     "text-foreground",
-                    value === index &&
-                      "text-primary opacity-100"
+                    value === index && "text-primary opacity-100",
                   )}
                 />
               )}
@@ -77,7 +74,7 @@ const LoaderCore = ({
             <span
               className={cn(
                 "text-foreground",
-                value === index && "text-primary opacity-100"
+                value === index && "text-primary opacity-100",
               )}
             >
               {loadingState.text}
@@ -88,7 +85,7 @@ const LoaderCore = ({
     </div>
   );
 };
- 
+
 export const MultiStepLoader = ({
   loadingStates,
   loading,
@@ -101,7 +98,7 @@ export const MultiStepLoader = ({
   loop?: boolean;
 }) => {
   const [currentState, setCurrentState] = useState(0);
- 
+
   useEffect(() => {
     if (!loading) {
       setCurrentState(0);
@@ -113,10 +110,10 @@ export const MultiStepLoader = ({
           ? prevState === loadingStates.length - 1
             ? 0
             : prevState + 1
-          : Math.min(prevState + 1, loadingStates.length - 1)
+          : Math.min(prevState + 1, loadingStates.length - 1),
       );
     }, duration);
- 
+
     return () => clearTimeout(timeout);
   }, [currentState, loading, loop, loadingStates.length, duration]);
 
@@ -133,15 +130,15 @@ export const MultiStepLoader = ({
           exit={{
             opacity: 0,
           }}
-          className="w-full h-full fixed inset-0 z-[100] flex items-center justify-center backdrop-blur-2xl"
+          className="fixed inset-0 z-[100] flex h-full w-full items-center justify-center backdrop-blur-2xl"
         >
-          <div className="h-96 relative">
+          <div className="relative h-96">
             <LoaderCore value={currentState} loadingStates={loadingStates} />
           </div>
- 
-          <div className="bg-gradient-to-t inset-x-0 z-20 bottom-0 bg-background h-full absolute [mask-image:radial-gradient(900px_at_center,transparent_30%,white)]" />
+
+          <div className="absolute inset-x-0 bottom-0 z-20 h-full bg-background bg-gradient-to-t [mask-image:radial-gradient(900px_at_center,transparent_30%,white)]" />
         </motion.div>
       )}
     </AnimatePresence>
   );
-}; 
+};

@@ -29,13 +29,15 @@ export interface DashboardData {
 }
 
 // Cache key generators
-const getDashboardCacheKey = (userId: string) => `${CACHE_KEYS.USER}:${userId}:dashboard`;
-const getStatsCacheKey = (userId: string) => `${CACHE_KEYS.USER}:${userId}:stats`;
+const getDashboardCacheKey = (userId: string) =>
+  `${CACHE_KEYS.USER}:${userId}:dashboard`;
+const getStatsCacheKey = (userId: string) =>
+  `${CACHE_KEYS.USER}:${userId}:stats`;
 
 // Fetch all dashboard data in a single transaction
 export async function getDashboardData(userId: string): Promise<DashboardData> {
   const cacheKey = getDashboardCacheKey(userId);
-  
+
   // Try to get from cache first
   const cached = await redis.get<DashboardData>(cacheKey);
   if (cached) return cached;
@@ -63,9 +65,9 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
         },
       }),
       tx.practiceSession.findMany({
-        where: { 
+        where: {
           userId,
-          endTime: { not: null }
+          endTime: { not: null },
         },
         select: {
           id: true,
@@ -74,11 +76,11 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
           duration: true,
           sessionType: true,
         },
-        orderBy: { startTime: 'desc' },
+        orderBy: { startTime: "desc" },
         take: 5,
       }),
       tx.resume.count({
-        where: { userId }
+        where: { userId },
       }),
     ]);
 
@@ -117,9 +119,11 @@ export interface UserStatistics {
 }
 
 // Fetch all user statistics in a single transaction
-export async function getUserStatistics(userId: string): Promise<UserStatistics> {
+export async function getUserStatistics(
+  userId: string,
+): Promise<UserStatistics> {
   const cacheKey = getStatsCacheKey(userId);
-  
+
   // Try to get from cache first
   const cached = await redis.get<UserStatistics>(cacheKey);
   if (cached) return cached;
@@ -135,7 +139,7 @@ export async function getUserStatistics(userId: string): Promise<UserStatistics>
       completedSessions,
       weeklySessionCount,
       resumeStats,
-      analyzedCount
+      analyzedCount,
     ] = await Promise.all([
       tx.practiceStats.findUnique({
         where: { userId },
@@ -150,7 +154,7 @@ export async function getUserStatistics(userId: string): Promise<UserStatistics>
         where: { userId },
       }),
       tx.practiceSession.count({
-        where: { 
+        where: {
           userId,
           endTime: { not: null },
         },
@@ -162,14 +166,14 @@ export async function getUserStatistics(userId: string): Promise<UserStatistics>
         },
       }),
       tx.resume.count({
-        where: { userId }
+        where: { userId },
       }),
       tx.resumeAnalysis.count({
         where: {
           userId,
-          totalScore: { gt: 0 }
-        }
-      })
+          totalScore: { gt: 0 },
+        },
+      }),
     ]);
 
     const stats: UserStatistics = {
@@ -222,9 +226,11 @@ export interface PracticeSessionBatch {
 }
 
 // Fetch batched resume analyses
-export async function getBatchedResumeAnalyses(userId: string): Promise<ResumeAnalysisBatch> {
+export async function getBatchedResumeAnalyses(
+  userId: string,
+): Promise<ResumeAnalysisBatch> {
   const cacheKey = `${CACHE_KEYS.USER}:${userId}:resume_analyses`;
-  
+
   // Try to get from cache first
   const cached = await redis.get<ResumeAnalysisBatch>(cacheKey);
   if (cached) return cached;
@@ -232,9 +238,9 @@ export async function getBatchedResumeAnalyses(userId: string): Promise<ResumeAn
   const data = await db.$transaction(async (tx) => {
     const [analyses, totalCount] = await Promise.all([
       tx.resumeAnalysis.findMany({
-        where: { 
+        where: {
           userId,
-          totalScore: { gt: 0 }
+          totalScore: { gt: 0 },
         },
         select: {
           id: true,
@@ -242,23 +248,25 @@ export async function getBatchedResumeAnalyses(userId: string): Promise<ResumeAn
           sectionScores: true,
           createdAt: true,
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         take: 10,
       }),
       tx.resumeAnalysis.count({
-        where: { 
+        where: {
           userId,
-          totalScore: { gt: 0 }
-        }
-      })
+          totalScore: { gt: 0 },
+        },
+      }),
     ]);
 
-    const averageScore = analyses.reduce((acc, curr) => acc + curr.totalScore, 0) / analyses.length || 0;
+    const averageScore =
+      analyses.reduce((acc, curr) => acc + curr.totalScore, 0) /
+        analyses.length || 0;
 
     return {
-      analyses: analyses.map(a => ({
+      analyses: analyses.map((a) => ({
         ...a,
-        sectionScores: a.sectionScores as Record<string, number>
+        sectionScores: a.sectionScores as Record<string, number>,
       })),
       totalCount,
       averageScore,
@@ -272,9 +280,11 @@ export async function getBatchedResumeAnalyses(userId: string): Promise<ResumeAn
 }
 
 // Fetch batched practice sessions
-export async function getBatchedPracticeSessions(userId: string): Promise<PracticeSessionBatch> {
+export async function getBatchedPracticeSessions(
+  userId: string,
+): Promise<PracticeSessionBatch> {
   const cacheKey = `${CACHE_KEYS.USER}:${userId}:practice_sessions`;
-  
+
   // Try to get from cache first
   const cached = await redis.get<PracticeSessionBatch>(cacheKey);
   if (cached) return cached;
@@ -290,20 +300,22 @@ export async function getBatchedPracticeSessions(userId: string): Promise<Practi
           duration: true,
           sessionType: true,
         },
-        orderBy: { startTime: 'desc' },
+        orderBy: { startTime: "desc" },
         take: 10,
       }),
       tx.practiceStats.findUnique({
         where: { userId },
         select: {
           totalDuration: true,
-        }
-      })
+        },
+      }),
     ]);
 
-    const completedSessions = sessions.filter(s => s.endTime !== null);
+    const completedSessions = sessions.filter((s) => s.endTime !== null);
     const completionRate = (completedSessions.length / sessions.length) * 100;
-    const averageScore = completedSessions.reduce((acc, curr) => acc + (curr.duration || 0), 0) / completedSessions.length || 0;
+    const averageScore =
+      completedSessions.reduce((acc, curr) => acc + (curr.duration || 0), 0) /
+        completedSessions.length || 0;
 
     return {
       sessions,

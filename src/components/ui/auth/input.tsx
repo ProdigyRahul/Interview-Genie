@@ -14,7 +14,11 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     const mouseY = useMotionValue(0);
     const [visible, setVisible] = React.useState(false);
 
-    function handleMouseMove({ currentTarget, clientX, clientY }: React.MouseEvent) {
+    function handleMouseMove({
+      currentTarget,
+      clientX,
+      clientY,
+    }: React.MouseEvent) {
       const { left, top } = currentTarget.getBoundingClientRect();
       mouseX.set(clientX - left);
       mouseY.set(clientY - top);
@@ -45,16 +49,16 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary",
             "disabled:cursor-not-allowed disabled:opacity-50",
             "group-hover/input:border-primary/50",
-            className
+            className,
           )}
           ref={ref}
           {...props}
         />
       </motion.div>
     );
-  }
+  },
 );
 
 Input.displayName = "Input";
 
-export { Input }; 
+export { Input };

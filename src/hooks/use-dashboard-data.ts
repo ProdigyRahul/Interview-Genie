@@ -1,8 +1,8 @@
-import useSWR from 'swr';
-import type { DashboardData } from '@/lib/batch-queries';
-import { fetcher } from './use-fetcher';
-import { cacheKeys, mutationUtils } from './use-cache-keys';
-import { useSession } from 'next-auth/react';
+import useSWR from "swr";
+import type { DashboardData } from "@/lib/batch-queries";
+import { fetcher } from "./use-fetcher";
+import { cacheKeys, mutationUtils } from "./use-cache-keys";
+import { useSession } from "next-auth/react";
 
 export function useDashboardData() {
   const { data: session } = useSession();
@@ -24,15 +24,14 @@ export function useDashboardData() {
         recentSessions: [],
         resumeCount: 0,
       },
-    }
+    },
   );
 
   const updateDashboard = async (newData: Partial<DashboardData>) => {
     // Optimistically update the cache
-    await mutate(
-      mutationUtils.updateDashboard(data, newData),
-      { revalidate: false }
-    );
+    await mutate(mutationUtils.updateDashboard(data, newData), {
+      revalidate: false,
+    });
 
     try {
       // Trigger revalidation
@@ -50,4 +49,4 @@ export function useDashboardData() {
     isError: error,
     mutate: updateDashboard,
   };
-} 
+}

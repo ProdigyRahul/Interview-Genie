@@ -99,32 +99,38 @@ export default function ResumeViewPage() {
 
   const handleDownload = async () => {
     try {
-      const loadingToast = toast.loading('Preparing your resume for download...');
+      const loadingToast = toast.loading(
+        "Preparing your resume for download...",
+      );
       const response = await fetch(`/api/resumes/${params.id}/download`);
-      
+
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Download failed');
+        throw new Error(error.error || "Download failed");
       }
-      
+
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      const fileName = `${resumeData?.personalInfo?.fullName?.replace(/\s+/g, '-')}-Resume.pdf`.toLowerCase() || `resume-${params.id}.pdf`;
-      
+      const a = document.createElement("a");
+      const fileName =
+        `${resumeData?.personalInfo?.fullName?.replace(/\s+/g, "-")}-Resume.pdf`.toLowerCase() ||
+        `resume-${params.id}.pdf`;
+
       a.href = url;
       a.download = fileName;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      
+
       toast.dismiss(loadingToast);
-      toast.success('Resume downloaded successfully!');
+      toast.success("Resume downloaded successfully!");
     } catch (err) {
-      console.error('Download error:', err);
+      console.error("Download error:", err);
       toast.error(
-        err instanceof Error ? err.message : 'Failed to download resume. Please try again.'
+        err instanceof Error
+          ? err.message
+          : "Failed to download resume. Please try again.",
       );
     }
   };
@@ -197,10 +203,14 @@ export default function ResumeViewPage() {
           </div>
         </div>
 
-        <Card className="p-8 !bg-white dark:!bg-white dark:!text-black">
+        <Card className="!bg-white p-8 dark:!bg-white dark:!text-black">
           <div className="mb-8">
-            <h2 className="text-2xl font-bold !text-black dark:!text-black">{resumeData.personalInfo.fullName}</h2>
-            <p className="text-gray-600 dark:text-gray-600">{resumeData.personalInfo.jobTitle}</p>
+            <h2 className="text-2xl font-bold !text-black dark:!text-black">
+              {resumeData.personalInfo.fullName}
+            </h2>
+            <p className="text-gray-600 dark:text-gray-600">
+              {resumeData.personalInfo.jobTitle}
+            </p>
             <div className="mt-2 text-sm text-gray-500 dark:text-gray-500">
               <p>{resumeData.personalInfo.email}</p>
               <p>{resumeData.personalInfo.phone}</p>
@@ -210,7 +220,9 @@ export default function ResumeViewPage() {
 
           {resumeData.summary && (
             <div className="mb-8">
-              <h3 className="mb-2 text-lg font-semibold">Professional Summary</h3>
+              <h3 className="mb-2 text-lg font-semibold">
+                Professional Summary
+              </h3>
               <p className="text-gray-700">{resumeData.summary.content}</p>
             </div>
           )}
@@ -264,7 +276,9 @@ export default function ResumeViewPage() {
                     <p className="text-sm text-gray-600">GPA: {edu.gpa}</p>
                   )}
                   {edu.achievements && (
-                    <p className="mt-2 text-sm text-gray-700">{edu.achievements}</p>
+                    <p className="mt-2 text-sm text-gray-700">
+                      {edu.achievements}
+                    </p>
                   )}
                 </div>
               ))}
@@ -276,7 +290,9 @@ export default function ResumeViewPage() {
               <h3 className="mb-4 text-lg font-semibold">Skills</h3>
               {resumeData.skills.technical?.length > 0 && (
                 <div className="mb-4">
-                  <h4 className="text-sm font-medium text-gray-600">Technical Skills</h4>
+                  <h4 className="text-sm font-medium text-gray-600">
+                    Technical Skills
+                  </h4>
                   <div className="mt-2 flex flex-wrap gap-2">
                     {resumeData.skills.technical.map((skill, index) => (
                       <span
@@ -291,7 +307,9 @@ export default function ResumeViewPage() {
               )}
               {resumeData.skills.soft?.length > 0 && (
                 <div className="mb-4">
-                  <h4 className="text-sm font-medium text-gray-600">Soft Skills</h4>
+                  <h4 className="text-sm font-medium text-gray-600">
+                    Soft Skills
+                  </h4>
                   <div className="mt-2 flex flex-wrap gap-2">
                     {resumeData.skills.soft.map((skill, index) => (
                       <span
@@ -331,7 +349,7 @@ export default function ResumeViewPage() {
                     <h4 className="font-medium">{project.name}</h4>
                     {project.startDate && (
                       <span className="text-sm text-gray-500">
-                        {project.startDate} - {project.endDate ?? 'Present'}
+                        {project.startDate} - {project.endDate ?? "Present"}
                       </span>
                     )}
                   </div>
@@ -345,7 +363,9 @@ export default function ResumeViewPage() {
                       Project Link
                     </a>
                   )}
-                  <p className="mt-2 text-sm text-gray-700">{project.description}</p>
+                  <p className="mt-2 text-sm text-gray-700">
+                    {project.description}
+                  </p>
                   {project.technologies?.length > 0 && (
                     <div className="mt-2 flex flex-wrap gap-2">
                       {project.technologies.map((tech, i) => (
@@ -370,7 +390,9 @@ export default function ResumeViewPage() {
                 <div key={index} className="mb-4">
                   <div className="flex justify-between">
                     <h4 className="font-medium">{cert.name}</h4>
-                    <span className="text-sm text-gray-500">{cert.issueDate}</span>
+                    <span className="text-sm text-gray-500">
+                      {cert.issueDate}
+                    </span>
                   </div>
                   <p className="text-sm text-gray-600">{cert.issuingOrg}</p>
                   {cert.credentialUrl && (
@@ -416,24 +438,39 @@ export default function ResumeViewPage() {
       </div>
 
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <DialogContent className="max-w-4xl p-0 overflow-hidden !bg-white dark:!bg-white">
-          <div className="sticky top-0 z-50 flex justify-between items-center p-4 !bg-white dark:!bg-white border-b">
-            <h2 className="text-lg font-semibold !text-black dark:!text-black">Resume Preview</h2>
-            <Button variant="ghost" size="icon" onClick={() => setPreviewOpen(false)}>
+        <DialogContent className="max-w-4xl overflow-hidden !bg-white p-0 dark:!bg-white">
+          <div className="sticky top-0 z-50 flex items-center justify-between border-b !bg-white p-4 dark:!bg-white">
+            <h2 className="text-lg font-semibold !text-black dark:!text-black">
+              Resume Preview
+            </h2>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setPreviewOpen(false)}
+            >
               <X className="h-4 w-4" />
             </Button>
           </div>
-          <div className="overflow-y-auto h-[80vh] bg-muted p-4">
-            <div className={cn(
-              "w-full max-w-[210mm] mx-auto !bg-white !text-black",
-              "p-8 shadow-lg print:shadow-none"
-            )}>
+          <div className="h-[80vh] overflow-y-auto bg-muted p-4">
+            <div
+              className={cn(
+                "mx-auto w-full max-w-[210mm] !bg-white !text-black",
+                "p-8 shadow-lg print:shadow-none",
+              )}
+            >
               {/* Header */}
               <header className="mb-8">
-                <h1 className="text-3xl font-bold text-[#466995] mb-2">{resumeData.personalInfo.fullName}</h1>
-                <p className="text-lg text-[#466995]/80 mb-4">{resumeData.personalInfo.jobTitle}</p>
+                <h1 className="mb-2 text-3xl font-bold text-[#466995]">
+                  {resumeData.personalInfo.fullName}
+                </h1>
+                <p className="mb-4 text-lg text-[#466995]/80">
+                  {resumeData.personalInfo.jobTitle}
+                </p>
                 <div className="flex flex-wrap gap-4 text-sm">
-                  <a href={`mailto:${resumeData.personalInfo.email}`} className="text-[#466995] hover:underline">
+                  <a
+                    href={`mailto:${resumeData.personalInfo.email}`}
+                    className="text-[#466995] hover:underline"
+                  >
                     {resumeData.personalInfo.email}
                   </a>
                   <span>{resumeData.personalInfo.phone}</span>
@@ -444,27 +481,39 @@ export default function ResumeViewPage() {
               {/* Summary */}
               {resumeData.summary && (
                 <section className="mb-6">
-                  <h2 className="text-xl font-semibold text-[#466995] border-b-2 border-[#466995] mb-3">Summary</h2>
-                  <p className="text-sm leading-relaxed">{resumeData.summary.content}</p>
+                  <h2 className="mb-3 border-b-2 border-[#466995] text-xl font-semibold text-[#466995]">
+                    Summary
+                  </h2>
+                  <p className="text-sm leading-relaxed">
+                    {resumeData.summary.content}
+                  </p>
                 </section>
               )}
 
               {/* Experience */}
               {resumeData.experiences?.length > 0 && (
                 <section className="mb-6">
-                  <h2 className="text-xl font-semibold text-[#466995] border-b-2 border-[#466995] mb-3">Experience</h2>
+                  <h2 className="mb-3 border-b-2 border-[#466995] text-xl font-semibold text-[#466995]">
+                    Experience
+                  </h2>
                   {resumeData.experiences.map((exp, index) => (
                     <div key={index} className="mb-4">
-                      <div className="flex justify-between items-baseline mb-1">
-                        <h3 className="text-base font-semibold">{exp.companyName}</h3>
-                        <span className="text-sm text-gray-600">{exp.startDate} - {exp.endDate}</span>
+                      <div className="mb-1 flex items-baseline justify-between">
+                        <h3 className="text-base font-semibold">
+                          {exp.companyName}
+                        </h3>
+                        <span className="text-sm text-gray-600">
+                          {exp.startDate} - {exp.endDate}
+                        </span>
                       </div>
-                      <p className="text-sm italic mb-2">{exp.jobTitle}</p>
+                      <p className="mb-2 text-sm italic">{exp.jobTitle}</p>
                       <p className="text-sm">{exp.description}</p>
                       {exp.technologies?.length > 0 && (
                         <div className="mt-2 flex flex-wrap gap-2">
                           {exp.technologies.map((tech, i) => (
-                            <span key={i} className="text-sm text-gray-600">{tech}</span>
+                            <span key={i} className="text-sm text-gray-600">
+                              {tech}
+                            </span>
                           ))}
                         </div>
                       )}
@@ -476,16 +525,26 @@ export default function ResumeViewPage() {
               {/* Education */}
               {resumeData.education?.length > 0 && (
                 <section className="mb-6">
-                  <h2 className="text-xl font-semibold text-[#466995] border-b-2 border-[#466995] mb-3">Education</h2>
+                  <h2 className="mb-3 border-b-2 border-[#466995] text-xl font-semibold text-[#466995]">
+                    Education
+                  </h2>
                   {resumeData.education.map((edu, index) => (
                     <div key={index} className="mb-4">
-                      <div className="flex justify-between items-baseline mb-1">
-                        <h3 className="text-base font-semibold">{edu.school}</h3>
-                        <span className="text-sm text-gray-600">{edu.startDate} - {edu.endDate}</span>
+                      <div className="mb-1 flex items-baseline justify-between">
+                        <h3 className="text-base font-semibold">
+                          {edu.school}
+                        </h3>
+                        <span className="text-sm text-gray-600">
+                          {edu.startDate} - {edu.endDate}
+                        </span>
                       </div>
-                      <p className="text-sm italic mb-2">{edu.degree} in {edu.fieldOfStudy}</p>
+                      <p className="mb-2 text-sm italic">
+                        {edu.degree} in {edu.fieldOfStudy}
+                      </p>
                       {edu.gpa && <p className="text-sm">GPA: {edu.gpa}</p>}
-                      {edu.achievements && <p className="text-sm mt-1">{edu.achievements}</p>}
+                      {edu.achievements && (
+                        <p className="mt-1 text-sm">{edu.achievements}</p>
+                      )}
                     </div>
                   ))}
                 </section>
@@ -494,14 +553,18 @@ export default function ResumeViewPage() {
               {/* Projects */}
               {resumeData.projects?.length > 0 && (
                 <section className="mb-6">
-                  <h2 className="text-xl font-semibold text-[#466995] border-b-2 border-[#466995] mb-3">Projects</h2>
+                  <h2 className="mb-3 border-b-2 border-[#466995] text-xl font-semibold text-[#466995]">
+                    Projects
+                  </h2>
                   {resumeData.projects.map((project, index) => (
                     <div key={index} className="mb-4">
-                      <div className="flex justify-between items-baseline mb-1">
-                        <h3 className="text-base font-semibold">{project.name}</h3>
+                      <div className="mb-1 flex items-baseline justify-between">
+                        <h3 className="text-base font-semibold">
+                          {project.name}
+                        </h3>
                         {project.startDate && (
                           <span className="text-sm text-gray-600">
-                            {project.startDate} - {project.endDate ?? 'Present'}
+                            {project.startDate} - {project.endDate ?? "Present"}
                           </span>
                         )}
                       </div>
@@ -509,7 +572,9 @@ export default function ResumeViewPage() {
                       {project.technologies?.length > 0 && (
                         <div className="mt-2 flex flex-wrap gap-2">
                           {project.technologies.map((tech, i) => (
-                            <span key={i} className="text-sm text-gray-600">{tech}</span>
+                            <span key={i} className="text-sm text-gray-600">
+                              {tech}
+                            </span>
                           ))}
                         </div>
                       )}
@@ -518,7 +583,7 @@ export default function ResumeViewPage() {
                           href={project.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-sm text-[#466995] hover:underline mt-1 inline-block"
+                          className="mt-1 inline-block text-sm text-[#466995] hover:underline"
                         >
                           View Project
                         </a>
@@ -531,16 +596,27 @@ export default function ResumeViewPage() {
               {/* Skills */}
               {resumeData.skills && (
                 <section className="mb-6">
-                  <h2 className="text-xl font-semibold text-[#466995] border-b-2 border-[#466995] mb-3">Skills</h2>
+                  <h2 className="mb-3 border-b-2 border-[#466995] text-xl font-semibold text-[#466995]">
+                    Skills
+                  </h2>
                   <div className="space-y-2 text-sm">
                     {resumeData.skills.technical?.length > 0 && (
-                      <p><strong>Technical:</strong> {resumeData.skills.technical.join(", ")}</p>
+                      <p>
+                        <strong>Technical:</strong>{" "}
+                        {resumeData.skills.technical.join(", ")}
+                      </p>
                     )}
                     {resumeData.skills.soft?.length > 0 && (
-                      <p><strong>Soft Skills:</strong> {resumeData.skills.soft.join(", ")}</p>
+                      <p>
+                        <strong>Soft Skills:</strong>{" "}
+                        {resumeData.skills.soft.join(", ")}
+                      </p>
                     )}
                     {resumeData.skills.tools?.length > 0 && (
-                      <p><strong>Tools:</strong> {resumeData.skills.tools.join(", ")}</p>
+                      <p>
+                        <strong>Tools:</strong>{" "}
+                        {resumeData.skills.tools.join(", ")}
+                      </p>
                     )}
                   </div>
                 </section>
@@ -549,12 +625,16 @@ export default function ResumeViewPage() {
               {/* Certifications */}
               {resumeData.certifications?.length > 0 && (
                 <section className="mb-6">
-                  <h2 className="text-xl font-semibold text-[#466995] border-b-2 border-[#466995] mb-3">Certifications</h2>
+                  <h2 className="mb-3 border-b-2 border-[#466995] text-xl font-semibold text-[#466995]">
+                    Certifications
+                  </h2>
                   {resumeData.certifications.map((cert, index) => (
                     <div key={index} className="mb-3">
-                      <div className="flex justify-between items-baseline mb-1">
+                      <div className="mb-1 flex items-baseline justify-between">
                         <h3 className="text-base font-semibold">{cert.name}</h3>
-                        <span className="text-sm text-gray-600">{cert.issueDate}</span>
+                        <span className="text-sm text-gray-600">
+                          {cert.issueDate}
+                        </span>
                       </div>
                       <p className="text-sm italic">{cert.issuingOrg}</p>
                       {cert.credentialUrl && (
@@ -562,7 +642,7 @@ export default function ResumeViewPage() {
                           href={cert.credentialUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-sm text-[#466995] hover:underline mt-1 inline-block"
+                          className="mt-1 inline-block text-sm text-[#466995] hover:underline"
                         >
                           View Credential
                         </a>
@@ -575,14 +655,20 @@ export default function ResumeViewPage() {
               {/* Achievements */}
               {resumeData.achievements?.length > 0 && (
                 <section className="mb-6">
-                  <h2 className="text-xl font-semibold text-[#466995] border-b-2 border-[#466995] mb-3">Achievements</h2>
+                  <h2 className="mb-3 border-b-2 border-[#466995] text-xl font-semibold text-[#466995]">
+                    Achievements
+                  </h2>
                   {resumeData.achievements.map((achievement, index) => (
                     <div key={index} className="mb-3">
                       {achievement.title && (
-                        <div className="flex justify-between items-baseline mb-1">
-                          <h3 className="text-base font-semibold">{achievement.title}</h3>
+                        <div className="mb-1 flex items-baseline justify-between">
+                          <h3 className="text-base font-semibold">
+                            {achievement.title}
+                          </h3>
                           {achievement.date && (
-                            <span className="text-sm text-gray-600">{achievement.date}</span>
+                            <span className="text-sm text-gray-600">
+                              {achievement.date}
+                            </span>
                           )}
                         </div>
                       )}
@@ -599,4 +685,4 @@ export default function ResumeViewPage() {
       </Dialog>
     </>
   );
-} 
+}

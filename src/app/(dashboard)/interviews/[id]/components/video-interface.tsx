@@ -12,7 +12,7 @@ export function VideoInterface() {
   useEffect(() => {
     return () => {
       if (stream) {
-        stream.getTracks().forEach(track => track.stop());
+        stream.getTracks().forEach((track) => track.stop());
       }
     };
   }, [stream]);
@@ -21,7 +21,7 @@ export function VideoInterface() {
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: true,
-        audio: true
+        audio: true,
       });
       setStream(mediaStream);
       if (videoRef.current) {
@@ -46,7 +46,9 @@ export function VideoInterface() {
       </div>
       <div className="mt-4 flex justify-center gap-4">
         <Button
-          onClick={() => isRecording ? setIsRecording(false) : startRecording()}
+          onClick={() =>
+            isRecording ? setIsRecording(false) : startRecording()
+          }
           variant={isRecording ? "destructive" : "default"}
         >
           {isRecording ? "Stop Recording" : "Start Recording"}
@@ -54,4 +56,4 @@ export function VideoInterface() {
       </div>
     </Card>
   );
-} 
+}

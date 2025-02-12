@@ -13,4 +13,4 @@ export default async function DashboardPage() {
   }
 
   return null; // Content is rendered by parallel routes
-} 
+}

@@ -36,8 +36,8 @@ export function UploadJobDescriptionDialog() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button className="gap-2 hover:scale-105 transition-transform">
-          <Plus className="w-4 h-4" />
+        <Button className="gap-2 transition-transform hover:scale-105">
+          <Plus className="h-4 w-4" />
           Add Job Description
         </Button>
       </DialogTrigger>
@@ -52,7 +52,9 @@ export function UploadJobDescriptionDialog() {
               className="space-y-6"
             >
               <DialogHeader>
-                <DialogTitle className="text-2xl">Add New Job Description</DialogTitle>
+                <DialogTitle className="text-2xl">
+                  Add New Job Description
+                </DialogTitle>
                 <DialogDescription className="text-base">
                   Enter the job details to start preparing for your interview
                 </DialogDescription>
@@ -109,16 +111,16 @@ export function UploadJobDescriptionDialog() {
                   type="button"
                   variant="outline"
                   onClick={() => setIsOpen(false)}
-                  className="hover:border-destructive transition-colors"
+                  className="transition-colors hover:border-destructive"
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
-                  className="gap-2 hover:scale-105 transition-transform"
+                  className="gap-2 transition-transform hover:scale-105"
                   disabled={!title || !company || !description}
                 >
-                  <Plus className="w-4 h-4" />
+                  <Plus className="h-4 w-4" />
                   Add Description
                 </Button>
               </DialogFooter>
@@ -128,4 +130,4 @@ export function UploadJobDescriptionDialog() {
       </AnimatePresence>
     </Dialog>
   );
-} 
+}

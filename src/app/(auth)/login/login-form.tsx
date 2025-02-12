@@ -111,7 +111,7 @@ export function LoginForm() {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
                     >
                       {showPassword ? (
                         <EyeOff className="h-4 w-4" />
@@ -135,11 +135,7 @@ export function LoginForm() {
             </Link>
           </div>
 
-          <Button
-            type="submit"
-            disabled={isLoading}
-            isLoading={isLoading}
-          >
+          <Button type="submit" disabled={isLoading} isLoading={isLoading}>
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -173,4 +169,4 @@ export function LoginForm() {
       </p>
     </motion.div>
   );
-} 
+}

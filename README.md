@@ -62,6 +62,7 @@ We welcome contributions! Please see our [Contributing Guidelines](/docs/CONTRIB
 ## Deployment 🌐
 
 This project is deployed on [Vercel](https://vercel.com). For deployment instructions, see:
+
 - [Vercel Deployment Guide](https://create.t3.gg/en/deployment/vercel)
 - [Our Setup Guide](/docs/SETUP.md)
 

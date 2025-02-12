@@ -21,19 +21,21 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { PasswordStrength } from "@/components/ui/password-strength";
 
-const formSchema = z.object({
-  password: z
-    .string()
-    .min(8, "Password must be at least 8 characters")
-    .regex(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-      "Password must contain at least one uppercase letter, one lowercase letter, and one number"
-    ),
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-});
+const formSchema = z
+  .object({
+    password: z
+      .string()
+      .min(8, "Password must be at least 8 characters")
+      .regex(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+        "Password must contain at least one uppercase letter, one lowercase letter, and one number",
+      ),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
 
 export function ResetPasswordForm() {
   const [isLoading, setIsLoading] = useState(false);
@@ -91,7 +93,8 @@ export function ResetPasswordForm() {
       toast({
         variant: "destructive",
         title: "Error",
-        description: error instanceof Error ? error.message : "Something went wrong",
+        description:
+          error instanceof Error ? error.message : "Something went wrong",
       });
     } finally {
       setIsLoading(false);
@@ -103,7 +106,7 @@ export function ResetPasswordForm() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="space-y-6 w-full"
+      className="w-full space-y-6"
     >
       <div className="space-y-2">
         <Link
@@ -114,9 +117,7 @@ export function ResetPasswordForm() {
           Back to login
         </Link>
         <h1 className="text-3xl font-bold tracking-tight">Reset password</h1>
-        <p className="text-muted-foreground">
-          Enter your new password below
-        </p>
+        <p className="text-muted-foreground">Enter your new password below</p>
       </div>
 
       {!isSuccess ? (
@@ -139,7 +140,7 @@ export function ResetPasswordForm() {
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
                       >
                         {showPassword ? (
                           <EyeOff className="h-4 w-4" />
@@ -171,8 +172,10 @@ export function ResetPasswordForm() {
                       />
                       <button
                         type="button"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                        onClick={() =>
+                          setShowConfirmPassword(!showConfirmPassword)
+                        }
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
                       >
                         {showConfirmPassword ? (
                           <EyeOff className="h-4 w-4" />
@@ -217,8 +220,10 @@ export function ResetPasswordForm() {
             <div className="rounded-full bg-primary/10 p-3">
               <KeyRound className="h-6 w-6 text-primary" />
             </div>
-            <div className="text-center space-y-2">
-              <h3 className="text-lg font-semibold">Password reset successful</h3>
+            <div className="space-y-2 text-center">
+              <h3 className="text-lg font-semibold">
+                Password reset successful
+              </h3>
               <p className="text-sm text-muted-foreground">
                 Your password has been reset. Redirecting to login...
               </p>
@@ -228,4 +233,4 @@ export function ResetPasswordForm() {
       )}
     </motion.div>
   );
-} 
+}

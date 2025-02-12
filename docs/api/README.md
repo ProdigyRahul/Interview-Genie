@@ -46,6 +46,7 @@ All API responses follow this standard format:
 ## Error Handling
 
 Common error status codes:
+
 - 400: Bad Request
 - 401: Unauthorized
 - 403: Forbidden
@@ -62,10 +63,11 @@ Common error status codes:
 ## Authentication
 
 All protected endpoints require a valid JWT token in the Authorization header:
+
 ```
 Authorization: Bearer <token>
 ```
 
 ## Environment Variables
 
-Required environment variables for API functionality are documented in `.env.example` 
+Required environment variables for API functionality are documented in `.env.example`

@@ -10,7 +10,7 @@ const stores = new Map<string, Map<string, RateLimitStore>>();
 
 export class RateLimit {
   private store: Map<string, RateLimitStore>;
-  
+
   constructor(private name: string) {
     if (!stores.has(name)) {
       stores.set(name, new Map());
@@ -67,33 +67,27 @@ function getClientIp(req: Request): string {
   const forwardedIp = forwardedFor?.split(",")[0]?.trim();
 
   // Return the first valid IP found
-  return (
-    forwardedIp ??
-    realIp ??
-    cfConnectingIp ??
-    trueClientIp ??
-    "127.0.0.1"
-  );
+  return forwardedIp ?? realIp ?? cfConnectingIp ?? trueClientIp ?? "127.0.0.1";
 }
 
 export async function rateLimit(
   req: Request,
   identifier: string,
   limit: number,
-  windowMs: number = 60000
+  windowMs: number = 60000,
 ) {
   // Get client IP
   const ip = getClientIp(req);
-  
+
   // Get deployment URL from env
   const deploymentUrl = new URL(env.NEXT_PUBLIC_APP_URL).hostname;
-  
+
   // Create a unique key that includes the deployment URL
   const key = `${deploymentUrl}:${ip}:${identifier}`;
-  
+
   const rateLimit = new RateLimit(identifier);
   const result = await rateLimit.check(key, limit, windowMs);
-  
+
   if (!result.success) {
     return NextResponse.json(
       { error: "Too many requests. Please try again later." },
@@ -103,13 +97,15 @@ export async function rateLimit(
           "X-RateLimit-Limit": limit.toString(),
           "X-RateLimit-Remaining": result.remaining.toString(),
           "X-RateLimit-Reset": result.reset.toString(),
-          "Retry-After": Math.ceil((result.reset - Date.now()) / 1000).toString(),
-          "Access-Control-Expose-Headers": 
+          "Retry-After": Math.ceil(
+            (result.reset - Date.now()) / 1000,
+          ).toString(),
+          "Access-Control-Expose-Headers":
             "X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, Retry-After",
         },
-      }
+      },
     );
   }
-  
+
   return null;
-} 
+}

@@ -50,4 +50,4 @@ export interface ResumeData {
   }>;
 }
 
-export type TemplateType = 'modern' | 'classic' | 'minimalist'; 
+export type TemplateType = "modern" | "classic" | "minimalist";

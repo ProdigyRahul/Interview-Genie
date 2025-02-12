@@ -58,7 +58,7 @@ export function NotificationsNav() {
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">
+            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">
               {unreadCount}
             </span>
           )}
@@ -87,12 +87,12 @@ export function NotificationsNav() {
               key={notification.id}
               className={cn(
                 "flex flex-col items-start gap-1 p-4",
-                !notification.read && "bg-muted/50"
+                !notification.read && "bg-muted/50",
               )}
             >
               <div className="flex w-full items-start justify-between gap-2">
                 <span className="font-medium">{notification.title}</span>
-                <span className="text-xs text-muted-foreground whitespace-nowrap">
+                <span className="whitespace-nowrap text-xs text-muted-foreground">
                   {notification.createdAt}
                 </span>
               </div>
@@ -113,4 +113,4 @@ export function NotificationsNav() {
       </DropdownMenuContent>
     </DropdownMenu>
   );
-} 
+}

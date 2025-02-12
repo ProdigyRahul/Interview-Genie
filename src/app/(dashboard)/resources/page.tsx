@@ -3,20 +3,21 @@
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { 
-  BookOpen, 
-  Building2, 
-  Lightbulb, 
-  GraduationCap, 
+import {
+  BookOpen,
+  Building2,
+  Lightbulb,
+  GraduationCap,
   Sparkles,
   MessagesSquare,
   Users,
-  } from "lucide-react";
+} from "lucide-react";
 
 const features = [
   {
     title: "Interview Questions",
-    description: "Comprehensive database of interview questions with AI-powered answers",
+    description:
+      "Comprehensive database of interview questions with AI-powered answers",
     icon: MessagesSquare,
     href: "/resources/interview-questions",
     color: "text-blue-500",
@@ -122,35 +123,41 @@ export default function ResourcesPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         {features.map((feature) => (
           <Link key={feature.title} href={feature.href} className="block">
             <Card className="group h-full transition-all hover:border-primary hover:shadow-lg">
               <div className="relative h-full p-6">
                 {/* Animated gradient background */}
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-lg" />
-                
+                <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-primary/5 via-primary/10 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+
                 <div className="relative space-y-4">
                   <div className="flex items-center justify-between">
-                    <div className={cn(
-                      "p-2.5 w-fit rounded-lg transition-colors duration-300",
-                      feature.bgColor,
-                      feature.hoverColor
-                    )}>
-                      <feature.icon className={cn(
-                        "h-6 w-6 transition-transform group-hover:scale-110",
-                        feature.color
-                      )} />
+                    <div
+                      className={cn(
+                        "w-fit rounded-lg p-2.5 transition-colors duration-300",
+                        feature.bgColor,
+                        feature.hoverColor,
+                      )}
+                    >
+                      <feature.icon
+                        className={cn(
+                          "h-6 w-6 transition-transform group-hover:scale-110",
+                          feature.color,
+                        )}
+                      />
                     </div>
                     <div className="flex items-center text-sm text-muted-foreground">
-                      <Sparkles className="h-4 w-4 mr-1" />
+                      <Sparkles className="mr-1 h-4 w-4" />
                       {feature.cost}
                     </div>
                   </div>
 
                   <div>
-                    <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
-                    <p className="text-sm text-muted-foreground mb-4">
+                    <h3 className="mb-2 text-lg font-semibold">
+                      {feature.title}
+                    </h3>
+                    <p className="mb-4 text-sm text-muted-foreground">
                       {feature.description}
                     </p>
                   </div>
@@ -161,13 +168,15 @@ export default function ResourcesPage() {
                         key={item}
                         className="flex items-center text-xs text-muted-foreground"
                       >
-                        <Sparkles className={cn("h-3 w-3 mr-1", feature.color)} />
+                        <Sparkles
+                          className={cn("mr-1 h-3 w-3", feature.color)}
+                        />
                         {item}
                       </div>
                     ))}
                   </div>
 
-                  <div className="flex items-center text-sm text-primary pt-2">
+                  <div className="flex items-center pt-2 text-sm text-primary">
                     <span className="group-hover:underline">Access Now</span>
                   </div>
                 </div>
@@ -178,4 +187,4 @@ export default function ResourcesPage() {
       </div>
     </div>
   );
-} 
+}

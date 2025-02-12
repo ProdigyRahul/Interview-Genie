@@ -7,9 +7,7 @@ declare global {
 
 function initPrisma() {
   return new PrismaClient({
-    log: process.env.NODE_ENV === "production" 
-      ? ["error"]
-      : ["error", "warn"],
+    log: process.env.NODE_ENV === "production" ? ["error"] : ["error", "warn"],
   });
 }
 
@@ -20,4 +18,4 @@ if (process.env.NODE_ENV !== "production") {
   global.cachedPrisma = prisma;
 }
 
-export const db = prisma; 
+export const db = prisma;

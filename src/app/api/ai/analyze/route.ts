@@ -133,10 +133,12 @@ export async function POST(req: Request) {
       return NextResponse.json(analysis);
     } catch (error) {
       console.error("Failed to parse Gemini response:", error);
-      return new NextResponse("Invalid response format from Gemini", { status: 500 });
+      return new NextResponse("Invalid response format from Gemini", {
+        status: 500,
+      });
     }
   } catch (error) {
     console.error("Error analyzing resume:", error);
     return new NextResponse("Failed to analyze resume", { status: 500 });
   }
-} 
+}

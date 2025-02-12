@@ -32,9 +32,7 @@ export default async function RootLayout({
           disableTransitionOnChange
         >
           <SessionProvider session={session}>
-            <ErrorBoundaryWrapper>
-              {children}
-            </ErrorBoundaryWrapper>
+            <ErrorBoundaryWrapper>{children}</ErrorBoundaryWrapper>
             <Toaster />
             <SpeedInsights />
           </SessionProvider>

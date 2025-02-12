@@ -1,5 +1,5 @@
-import type { DefaultSession, DefaultUser } from "next-auth"
-import type { JWT as DefaultJWT } from "next-auth/jwt"
+import type { DefaultSession, DefaultUser } from "next-auth";
+import type { JWT as DefaultJWT } from "next-auth/jwt";
 
 declare module "next-auth" {
   interface Session extends DefaultSession {
@@ -11,7 +11,7 @@ declare module "next-auth" {
       credits: number;
       subscriptionStatus: string;
       isVerified: boolean;
-    }
+    };
   }
 
   interface User extends DefaultUser {
@@ -35,4 +35,4 @@ declare module "next-auth/jwt" {
     subscriptionStatus: string;
     isVerified: boolean;
   }
-} 
+}

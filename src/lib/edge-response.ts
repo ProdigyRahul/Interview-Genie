@@ -3,22 +3,16 @@ export function edgeResponse(data: any, init?: ResponseInit) {
     ...init,
     headers: {
       ...init?.headers,
-      'Content-Type': 'application/json',
-      'Cache-Control': 'no-store',
+      "Content-Type": "application/json",
+      "Cache-Control": "no-store",
     },
   });
 }
 
 export function edgeError(message: string, status: number = 400) {
-  return edgeResponse(
-    { error: message },
-    { status }
-  );
+  return edgeResponse({ error: message }, { status });
 }
 
 export function edgeSuccess(data: any, status: number = 200) {
-  return edgeResponse(
-    data,
-    { status }
-  );
-} 
+  return edgeResponse(data, { status });
+}

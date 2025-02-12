@@ -60,7 +60,7 @@ export async function GET() {
         error: error instanceof Error ? error.message : "Health check failed",
         latency: Date.now() - start,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
-} 
+}

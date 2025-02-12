@@ -15,7 +15,7 @@ const transporter = nodemailer.createTransport({
   auth: {
     user: env.EMAIL_USER,
     pass: env.EMAIL_PASS,
-  }
+  },
 });
 
 // Verify connection on startup
@@ -28,7 +28,7 @@ if (process.env.NODE_ENV === "production") {
         code: smtpError.code,
         command: smtpError.command,
         user: env.EMAIL_USER,
-        service: "gmail"
+        service: "gmail",
       });
     } else {
       console.log("SMTP Server is ready to send emails");
@@ -49,23 +49,23 @@ export async function sendEmail({ to, subject, html }: EmailTemplate) {
       environment: process.env.NODE_ENV,
       to,
       subject,
-      from: env.EMAIL_USER
+      from: env.EMAIL_USER,
     });
 
     const info = await transporter.sendMail({
       from: {
         name: "Interview Genie",
-        address: env.EMAIL_USER
+        address: env.EMAIL_USER,
       },
       to,
       subject,
       html,
       priority: "high",
       headers: {
-        'X-Priority': '1',
-        'X-MSMail-Priority': 'High',
-        'Importance': 'high'
-      }
+        "X-Priority": "1",
+        "X-MSMail-Priority": "High",
+        Importance: "high",
+      },
     });
 
     console.log("Email sent successfully:", {
@@ -73,7 +73,7 @@ export async function sendEmail({ to, subject, html }: EmailTemplate) {
       response: info.response,
       to,
       subject,
-      environment: process.env.NODE_ENV
+      environment: process.env.NODE_ENV,
     });
 
     return { success: true, messageId: info.messageId };
@@ -87,21 +87,21 @@ export async function sendEmail({ to, subject, html }: EmailTemplate) {
         code: smtpError.code,
         command: smtpError.command,
         response: smtpError.response,
-        stack: smtpError.stack
+        stack: smtpError.stack,
       },
       to,
       subject,
       environment: process.env.NODE_ENV,
-      emailUser: env.EMAIL_USER
+      emailUser: env.EMAIL_USER,
     });
-    
+
     return { success: false, error: smtpError };
   }
 }
 
 export function generatePasswordResetEmail(
   userName: string,
-  resetLink: string
+  resetLink: string,
 ): string {
   return `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -120,4 +120,4 @@ export function generatePasswordResetEmail(
       <p>Best regards,<br>Interview Genie Team</p>
     </div>
   `;
-} 
+}

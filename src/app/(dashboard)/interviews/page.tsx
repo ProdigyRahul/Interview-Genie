@@ -4,4 +4,4 @@ export default function InterviewsPage() {
       <h1 className="text-3xl font-bold">Interview Practice Sessions</h1>
     </div>
   );
-} 
+}

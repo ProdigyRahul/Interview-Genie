@@ -14,7 +14,7 @@ import {
 
 interface FeatureNavProps {
   className?: string;
-  type?: 'document' | 'interview' | 'resources' | 'progress';
+  type?: "document" | "interview" | "resources" | "progress";
 }
 
 const features = [
@@ -32,11 +32,12 @@ const features = [
       "LinkedIn Optimizer",
       "Cover Letter Generator",
     ],
-    type: 'document'
+    type: "document",
   },
   {
     title: "Interview Preparation",
-    description: "Practice with AI-powered mock interviews and get instant feedback",
+    description:
+      "Practice with AI-powered mock interviews and get instant feedback",
     icon: Video,
     href: "/interview-preparation",
     color: "text-purple-500",
@@ -48,7 +49,7 @@ const features = [
       "Technical Interviews",
       "Behavioral Interviews",
     ],
-    type: 'interview'
+    type: "interview",
   },
   {
     title: "Resources",
@@ -64,7 +65,7 @@ const features = [
       "Industry Insights",
       "Career Tips",
     ],
-    type: 'resources'
+    type: "resources",
   },
   {
     title: "Progress & Analytics",
@@ -80,13 +81,13 @@ const features = [
       "Skill Assessment",
       "Certificates",
     ],
-    type: 'progress'
+    type: "progress",
   },
 ];
 
 export function FeatureNav({ type }: FeatureNavProps) {
-  const filteredFeatures = type 
-    ? features.filter(feature => feature.type === type)
+  const filteredFeatures = type
+    ? features.filter((feature) => feature.type === type)
     : features;
 
   return (
@@ -96,37 +97,45 @@ export function FeatureNav({ type }: FeatureNavProps) {
           <Card className="group h-full transition-all hover:border-primary hover:shadow-lg">
             <div className="relative h-full p-4 md:p-6">
               {/* Animated gradient background */}
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-lg" />
-              
+              <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-primary/5 via-primary/10 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+
               <div className="relative space-y-4">
                 <div className="flex items-center justify-between">
-                  <div className={cn(
-                    "p-2.5 w-fit rounded-lg transition-colors duration-300",
-                    feature.bgColor,
-                    feature.hoverColor
-                  )}>
-                    <feature.icon className={cn(
-                      "h-6 w-6 transition-transform group-hover:scale-110",
-                      feature.color
-                    )} />
+                  <div
+                    className={cn(
+                      "w-fit rounded-lg p-2.5 transition-colors duration-300",
+                      feature.bgColor,
+                      feature.hoverColor,
+                    )}
+                  >
+                    <feature.icon
+                      className={cn(
+                        "h-6 w-6 transition-transform group-hover:scale-110",
+                        feature.color,
+                      )}
+                    />
                   </div>
                   <ArrowRight className="h-5 w-5 text-muted-foreground transition-transform group-hover:translate-x-1" />
                 </div>
 
                 <div>
-                  <h3 className="text-lg font-semibold mb-1.5">{feature.title}</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
+                  <h3 className="mb-1.5 text-lg font-semibold">
+                    {feature.title}
+                  </h3>
+                  <p className="mb-4 text-sm text-muted-foreground">
                     {feature.description}
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   {feature.items.map((item) => (
                     <div
                       key={item}
                       className="flex items-center text-sm text-muted-foreground group-hover:text-muted-foreground/80"
                     >
-                      <Sparkles className={cn("h-3.5 w-3.5 mr-1.5", feature.color)} />
+                      <Sparkles
+                        className={cn("mr-1.5 h-3.5 w-3.5", feature.color)}
+                      />
                       {item}
                     </div>
                   ))}
@@ -138,4 +147,4 @@ export function FeatureNav({ type }: FeatureNavProps) {
       ))}
     </div>
   );
-} 
+}

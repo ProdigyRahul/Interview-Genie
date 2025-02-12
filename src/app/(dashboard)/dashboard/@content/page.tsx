@@ -13,10 +13,10 @@ export default async function DashboardPage() {
   return (
     <Suspense
       fallback={
-        <div className="w-full h-48 rounded-lg bg-muted animate-pulse" />
+        <div className="h-48 w-full animate-pulse rounded-lg bg-muted" />
       }
     >
       <DashboardContent user={session.user} />
     </Suspense>
   );
-} 
+}
