@@ -354,14 +354,13 @@ export default function ResumeOptimizerPage() {
     </div>
   );
 
-  const renderHistory = () => (
-    <Card className="p-6">
-      <h3 className="text-lg font-semibold mb-4">Previous Analyses</h3>
-      {isLoadingHistory ? (
-        <div className="flex items-center justify-center py-4">
+  const renderHistory = () => {
+    return (
+      isLoadingHistory ? (
+        <div className="flex justify-center py-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </div>
-      ) : analyses.length === 0 ? (
+      ) : !analyses || analyses.length === 0 ? (
         <p className="text-muted-foreground text-sm">No previous analyses found</p>
       ) : (
         <div className="space-y-4">
@@ -431,9 +430,9 @@ export default function ResumeOptimizerPage() {
             </Card>
           ))}
         </div>
-      )}
-    </Card>
-  );
+      )
+    );
+  };
 
   if (isAnalyzing) {
     return (
