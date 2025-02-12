@@ -13,6 +13,8 @@ const publicPaths = [
   "/_next",
   "/favicon.ico",
   "/verify-otp",
+  "/api/trpc",
+  "/api/webhooks",
 ];
 
 // Paths that should redirect to dashboard if authenticated
@@ -105,24 +107,17 @@ export async function middleware(request: NextRequest) {
     }
 
     // For protected paths, check authentication
-    if (!isPublicPath) {
-      if (!token) {
-        // Clear any invalid cookies
-        const response = NextResponse.redirect(new URL("/login", request.url));
-        response.cookies.delete("next-auth.session-token");
-        response.cookies.delete("next-auth.callback-url");
-        response.cookies.delete("next-auth.csrf-token");
-        response.cookies.delete("__Secure-next-auth.session-token");
-        response.cookies.delete("__Host-next-auth.csrf-token");
+    if (!isPublicPath && !token) {
+      // Store the original URL as the callback URL
+      const callbackUrl = pathname;
+      const response = NextResponse.redirect(new URL("/login", request.url));
+      
+      // Set callback URL in cookie
+      response.cookies.set("next-auth.callback-url", callbackUrl, {
+        path: "/",
+      });
 
-        // Only add callbackUrl if not already on login page
-        if (!pathname.startsWith("/login")) {
-          response.cookies.set("next-auth.callback-url", pathname, {
-            path: "/",
-          });
-        }
-        return response;
-      }
+      return response;
     }
 
     // Allow the request to proceed
@@ -136,16 +131,7 @@ export async function middleware(request: NextRequest) {
     return response;
   } catch (error) {
     console.error("Auth middleware error:", error);
-
-    // Clear all auth-related cookies and redirect to login
-    const response = NextResponse.redirect(new URL("/login", request.url));
-    response.cookies.delete("next-auth.session-token");
-    response.cookies.delete("next-auth.callback-url");
-    response.cookies.delete("next-auth.csrf-token");
-    response.cookies.delete("__Secure-next-auth.session-token");
-    response.cookies.delete("__Host-next-auth.csrf-token");
-
-    return response;
+    return NextResponse.redirect(new URL("/login", request.url));
   }
 }
 
