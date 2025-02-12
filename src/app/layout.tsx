@@ -1,24 +1,42 @@
+import { Inter } from "next/font/google";
+import { headers } from "next/headers";
+import { Toaster } from "@/components/ui/toaster";
+import { ThemeProvider } from "@/components/providers/theme-provider";
+import { SessionProvider } from "@/components/providers/session-provider";
+import { ErrorBoundaryWrapper } from "@/components/error-boundary-wrapper";
+import { auth } from "@/lib/auth";
 import "@/styles/globals.css";
-import { GeistSans } from "geist/font/sans";
-import { Providers } from "../components/providers";
+
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "Interview Genie - AI-Powered Interview Preparation",
-  description: "Prepare for your next job interview with AI-powered mock interviews, personalized feedback, and expert guidance.",
-  icons: {
-    icon: "/favicon.ico",
-  },
+  title: "Interview Genie",
+  description: "Your AI-powered interview preparation assistant",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const session = await auth();
+
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={GeistSans.className}>
-        <Providers>{children}</Providers>
+      <body className={inter.className}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <SessionProvider session={session}>
+            <ErrorBoundaryWrapper>
+              {children}
+            </ErrorBoundaryWrapper>
+            <Toaster />
+          </SessionProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

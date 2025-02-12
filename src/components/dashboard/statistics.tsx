@@ -55,6 +55,7 @@ const statConfig = {
 
 export function Statistics() {
   const [stats, setStats] = useState<Stats | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const { isActive } = usePracticeTime();
 
   useEffect(() => {
@@ -66,6 +67,8 @@ export function Statistics() {
         setStats(data);
       } catch (error) {
         console.error("Error fetching statistics:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -80,7 +83,40 @@ export function Statistics() {
     }
   }, [isActive]);
 
-  if (!stats) return null;
+  // Show loading state
+  if (isLoading || !stats) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {Object.entries(statConfig).map(([key, config]) => (
+          <Card key={key} className="group relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                {config.title}
+              </CardTitle>
+              <div className="flex items-center gap-2">
+                <config.icon className={cn("h-4 w-4 transition-transform group-hover:scale-110", config.color)} />
+                <div className="h-4 w-12 animate-pulse bg-muted rounded" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div className="h-8 w-24 animate-pulse bg-muted rounded" />
+                <div className="h-4 w-32 animate-pulse bg-muted rounded" />
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <div className="h-3 w-20 animate-pulse bg-muted rounded" />
+                    <div className="h-3 w-8 animate-pulse bg-muted rounded" />
+                  </div>
+                  <div className="h-2 w-full animate-pulse bg-muted rounded" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
