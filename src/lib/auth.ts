@@ -11,7 +11,7 @@ import type { AdapterSession } from "next-auth/adapters";
 import type { Session } from "next-auth";
 import { env } from "@/env";
 import { redis } from "@/server/redis";
-import { getUser, invalidateUserCache } from "@/lib/user-cache";
+import { getUser, invalidateUserCache, updateUser } from "@/lib/user-cache";
 
 // Extend the User type to include our custom fields
 interface CustomUser extends User {
@@ -185,30 +185,28 @@ export const authConfig = {
 
       try {
         if (isNewUser) {
-          const updatedUser = await db.user.update({
-            where: { email: user.email },
-            data: {
+          const updatedUser = await updateUser(
+            { email: user.email },
+            {
               credits: 100,
               subscriptionStatus: 'free',
               isVerified: true,
               emailVerified: new Date(),
               ...(typeof user.name === 'string' ? { name: user.name } : {}),
               ...(typeof user.image === 'string' ? { image: user.image } : {}),
-            },
-          });
-          // Invalidate cache for new user
-          await invalidateUserCache({ id: updatedUser.id, email: updatedUser.email });
+            }
+          );
+          // Cache is already invalidated by updateUser
         } else if (account?.provider === "google") {
-          const updatedUser = await db.user.update({
-            where: { email: user.email },
-            data: {
+          const updatedUser = await updateUser(
+            { email: user.email },
+            {
               emailVerified: new Date(),
               ...(typeof user.name === 'string' ? { name: user.name } : {}),
               ...(typeof user.image === 'string' ? { image: user.image } : {}),
-            },
-          });
-          // Invalidate cache for updated user
-          await invalidateUserCache({ id: updatedUser.id, email: updatedUser.email });
+            }
+          );
+          // Cache is already invalidated by updateUser
         }
       } catch (error) {
         console.error("[AUTH_SIGNIN_ERROR]", error);
