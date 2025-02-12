@@ -7,7 +7,11 @@ import { credentialsProvider } from "@/server/auth/credentials";
 import type { NextAuthConfig } from "next-auth";
 import type { JWT } from "next-auth/jwt";
 import type { User } from "next-auth";
+import type { AdapterSession } from "next-auth/adapters";
+import type { Session } from "next-auth";
 import { env } from "@/env";
+import { redis } from "@/server/redis";
+import { getUser, invalidateUserCache } from "@/lib/user-cache";
 
 // Extend the User type to include our custom fields
 interface CustomUser extends User {
@@ -43,6 +47,7 @@ export const authConfig = {
     signIn: "/login",
     error: "/login",
     verifyRequest: "/verify-otp",
+    newUser: "/register",
   },
   providers: [
     credentialsProvider,
@@ -67,7 +72,6 @@ export const authConfig = {
       clientSecret: env.AUTH_GITHUB_SECRET!,
       authorization: {
         params: {
-          // Request user's email and profile data
           scope: "read:user user:email",
         },
       },
@@ -77,7 +81,6 @@ export const authConfig = {
           name: profile.name ?? profile.login,
           email: profile.email,
           image: profile.avatar_url,
-          // Additional fields for our custom user type
           emailVerified: null,
           credits: 100,
           subscriptionStatus: "free",
@@ -88,34 +91,45 @@ export const authConfig = {
   ],
   callbacks: {
     async jwt({ token, user, trigger, session }) {
-      if (trigger === "signIn" && user) {
-        // For new sign-ins, fetch the complete user data
-        const dbUser = await db.user.findUnique({
-          where: { email: user.email! },
-          select: {
-            id: true,
-            email: true,
-            name: true,
-            image: true,
-            credits: true,
-            subscriptionStatus: true,
-            isVerified: true,
-          },
-        });
+      // Add cache invalidation on token updates
+      if (token?.jti && (trigger === "signIn" || trigger === "update")) {
+        await redis.del(`session:${token.jti}`);
+      }
+      
+      // If this is a sign in or we have an email in the token
+      if ((trigger === "signIn" && user) || token?.email) {
+        try {
+          // Use our cached user utility
+          const email = user?.email ?? token.email;
+          if (!email) {
+            console.warn("No email found in token or user");
+            return null;
+          }
 
-        if (dbUser) {
+          const dbUser = await getUser({ email });
+
+          // If user doesn't exist in the database anymore, invalidate the token
+          if (!dbUser) {
+            console.warn(`User not found in database: ${email}`);
+            return null;
+          }
+
+          // Update token with latest user data
           token.id = dbUser.id;
-          token.email = dbUser.email ?? user.email;
-          token.name = dbUser.name ?? user.name ?? "";
+          token.email = dbUser.email;
+          token.name = dbUser.name ?? "";
           token.image = dbUser.image ?? undefined;
           token.credits = dbUser.credits;
           token.subscriptionStatus = dbUser.subscriptionStatus;
           token.isVerified = dbUser.isVerified;
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+          return null;
         }
       }
 
       if (trigger === "update" && session) {
-        // Update token with latest session data
+        await redis.del(`session:${token.jti}`);
         const updatedToken = {
           ...token,
           ...session.user,
@@ -126,6 +140,15 @@ export const authConfig = {
       return token as CustomJWT;
     },
     async session({ session, token }) {
+      // If no token, return an empty session
+      if (!token) {
+        return {
+          ...session,
+          user: undefined,
+          expires: new Date().toISOString(),
+        };
+      }
+
       const customToken = token as CustomJWT;
       
       if (customToken && session.user) {
@@ -162,33 +185,38 @@ export const authConfig = {
 
       try {
         if (isNewUser) {
-          // Initialize profile data for new users
-          await db.user.update({
+          const updatedUser = await db.user.update({
             where: { email: user.email },
             data: {
               credits: 100,
               subscriptionStatus: 'free',
               isVerified: true,
               emailVerified: new Date(),
-              // Only set name and image if they are strings
               ...(typeof user.name === 'string' ? { name: user.name } : {}),
               ...(typeof user.image === 'string' ? { image: user.image } : {}),
             },
           });
+          // Invalidate cache for new user
+          await invalidateUserCache({ id: updatedUser.id, email: updatedUser.email });
         } else if (account?.provider === "google") {
-          // Update existing user's Google-specific data
-          await db.user.update({
+          const updatedUser = await db.user.update({
             where: { email: user.email },
             data: {
               emailVerified: new Date(),
-              // Only set name and image if they are strings
               ...(typeof user.name === 'string' ? { name: user.name } : {}),
               ...(typeof user.image === 'string' ? { image: user.image } : {}),
             },
           });
+          // Invalidate cache for updated user
+          await invalidateUserCache({ id: updatedUser.id, email: updatedUser.email });
         }
       } catch (error) {
         console.error("[AUTH_SIGNIN_ERROR]", error);
+      }
+    },
+    async signOut(message: { session: void | AdapterSession | null | undefined } | { token: JWT | null }) {
+      if ('token' in message && message.token?.jti) {
+        await redis.del(`session:${message.token.jti}`);
       }
     },
   },
