@@ -5,7 +5,7 @@ import { AlertHistory } from "@/components/health/alert-history";
 
 export default function HealthPage() {
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto space-y-6 p-6">
       <div className="flex flex-col space-y-2">
         <h1 className="text-3xl font-bold">System Health</h1>
         <p className="text-muted-foreground">
@@ -17,7 +17,7 @@ export default function HealthPage() {
         <Suspense fallback={<div>Loading system status...</div>}>
           <SystemStatus />
         </Suspense>
-        
+
         <Suspense fallback={<div>Loading metrics...</div>}>
           <HealthMetrics />
         </Suspense>
@@ -28,4 +28,4 @@ export default function HealthPage() {
       </Suspense>
     </div>
   );
-} 
+}

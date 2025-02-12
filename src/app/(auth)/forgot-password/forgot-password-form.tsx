@@ -63,7 +63,8 @@ export function ForgotPasswordForm() {
       toast({
         variant: "destructive",
         title: "Error",
-        description: error instanceof Error ? error.message : "Something went wrong",
+        description:
+          error instanceof Error ? error.message : "Something went wrong",
       });
     } finally {
       setIsLoading(false);
@@ -75,7 +76,7 @@ export function ForgotPasswordForm() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="space-y-6 w-full"
+      className="w-full space-y-6"
     >
       <div className="space-y-2">
         <Link
@@ -87,7 +88,8 @@ export function ForgotPasswordForm() {
         </Link>
         <h1 className="text-3xl font-bold tracking-tight">Reset password</h1>
         <p className="text-muted-foreground">
-          Enter your email address and we&apos;ll send you a link to reset your password
+          Enter your email address and we&apos;ll send you a link to reset your
+          password
         </p>
       </div>
 
@@ -143,10 +145,11 @@ export function ForgotPasswordForm() {
             <div className="rounded-full bg-primary/10 p-3">
               <Mail className="h-6 w-6 text-primary" />
             </div>
-            <div className="text-center space-y-2">
+            <div className="space-y-2 text-center">
               <h3 className="text-lg font-semibold">Check your email</h3>
               <p className="text-sm text-muted-foreground">
-                We&apos;ve sent you a link to reset your password. The link will expire in 1 hour.
+                We&apos;ve sent you a link to reset your password. The link will
+                expire in 1 hour.
               </p>
             </div>
           </div>
@@ -176,4 +179,4 @@ export function ForgotPasswordForm() {
       </p>
     </motion.div>
   );
-} 
+}

@@ -6,10 +6,7 @@ export async function GET() {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // Fetch user's resumes and calculate average ATS score
@@ -19,12 +16,13 @@ export async function GET() {
     });
 
     const atsScores = resumes
-      .map(resume => resume.atsScore)
+      .map((resume) => resume.atsScore)
       .filter((score): score is number => score !== null);
 
-    const avgAtsScore = atsScores.length > 0
-      ? Math.round(atsScores.reduce((a, b) => a + b, 0) / atsScores.length)
-      : 0;
+    const avgAtsScore =
+      atsScores.length > 0
+        ? Math.round(atsScores.reduce((a, b) => a + b, 0) / atsScores.length)
+        : 0;
 
     // Calculate ATS score trend
     const lastAtsScore = atsScores[atsScores.length - 1] || 0;
@@ -72,7 +70,7 @@ export async function GET() {
     const stats = {
       totalScore: {
         value: `${avgAtsScore}%`,
-        trend: `${atsTrend >= 0 ? '+' : ''}${atsTrend}%`,
+        trend: `${atsTrend >= 0 ? "+" : ""}${atsTrend}%`,
         trendType: atsTrend >= 0 ? "positive" : "negative",
         nextMilestone: `${getNextTarget(avgAtsScore)}%`,
         progress: avgAtsScore,
@@ -86,10 +84,19 @@ export async function GET() {
       },
       practiceTime: {
         value: `${Math.round((practiceStats?.totalDuration || 0) / 3600)}h`,
-        trend: `${practiceStats?.weeklyDuration ? '+' : ''}${Math.round((practiceStats?.weeklyDuration || 0) / 3600)}h`,
-        trendType: (practiceStats?.weeklyDuration || 0) >= (practiceStats?.lastWeekDuration || 0) ? "positive" : "negative",
+        trend: `${practiceStats?.weeklyDuration ? "+" : ""}${Math.round((practiceStats?.weeklyDuration || 0) / 3600)}h`,
+        trendType:
+          (practiceStats?.weeklyDuration || 0) >=
+          (practiceStats?.lastWeekDuration || 0)
+            ? "positive"
+            : "negative",
         nextMilestone: "20h",
-        progress: Math.min(Math.round(((practiceStats?.weeklyDuration || 0) / (20 * 3600)) * 100), 100),
+        progress: Math.min(
+          Math.round(
+            ((practiceStats?.weeklyDuration || 0) / (20 * 3600)) * 100,
+          ),
+          100,
+        ),
       },
       credits: {
         value: (user?.credits || 0).toString(),
@@ -105,7 +112,7 @@ export async function GET() {
     console.error("Error fetching statistics:", error);
     return NextResponse.json(
       { error: "Failed to fetch statistics" },
-      { status: 500 }
+      { status: 500 },
     );
   }
-} 
+}

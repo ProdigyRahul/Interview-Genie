@@ -12,7 +12,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
-import { Menu, Briefcase, Award, FileText, Settings, BarChart } from "lucide-react";
+import {
+  Menu,
+  Briefcase,
+  Award,
+  FileText,
+  Settings,
+  BarChart,
+} from "lucide-react";
 
 const navItems = [
   {
@@ -52,16 +59,16 @@ export function MainNav() {
   return (
     <>
       {/* Desktop Navigation */}
-      <nav className="hidden md:flex items-center space-x-6">
+      <nav className="hidden items-center space-x-6 md:flex">
         {navItems.map((item) => (
           <Link
             key={item.href}
             href={item.href}
             className={cn(
-              "text-sm font-medium transition-colors hover:text-primary flex items-center gap-2",
+              "flex items-center gap-2 text-sm font-medium transition-colors hover:text-primary",
               pathname === item.href
                 ? "text-foreground"
-                : "text-muted-foreground"
+                : "text-muted-foreground",
             )}
           >
             <item.icon className="h-4 w-4" />
@@ -87,8 +94,8 @@ export function MainNav() {
                 <Link
                   href={item.href}
                   className={cn(
-                    "flex items-center gap-2 w-full",
-                    pathname === item.href && "font-medium text-foreground"
+                    "flex w-full items-center gap-2",
+                    pathname === item.href && "font-medium text-foreground",
                   )}
                 >
                   <item.icon className="h-4 w-4" />
@@ -108,4 +115,4 @@ export function MainNav() {
       </div>
     </>
   );
-} 
+}

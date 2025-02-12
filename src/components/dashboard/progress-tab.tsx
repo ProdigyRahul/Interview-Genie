@@ -1,4 +1,10 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Award, Clock, Star, Trophy } from "lucide-react";
 
@@ -43,7 +49,8 @@ const mockUserProgress = {
 };
 
 export function ProgressTab() {
-  const { level, xp, xpToNextLevel, credits, stats, recentAchievements } = mockUserProgress;
+  const { level, xp, xpToNextLevel, credits, stats, recentAchievements } =
+    mockUserProgress;
   const xpProgress = (xp / xpToNextLevel) * 100;
 
   return (
@@ -78,7 +85,9 @@ export function ProgressTab() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <div className="text-sm font-medium">Interviews</div>
-              <div className="text-2xl font-bold">{stats.interviewsCompleted}</div>
+              <div className="text-2xl font-bold">
+                {stats.interviewsCompleted}
+              </div>
             </div>
             <div>
               <div className="text-sm font-medium">Avg. Score</div>
@@ -86,16 +95,18 @@ export function ProgressTab() {
             </div>
             <div>
               <div className="text-sm font-medium">Practice Time</div>
-              <div className="text-2xl font-bold">{stats.totalPracticeTime}</div>
+              <div className="text-2xl font-bold">
+                {stats.totalPracticeTime}
+              </div>
             </div>
           </div>
           <div>
-            <div className="text-sm font-medium mb-2">Key Strengths:</div>
+            <div className="mb-2 text-sm font-medium">Key Strengths:</div>
             <div className="flex flex-wrap gap-2">
               {stats.strengths.map((strength) => (
                 <span
                   key={strength}
-                  className="bg-primary/10 text-primary text-xs px-2 py-1 rounded-full"
+                  className="rounded-full bg-primary/10 px-2 py-1 text-xs text-primary"
                 >
                   {strength}
                 </span>
@@ -116,13 +127,15 @@ export function ProgressTab() {
             {recentAchievements.map((achievement) => (
               <div
                 key={achievement.title}
-                className={`flex items-center space-x-4 p-2 rounded-lg ${
+                className={`flex items-center space-x-4 rounded-lg p-2 ${
                   achievement.earned ? "bg-primary/10" : "bg-muted"
                 }`}
               >
                 <achievement.icon
                   className={`h-8 w-8 ${
-                    achievement.earned ? "text-primary" : "text-muted-foreground"
+                    achievement.earned
+                      ? "text-primary"
+                      : "text-muted-foreground"
                   }`}
                 />
                 <div>
@@ -138,4 +151,4 @@ export function ProgressTab() {
       </Card>
     </div>
   );
-} 
+}

@@ -1,4 +1,9 @@
-export function generateLoginAttemptEmail(name: string, attempts: number, location: string, time: string): string {
+export function generateLoginAttemptEmail(
+  name: string,
+  attempts: number,
+  location: string,
+  time: string,
+): string {
   return `
     <!DOCTYPE html>
     <html>
@@ -113,4 +118,4 @@ export function generateLoginAttemptEmail(name: string, attempts: number, locati
       </body>
     </html>
   `;
-} 
+}

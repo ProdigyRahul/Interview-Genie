@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
 
     const existingSession = await prisma.practiceSession.findUnique({
       where: { id: sessionId },
-      select: { startTime: true, userId: true }
+      select: { startTime: true, userId: true },
     });
 
     if (!existingSession) {
@@ -27,14 +27,14 @@ export async function POST(req: NextRequest) {
 
     const endTime = new Date();
     const durationInSeconds = Math.round(
-      (endTime.getTime() - existingSession.startTime.getTime()) / 1000
+      (endTime.getTime() - existingSession.startTime.getTime()) / 1000,
     );
 
     const updatedSession = await prisma.practiceSession.update({
       where: { id: sessionId },
-      data: { 
+      data: {
         endTime,
-        duration: durationInSeconds
+        duration: durationInSeconds,
       },
     });
 
@@ -50,10 +50,10 @@ export async function POST(req: NextRequest) {
       },
       update: {
         totalDuration: {
-          increment: durationInSeconds
+          increment: durationInSeconds,
         },
         weeklyDuration: {
-          increment: durationInSeconds
+          increment: durationInSeconds,
         },
         lastUpdated: endTime,
       },
@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
     console.error("Error ending practice session:", error);
     return Response.json(
       { error: "Failed to end practice session" },
-      { status: 500 }
+      { status: 500 },
     );
   }
-} 
+}

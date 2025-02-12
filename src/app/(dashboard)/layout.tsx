@@ -58,22 +58,27 @@ export default async function DashboardLayout({
   const subscriptionStatus = dashboardUser.subscriptionStatus ?? "free";
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="w-full">
           <div className="flex h-16 items-center px-4 md:px-6">
-            <div className="flex items-center flex-1">
+            <div className="flex flex-1 items-center">
               <div className="flex-shrink-0">
                 <span className="text-xl font-bold">Interview Genie</span>
               </div>
-              <div className="hidden md:block ml-10 flex-1">
+              <div className="ml-10 hidden flex-1 md:block">
                 <MainNav />
               </div>
             </div>
             <div className="flex items-center gap-4">
               {/* Subscription Badge */}
-              <div className="hidden md:flex items-center gap-2">
-                <Badge variant={subscriptionStatus === "free" ? "secondary" : "outline"} className="capitalize">
+              <div className="hidden items-center gap-2 md:flex">
+                <Badge
+                  variant={
+                    subscriptionStatus === "free" ? "secondary" : "outline"
+                  }
+                  className="capitalize"
+                >
                   {subscriptionStatus}
                 </Badge>
                 <div className="flex items-center gap-1 text-sm text-muted-foreground">
@@ -103,4 +108,4 @@ export default async function DashboardLayout({
       </main>
     </div>
   );
-} 
+}

@@ -15,4 +15,4 @@ export function QuestionPanel() {
       </div>
     </div>
   );
-} 
+}

@@ -10,4 +10,4 @@ export function SubscriptionSettings() {
       </div>
     </div>
   );
-} 
+}

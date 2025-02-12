@@ -247,7 +247,9 @@ FINAL SCORING REMINDERS:
 Return ONLY valid JSON, no other text.`;
 
 // Gemini API Functions
-export async function analyzeResume(pdfText: string): Promise<ResumeAnalysisResult> {
+export async function analyzeResume(
+  pdfText: string,
+): Promise<ResumeAnalysisResult> {
   const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
   const prompt = `${RESUME_ANALYSIS_PROMPT}\n\nHere is the resume text to analyze:\n${pdfText}\n\nProvide your analysis in the exact JSON format specified above. Do not include any other text in your response.`;
@@ -265,12 +267,14 @@ export async function analyzeResume(pdfText: string): Promise<ResumeAnalysisResu
 
     const response = result.response;
     const text = response.text();
-    
+
     try {
       return JSON.parse(text) as ResumeAnalysisResult;
     } catch (error) {
       console.error("Failed to parse Gemini response:", error);
-      throw new Error("Failed to parse resume analysis result. The AI response was not in the expected JSON format.");
+      throw new Error(
+        "Failed to parse resume analysis result. The AI response was not in the expected JSON format.",
+      );
     }
   } catch (error) {
     console.error("Error calling Gemini API:", error);
@@ -281,73 +285,76 @@ export async function analyzeResume(pdfText: string): Promise<ResumeAnalysisResu
 // Resume Content Generation Functions
 export const generateResumeContent = async (
   section: string,
-  context: Record<string, any>
+  context: Record<string, any>,
 ): Promise<GeminiResponse> => {
   try {
-    const response = await fetch('/api/ai/generate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ section, context })
+    const response = await fetch("/api/ai/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ section, context }),
     });
 
     if (!response.ok) {
-      throw new Error('Failed to generate content');
+      throw new Error("Failed to generate content");
     }
 
     const data = await response.json();
     return { content: data.content };
   } catch (error) {
-    console.error('Error generating resume content:', error);
+    console.error("Error generating resume content:", error);
     return {
-      content: '',
-      error: 'Failed to generate content. Please try again.'
+      content: "",
+      error: "Failed to generate content. Please try again.",
     };
   }
 };
 
 export const generateBulletPoints = async (
   text: string,
-  context: Record<string, any>
+  context: Record<string, any>,
 ): Promise<GeminiResponse> => {
   try {
-    const response = await fetch('/api/ai/generate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const response = await fetch("/api/ai/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        section: 'bullet_points',
-        context: { ...context, text }
-      })
+        section: "bullet_points",
+        context: { ...context, text },
+      }),
     });
 
     if (!response.ok) {
-      throw new Error('Failed to generate bullet points');
+      throw new Error("Failed to generate bullet points");
     }
 
     const data = await response.json();
     return { content: data.content };
   } catch (error) {
-    console.error('Error generating bullet points:', error);
+    console.error("Error generating bullet points:", error);
     return {
-      content: '',
-      error: 'Failed to generate bullet points. Please try again.'
+      content: "",
+      error: "Failed to generate bullet points. Please try again.",
     };
   }
 };
 
 // Helper Functions
-const getPromptForSection = (section: string, context: Record<string, any>): string => {
+const getPromptForSection = (
+  section: string,
+  context: Record<string, any>,
+): string => {
   const prompts: Record<string, string> = {
     name: `Generate a professional full name that would be suitable for a ${context.jobTitle} position.`,
     jobTitle: `Based on the skills "${context.skills}" and ${context.experience} years of experience, suggest a professional job title that best represents this profile.`,
     skills: `Based on the job title "${context.jobTitle}" and experience level of ${context.experience} years, suggest 5-7 relevant technical and soft skills that should be included in the resume. Format them as a comma-separated list.`,
-    summary: `Create a compelling professional summary for a ${context.jobTitle} with ${context.experience} years of experience. Focus on their expertise in ${context.skills.join(', ')}.`,
+    summary: `Create a compelling professional summary for a ${context.jobTitle} with ${context.experience} years of experience. Focus on their expertise in ${context.skills.join(", ")}.`,
     experience: `Create a detailed bullet point description for a ${context.jobTitle} role at ${context.company}, focusing on achievements and impact. Include metrics where possible.`,
     education: `Create a professional description for education at ${context.school} studying ${context.degree} in ${context.fieldOfStudy}.`,
-    projects: `Create a compelling description for a project titled "${context.title}" that uses technologies: ${context.technologies.join(', ')}.`,
+    projects: `Create a compelling description for a project titled "${context.title}" that uses technologies: ${context.technologies.join(", ")}.`,
     certifications: `Create a professional description highlighting the value and relevance of ${context.name} certification from ${context.issuingOrg}.`,
     achievements: `Create an impactful description for a professional achievement titled "${context.title}" that demonstrates leadership and impact.`,
-    references: `Create a professional reference description for ${context.name} who is a ${context.position} at ${context.company}.`
+    references: `Create a professional reference description for ${context.name} who is a ${context.position} at ${context.company}.`,
   };
 
-  return prompts[section] || 'Please provide content for this section.';
-}; 
+  return prompts[section] || "Please provide content for this section.";
+};

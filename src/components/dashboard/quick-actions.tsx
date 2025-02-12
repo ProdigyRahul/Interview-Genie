@@ -1,7 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import {
   FileText,
@@ -90,13 +96,15 @@ export function QuickActions({ user }: QuickActionsProps) {
             </CardDescription>
           </div>
           <div className="flex items-center text-sm">
-            <Sparkles className="h-4 w-4 mr-1 text-yellow-500" />
-            <span className="font-medium">Available Credits: {user.credits}</span>
+            <Sparkles className="mr-1 h-4 w-4 text-yellow-500" />
+            <span className="font-medium">
+              Available Credits: {user.credits}
+            </span>
           </div>
         </div>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {quickActions.map((action) => (
             <Link
               key={action.title}
@@ -105,22 +113,27 @@ export function QuickActions({ user }: QuickActionsProps) {
             >
               <div className="relative h-[120px] w-full overflow-hidden rounded-xl border bg-background p-6 transition-all hover:border-primary hover:shadow-lg">
                 {/* Animated gradient background */}
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                
-                <div className="relative h-full flex flex-col justify-between">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-primary/10 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+
+                <div className="relative flex h-full flex-col justify-between">
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <div className={cn("p-2 w-fit rounded-lg bg-background", action.color)}>
+                      <div
+                        className={cn(
+                          "w-fit rounded-lg bg-background p-2",
+                          action.color,
+                        )}
+                      >
                         <action.icon className="h-5 w-5 transition-transform group-hover:scale-110" />
                       </div>
                       <div className="flex items-center text-xs text-muted-foreground">
-                        <Sparkles className="h-3 w-3 mr-1" />
+                        <Sparkles className="mr-1 h-3 w-3" />
                         {action.cost}
                       </div>
                     </div>
                     <div>
-                      <h3 className="font-semibold truncate">{action.title}</h3>
-                      <p className="text-xs text-muted-foreground truncate">
+                      <h3 className="truncate font-semibold">{action.title}</h3>
+                      <p className="truncate text-xs text-muted-foreground">
                         {action.description}
                       </p>
                     </div>
@@ -133,4 +146,4 @@ export function QuickActions({ user }: QuickActionsProps) {
       </CardContent>
     </Card>
   );
-} 
+}

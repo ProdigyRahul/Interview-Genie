@@ -21,21 +21,23 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { SocialLoginButtons } from "@/components/auth/social-login-buttons";
 
-const formSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.string().email("Invalid email address"),
-  password: z
-    .string()
-    .min(8, "Password must be at least 8 characters")
-    .regex(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-      "Password must contain at least one uppercase letter, one lowercase letter, and one number"
-    ),
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-});
+const formSchema = z
+  .object({
+    name: z.string().min(2, "Name must be at least 2 characters"),
+    email: z.string().email("Invalid email address"),
+    password: z
+      .string()
+      .min(8, "Password must be at least 8 characters")
+      .regex(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+        "Password must contain at least one uppercase letter, one lowercase letter, and one number",
+      ),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
 
 export function SignupForm() {
   const [isLoading, setIsLoading] = useState(false);
@@ -56,7 +58,7 @@ export function SignupForm() {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       setIsLoading(true);
-      
+
       const response = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -71,9 +73,9 @@ export function SignupForm() {
             description: "Please try signing in with Google or Discord instead",
             action: {
               label: "Sign In",
-              onClick: () => router.push("/login")
+              onClick: () => router.push("/login"),
             },
-            duration: 5000
+            duration: 5000,
           });
           return;
         }
@@ -82,14 +84,14 @@ export function SignupForm() {
 
       toast.success("Account created!", {
         description: "Please check your email for verification",
-        duration: 3000
+        duration: 3000,
       });
 
       router.push(`/verify-otp?userId=${data.user.id}`);
     } catch (error) {
       console.error("Signup error:", error);
       toast.error("Failed to create account", {
-        description: "Please try again later"
+        description: "Please try again later",
       });
     } finally {
       setIsLoading(false);
@@ -158,7 +160,7 @@ export function SignupForm() {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
                     >
                       {showPassword ? (
                         <EyeOff className="h-4 w-4" />
@@ -189,8 +191,10 @@ export function SignupForm() {
                     />
                     <button
                       type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      onClick={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
                     >
                       {showConfirmPassword ? (
                         <EyeOff className="h-4 w-4" />
@@ -205,11 +209,7 @@ export function SignupForm() {
             )}
           />
 
-          <Button
-            type="submit"
-            disabled={isLoading}
-            isLoading={isLoading}
-          >
+          <Button type="submit" disabled={isLoading} isLoading={isLoading}>
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -243,4 +243,4 @@ export function SignupForm() {
       </p>
     </motion.div>
   );
-} 
+}

@@ -10,4 +10,4 @@ export function NotificationSettings() {
       </div>
     </div>
   );
-} 
+}

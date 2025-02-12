@@ -32,13 +32,7 @@ export function PasswordStrength({ password }: PasswordStrengthProps) {
     const strength = calculateStrength();
     setStrength(strength);
 
-    const messages = [
-      "Very Weak",
-      "Weak",
-      "Fair",
-      "Good",
-      "Strong",
-    ];
+    const messages = ["Very Weak", "Weak", "Fair", "Good", "Strong"];
     setMessage(messages[strength] ?? "");
   }, [password]);
 
@@ -56,7 +50,7 @@ export function PasswordStrength({ password }: PasswordStrengthProps) {
                 "bg-yellow-500": strength === 3 && i <= 2,
                 "bg-green-500": strength === 4 && i <= 3,
                 "bg-gray-200": i >= strength,
-              }
+              },
             )}
           />
         ))}
@@ -73,4 +67,4 @@ export function PasswordStrength({ password }: PasswordStrengthProps) {
       </p>
     </div>
   );
-} 
+}

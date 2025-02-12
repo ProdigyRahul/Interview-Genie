@@ -101,4 +101,4 @@ export const Icons = {
   twitter: Twitter,
 } as const;
 
-export type IconKeys = keyof typeof Icons; 
+export type IconKeys = keyof typeof Icons;

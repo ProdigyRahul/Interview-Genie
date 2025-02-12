@@ -7,7 +7,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { MultiStepLoader } from "@/components/ui/multi-step-loader";
-import { FileText, Sparkles, Download, Eye, ArrowRight, Loader2 } from "lucide-react";
+import {
+  FileText,
+  Sparkles,
+  Download,
+  Eye,
+  ArrowRight,
+  Loader2,
+} from "lucide-react";
 import { toast } from "sonner";
 
 const loadingStates = [
@@ -54,11 +61,13 @@ export default function CoverLetterBuilderPage() {
     try {
       setIsGenerating(true);
       // TODO: Implement AI generation logic
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Simulated delay
-      
+      await new Promise((resolve) => setTimeout(resolve, 2000)); // Simulated delay
+
       // Simulated preview
-      setPreview(`Dear ${formData.hiringManager},\n\nI am writing to express my strong interest in the ${formData.jobTitle} position at ${formData.companyName}...`);
-      
+      setPreview(
+        `Dear ${formData.hiringManager},\n\nI am writing to express my strong interest in the ${formData.jobTitle} position at ${formData.companyName}...`,
+      );
+
       toast.success("Cover letter generated successfully!");
     } catch (error) {
       console.error("Error generating cover letter:", error);
@@ -80,7 +89,7 @@ export default function CoverLetterBuilderPage() {
 
   if (isGenerating) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[80vh] p-4">
+      <div className="flex min-h-[80vh] flex-col items-center justify-center p-4">
         <MultiStepLoader
           loadingStates={loadingStates}
           loading={true}
@@ -94,22 +103,27 @@ export default function CoverLetterBuilderPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">Cover Letter Builder</h2>
+        <h2 className="text-3xl font-bold tracking-tight">
+          Cover Letter Builder
+        </h2>
         <p className="text-muted-foreground">
-          We&apos;ll help you create a compelling cover letter tailored to your job application
+          We&apos;ll help you create a compelling cover letter tailored to your
+          job application
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Input Form */}
-        <Card className="p-6 space-y-6">
+        <Card className="space-y-6 p-6">
           <div className="space-y-4">
             <div className="space-y-2">
               <Label>Full Name</Label>
               <Input
                 placeholder="John Doe"
                 value={formData.fullName}
-                onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, fullName: e.target.value })
+                }
               />
             </div>
 
@@ -120,7 +134,9 @@ export default function CoverLetterBuilderPage() {
                   type="email"
                   placeholder="john@example.com"
                   value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
                 />
               </div>
               <div className="space-y-2">
@@ -129,7 +145,9 @@ export default function CoverLetterBuilderPage() {
                   type="tel"
                   placeholder="+1 234 567 8900"
                   value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, phone: e.target.value })
+                  }
                 />
               </div>
             </div>
@@ -139,7 +157,9 @@ export default function CoverLetterBuilderPage() {
               <Input
                 placeholder="Company Inc."
                 value={formData.companyName}
-                onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, companyName: e.target.value })
+                }
               />
             </div>
 
@@ -148,7 +168,9 @@ export default function CoverLetterBuilderPage() {
               <Input
                 placeholder="Senior Software Engineer"
                 value={formData.jobTitle}
-                onChange={(e) => setFormData({ ...formData, jobTitle: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, jobTitle: e.target.value })
+                }
               />
             </div>
 
@@ -157,7 +179,9 @@ export default function CoverLetterBuilderPage() {
               <Input
                 placeholder="Jane Smith"
                 value={formData.hiringManager}
-                onChange={(e) => setFormData({ ...formData, hiringManager: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, hiringManager: e.target.value })
+                }
               />
             </div>
 
@@ -166,7 +190,12 @@ export default function CoverLetterBuilderPage() {
               <Textarea
                 placeholder="Enter key points you'd like to highlight in your cover letter..."
                 className="h-24"
-                onChange={(e) => setFormData({ ...formData, keyPoints: e.target.value.split('\n').filter(Boolean) })}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    keyPoints: e.target.value.split("\n").filter(Boolean),
+                  })
+                }
               />
             </div>
 
@@ -176,12 +205,17 @@ export default function CoverLetterBuilderPage() {
                 <div className="space-y-2">
                   <Label className="text-sm">Tone</Label>
                   <select
-                    className="w-full p-2 rounded-md border border-input bg-background"
+                    className="w-full rounded-md border border-input bg-background p-2"
                     value={formData.customization.tone}
-                    onChange={(e) => setFormData({
-                      ...formData,
-                      customization: { ...formData.customization, tone: e.target.value }
-                    })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        customization: {
+                          ...formData.customization,
+                          tone: e.target.value,
+                        },
+                      })
+                    }
                   >
                     <option value="professional">Professional</option>
                     <option value="friendly">Friendly</option>
@@ -191,12 +225,17 @@ export default function CoverLetterBuilderPage() {
                 <div className="space-y-2">
                   <Label className="text-sm">Style</Label>
                   <select
-                    className="w-full p-2 rounded-md border border-input bg-background"
+                    className="w-full rounded-md border border-input bg-background p-2"
                     value={formData.customization.style}
-                    onChange={(e) => setFormData({
-                      ...formData,
-                      customization: { ...formData.customization, style: e.target.value }
-                    })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        customization: {
+                          ...formData.customization,
+                          style: e.target.value,
+                        },
+                      })
+                    }
                   >
                     <option value="modern">Modern</option>
                     <option value="traditional">Traditional</option>
@@ -206,12 +245,17 @@ export default function CoverLetterBuilderPage() {
                 <div className="space-y-2">
                   <Label className="text-sm">Length</Label>
                   <select
-                    className="w-full p-2 rounded-md border border-input bg-background"
+                    className="w-full rounded-md border border-input bg-background p-2"
                     value={formData.customization.length}
-                    onChange={(e) => setFormData({
-                      ...formData,
-                      customization: { ...formData.customization, length: e.target.value }
-                    })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        customization: {
+                          ...formData.customization,
+                          length: e.target.value,
+                        },
+                      })
+                    }
                   >
                     <option value="short">Short</option>
                     <option value="medium">Medium</option>
@@ -222,9 +266,9 @@ export default function CoverLetterBuilderPage() {
             </div>
           </div>
 
-          <div className="flex items-center justify-between pt-4 border-t">
+          <div className="flex items-center justify-between border-t pt-4">
             <div className="flex items-center text-sm text-muted-foreground">
-              <Sparkles className="h-4 w-4 mr-2 text-yellow-500" />
+              <Sparkles className="mr-2 h-4 w-4 text-yellow-500" />
               Uses 20 credits
             </div>
             <Button onClick={handleGenerate} disabled={isGenerating}>
@@ -244,11 +288,15 @@ export default function CoverLetterBuilderPage() {
         </Card>
 
         {/* Preview */}
-        <Card className="p-6 space-y-6">
+        <Card className="space-y-6 p-6">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold">Preview</h3>
             <div className="flex gap-2">
-              <Button variant="outline" onClick={handleDownload} disabled={!preview}>
+              <Button
+                variant="outline"
+                onClick={handleDownload}
+                disabled={!preview}
+              >
                 <Download className="mr-2 h-4 w-4" />
                 Download
               </Button>
@@ -261,19 +309,22 @@ export default function CoverLetterBuilderPage() {
 
           {preview ? (
             <div className="prose prose-sm max-w-none">
-              <div className="p-6 bg-muted rounded-lg">
+              <div className="rounded-lg bg-muted p-6">
                 <pre className="whitespace-pre-wrap font-sans">{preview}</pre>
               </div>
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center h-[600px] text-center text-muted-foreground">
-              <FileText className="h-12 w-12 mb-4 opacity-50" />
+            <div className="flex h-[600px] flex-col items-center justify-center text-center text-muted-foreground">
+              <FileText className="mb-4 h-12 w-12 opacity-50" />
               <p>Your cover letter preview will appear here</p>
-              <p className="text-sm">Fill in your details and click Generate to create your cover letter</p>
+              <p className="text-sm">
+                Fill in your details and click Generate to create your cover
+                letter
+              </p>
             </div>
           )}
         </Card>
       </div>
     </div>
   );
-} 
+}

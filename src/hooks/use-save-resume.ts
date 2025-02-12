@@ -6,12 +6,19 @@ import { validateSection } from "@/lib/validations/resume";
 interface SaveResumeOptions {
   onSuccess?: () => void;
   onError?: (error: Error) => void;
-  onValidationError?: (errors: Array<{ field: string; message: string }>) => void;
+  onValidationError?: (
+    errors: Array<{ field: string; message: string }>,
+  ) => void;
 }
 
-export function useSaveResume(resumeId: string, options: SaveResumeOptions = {}) {
+export function useSaveResume(
+  resumeId: string,
+  options: SaveResumeOptions = {},
+) {
   const [isSaving, setIsSaving] = useState(false);
-  const [validationErrors, setValidationErrors] = useState<Array<{ field: string; message: string }>>([]);
+  const [validationErrors, setValidationErrors] = useState<
+    Array<{ field: string; message: string }>
+  >([]);
 
   const saveSection = async (section: TabId, data: any) => {
     setIsSaving(true);
@@ -19,10 +26,10 @@ export function useSaveResume(resumeId: string, options: SaveResumeOptions = {})
 
     try {
       console.log(`Saving ${section} section with data:`, data);
-      
+
       // Transform data based on section
       let transformedData = data;
-      
+
       if (section === "personal") {
         // Transform personal data to match schema
         transformedData = {
@@ -36,38 +43,44 @@ export function useSaveResume(resumeId: string, options: SaveResumeOptions = {})
         };
         console.log("Transformed personal data:", transformedData);
       } else if (
-        section === "experience" || 
-        section === "projects" || 
-        section === "education" || 
-        section === "certifications" || 
+        section === "experience" ||
+        section === "projects" ||
+        section === "education" ||
+        section === "certifications" ||
         section === "achievements"
       ) {
         // Transform array sections
-        transformedData = Object.values(data).filter((item: any) => 
-          // For achievements, require all fields to be non-empty
-          section === "achievements" ? (
-            item?.title?.trim() !== "" &&
-            item?.date?.trim() !== "" &&
-            item?.description?.trim() !== ""
-          ) : (
-            Object.values(item).some((value: any) => 
-              typeof value === 'string' ? value.trim() !== "" : !!value
-            )
+        transformedData = Object.values(data)
+          .filter((item: any) =>
+            // For achievements, require all fields to be non-empty
+            section === "achievements"
+              ? item?.title?.trim() !== "" &&
+                item?.date?.trim() !== "" &&
+                item?.description?.trim() !== ""
+              : Object.values(item).some((value: any) =>
+                  typeof value === "string" ? value.trim() !== "" : !!value,
+                ),
           )
-        ).map((item: any) => ({
-          ...item,
-          // Only add technologies field for sections that use it
-          ...(["experience", "projects"].includes(section) ? {
-            technologies: Array.isArray(item.technologies) ? item.technologies : []
-          } : {})
-        }));
+          .map((item: any) => ({
+            ...item,
+            // Only add technologies field for sections that use it
+            ...(["experience", "projects"].includes(section)
+              ? {
+                  technologies: Array.isArray(item.technologies)
+                    ? item.technologies
+                    : [],
+                }
+              : {}),
+          }));
         console.log("Transformed array section data:", transformedData);
       } else if (section === "skills") {
         // Transform skills data
         transformedData = {
-          technical: Array.isArray(data.technical) ? data.technical.filter(Boolean) : [],
+          technical: Array.isArray(data.technical)
+            ? data.technical.filter(Boolean)
+            : [],
           soft: Array.isArray(data.soft) ? data.soft.filter(Boolean) : [],
-          tools: Array.isArray(data.tools) ? data.tools.filter(Boolean) : []
+          tools: Array.isArray(data.tools) ? data.tools.filter(Boolean) : [],
         };
         console.log("Transformed skills data:", transformedData);
       }
@@ -75,7 +88,7 @@ export function useSaveResume(resumeId: string, options: SaveResumeOptions = {})
       // Validate the data before sending to the server
       const validationResult = validateSection(section, transformedData);
       console.log(`Validation result for ${section}:`, validationResult);
-      
+
       if (!validationResult.success) {
         const errors = validationResult.errors || [];
         console.log(`Validation errors for ${section}:`, errors);
@@ -95,16 +108,23 @@ export function useSaveResume(resumeId: string, options: SaveResumeOptions = {})
 
       if (!response.ok) {
         const error = await response.json();
-        
+
         if (error.errors) {
           // Handle server-side validation errors
-          const serverErrors = error.errors.map((err: { path?: string[]; message: string }) => ({
-            field: err.path?.join(".") || "unknown",
-            message: err.message
-          }));
+          const serverErrors = error.errors.map(
+            (err: { path?: string[]; message: string }) => ({
+              field: err.path?.join(".") || "unknown",
+              message: err.message,
+            }),
+          );
           setValidationErrors(serverErrors);
           options.onValidationError?.(serverErrors);
-          throw new Error("Validation failed: " + serverErrors.map((e: { message: string }) => e.message).join(", "));
+          throw new Error(
+            "Validation failed: " +
+              serverErrors
+                .map((e: { message: string }) => e.message)
+                .join(", "),
+          );
         }
 
         // Handle other types of errors
@@ -121,7 +141,7 @@ export function useSaveResume(resumeId: string, options: SaveResumeOptions = {})
       options.onSuccess?.();
     } catch (error) {
       console.error("Error saving resume data:", error);
-      
+
       if (error instanceof Error) {
         toast.error(error.message);
         options.onError?.(error);
@@ -145,4 +165,4 @@ export function useSaveResume(resumeId: string, options: SaveResumeOptions = {})
     saveSection,
     clearValidationErrors,
   };
-} 
+}

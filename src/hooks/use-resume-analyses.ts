@@ -1,8 +1,8 @@
-import useSWR from 'swr';
-import type { ResumeAnalysisBatch } from '@/lib/batch-queries';
-import { fetcher } from './use-fetcher';
-import { cacheKeys, mutationUtils } from './use-cache-keys';
-import { useSession } from 'next-auth/react';
+import useSWR from "swr";
+import type { ResumeAnalysisBatch } from "@/lib/batch-queries";
+import { fetcher } from "./use-fetcher";
+import { cacheKeys, mutationUtils } from "./use-cache-keys";
+import { useSession } from "next-auth/react";
 
 export function useResumeAnalyses() {
   const { data: session } = useSession();
@@ -23,15 +23,14 @@ export function useResumeAnalyses() {
         totalCount: 0,
         averageScore: 0,
       },
-    }
+    },
   );
 
   const updateAnalyses = async (newAnalysis: any) => {
     // Optimistically update the cache
-    await mutate(
-      mutationUtils.updateResumeAnalyses(data, newAnalysis),
-      { revalidate: false }
-    );
+    await mutate(mutationUtils.updateResumeAnalyses(data, newAnalysis), {
+      revalidate: false,
+    });
 
     try {
       // Trigger revalidation
@@ -49,4 +48,4 @@ export function useResumeAnalyses() {
     isError: error,
     mutate: updateAnalyses,
   };
-} 
+}

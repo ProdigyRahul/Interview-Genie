@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,7 +16,15 @@ function StatusCard({ title, value, status }: StatusCardProps) {
       <CardContent className="pt-6">
         <div className="flex items-center justify-between">
           <p className="text-sm font-medium">{title}</p>
-          <Badge variant={status === "healthy" ? "default" : status === "warning" ? "secondary" : "destructive"}>
+          <Badge
+            variant={
+              status === "healthy"
+                ? "default"
+                : status === "warning"
+                  ? "secondary"
+                  : "destructive"
+            }
+          >
             {status}
           </Badge>
         </div>
@@ -36,7 +44,7 @@ export function SystemStatus() {
     overall: "healthy",
     latency: 0,
     redis: true,
-    database: true
+    database: true,
   });
 
   useEffect(() => {
@@ -44,14 +52,14 @@ export function SystemStatus() {
 
     const fetchStatus = async () => {
       try {
-        const res = await fetch('/api/health');
+        const res = await fetch("/api/health");
         const health = await res.json();
-        
+
         if (!mounted) return;
 
         // Determine overall status
         let overall: "healthy" | "warning" | "error" = "healthy";
-        
+
         if (!health.redis.ok || !health.database.ok) {
           overall = "error";
         } else if (health.latency > 1000) {
@@ -62,13 +70,13 @@ export function SystemStatus() {
           overall,
           latency: health.latency ?? 0,
           redis: health.redis.ok,
-          database: health.database.ok
+          database: health.database.ok,
         });
       } catch (error) {
-        console.error('Failed to fetch health data:', error);
-        setStatus(prev => ({
+        console.error("Failed to fetch health data:", error);
+        setStatus((prev) => ({
           ...prev,
-          overall: "error"
+          overall: "error",
         }));
       }
     };
@@ -112,4 +120,4 @@ export function SystemStatus() {
       />
     </div>
   );
-} 
+}

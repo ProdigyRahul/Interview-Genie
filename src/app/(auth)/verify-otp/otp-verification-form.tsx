@@ -39,7 +39,7 @@ export function OTPVerificationForm() {
     let timer: NodeJS.Timeout;
     if (resendTimeout > 0) {
       timer = setInterval(() => {
-        setResendTimeout(prev => Math.max(0, prev - 1));
+        setResendTimeout((prev) => Math.max(0, prev - 1));
       }, 1000);
     }
     return () => clearInterval(timer);
@@ -61,7 +61,10 @@ export function OTPVerificationForm() {
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
+  const handleKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+    index: number,
+  ) => {
     if (e.key === "Backspace" && !otp[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
       setActiveInput(index - 1);
@@ -72,14 +75,14 @@ export function OTPVerificationForm() {
     e.preventDefault();
     const pastedData = e.clipboardData.getData("text").slice(0, OTP_LENGTH);
     const newOtp = [...otp];
-    
+
     pastedData.split("").forEach((value, index) => {
       newOtp[index] = value;
       if (inputRefs.current[index]) {
         inputRefs.current[index].value = value;
       }
     });
-    
+
     setOtp(newOtp);
     if (inputRefs.current[pastedData.length - 1]) {
       inputRefs.current[pastedData.length - 1]?.focus();
@@ -120,13 +123,15 @@ export function OTPVerificationForm() {
         description: "Please check your email for the new code",
         duration: 5000,
       });
-
     } catch (error) {
       console.error("Resend error:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to resend code", {
-        icon: <XCircle className="h-5 w-5 text-destructive" />,
-        duration: 5000,
-      });
+      toast.error(
+        error instanceof Error ? error.message : "Failed to resend code",
+        {
+          icon: <XCircle className="h-5 w-5 text-destructive" />,
+          duration: 5000,
+        },
+      );
     } finally {
       setIsResending(false);
     }
@@ -183,7 +188,6 @@ export function OTPVerificationForm() {
       setTimeout(() => {
         router.push("/login");
       }, 2000);
-
     } catch (error) {
       console.error("Verification error:", error);
       toast.error("Verification failed", {
@@ -205,9 +209,11 @@ export function OTPVerificationForm() {
         exit={{ opacity: 0, y: -20 }}
         transition={{ duration: 0.2, ease: "easeOut" }}
       >
-        <Card className="w-full max-w-[440px] mx-auto shadow-lg border-neutral-200/50">
+        <Card className="mx-auto w-full max-w-[440px] border-neutral-200/50 shadow-lg">
           <CardHeader>
-            <CardTitle className="text-2xl font-bold tracking-tight">Email Verification</CardTitle>
+            <CardTitle className="text-2xl font-bold tracking-tight">
+              Email Verification
+            </CardTitle>
             <CardDescription className="text-muted-foreground/80">
               Enter the 6-digit code sent to your email
             </CardDescription>
@@ -230,14 +236,7 @@ export function OTPVerificationForm() {
                       onChange={(e) => handleChange(e.target.value, index)}
                       onKeyDown={(e) => handleKeyDown(e, index)}
                       onPaste={handlePaste}
-                      className={`w-11 h-12 text-center text-2xl font-bold border rounded-lg
-                        focus:border-primary focus:ring-2 focus:ring-primary/20 
-                        transition-all duration-200
-                        mx-2 first:ml-0 last:mr-0
-                        ${activeInput === index ? "border-primary shadow-sm" : "border-input"}
-                        ${isLoading ? "opacity-50 cursor-not-allowed" : ""}
-                        hover:border-primary/50
-                      `}
+                      className={`mx-2 h-12 w-11 rounded-lg border text-center text-2xl font-bold transition-all duration-200 first:ml-0 last:mr-0 focus:border-primary focus:ring-2 focus:ring-primary/20 ${activeInput === index ? "border-primary shadow-sm" : "border-input"} ${isLoading ? "cursor-not-allowed opacity-50" : ""} hover:border-primary/50`}
                       disabled={isLoading}
                     />
                   </motion.div>
@@ -246,7 +245,7 @@ export function OTPVerificationForm() {
 
               <Button
                 onClick={verifyOTP}
-                className="w-full h-11 font-medium tracking-wide"
+                className="h-11 w-full font-medium tracking-wide"
                 disabled={isLoading || otp.some((digit) => !digit)}
               >
                 {isLoading ? (
@@ -265,16 +264,17 @@ export function OTPVerificationForm() {
             </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
-            <div className="text-sm text-muted-foreground text-center">
+            <div className="text-center text-sm text-muted-foreground">
               Didn&apos;t receive the code?{" "}
               {resendTimeout > 0 ? (
-                <span className="text-muted-foreground/80 font-medium">
-                  Resend available in <span className="text-primary">{resendTimeout}s</span>
+                <span className="font-medium text-muted-foreground/80">
+                  Resend available in{" "}
+                  <span className="text-primary">{resendTimeout}s</span>
                 </span>
               ) : (
                 <button
                   onClick={handleResend}
-                  className="text-primary hover:text-primary/80 font-medium hover:underline transition-colors disabled:opacity-50 disabled:no-underline disabled:hover:text-primary"
+                  className="font-medium text-primary transition-colors hover:text-primary/80 hover:underline disabled:no-underline disabled:opacity-50 disabled:hover:text-primary"
                   disabled={isResending || isLoading || !email}
                 >
                   {isResending ? (
@@ -293,4 +293,4 @@ export function OTPVerificationForm() {
       </motion.div>
     </AnimatePresence>
   );
-} 
+}

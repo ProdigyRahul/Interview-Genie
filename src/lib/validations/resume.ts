@@ -50,21 +50,27 @@ export const certificationSchema = z.object({
   issueDate: z.string().min(1, "Issue date is required"),
   expiryDate: z.string().optional(),
   credentialId: z.string().optional(),
-  credentialUrl: z.string().url("Invalid credential URL").optional().or(z.literal("")),
+  credentialUrl: z
+    .string()
+    .url("Invalid credential URL")
+    .optional()
+    .or(z.literal("")),
 });
 
 // Achievement Section
 export const achievementSchema = z.object({
   title: z.string().min(1, "Achievement title is required"),
   date: z.string().min(1, "Achievement date is required"),
-  description: z.string().min(1, "Achievement description is required")
+  description: z.string().min(1, "Achievement description is required"),
 });
 
 // Skills Section
 export const skillsSchema = z.object({
-  technical: z.array(z.string()).min(1, "At least one technical skill is required"),
+  technical: z
+    .array(z.string())
+    .min(1, "At least one technical skill is required"),
   soft: z.array(z.string()).default([]),
-  tools: z.array(z.string()).default([])
+  tools: z.array(z.string()).default([]),
 });
 
 // Summary Section
@@ -97,7 +103,10 @@ export function validateSection(section: TabId, data: any) {
       case "education":
         return { success: true, data: z.array(educationSchema).parse(data) };
       case "certifications":
-        return { success: true, data: z.array(certificationSchema).parse(data) };
+        return {
+          success: true,
+          data: z.array(certificationSchema).parse(data),
+        };
       case "achievements":
         return { success: true, data: z.array(achievementSchema).parse(data) };
       case "skills":
@@ -109,9 +118,9 @@ export function validateSection(section: TabId, data: any) {
     }
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const errors = error.errors.map(err => ({
+      const errors = error.errors.map((err) => ({
         field: err.path.join("."),
-        message: err.message
+        message: err.message,
       }));
       return { success: false, error: "Validation failed", errors };
     }
@@ -138,21 +147,29 @@ export function isSectionComplete(section: string, data: any): boolean {
           console.log("Achievements validation failed: No achievements found");
           return false;
         }
-        const isValid = data.every(achievement => 
-          achievement?.title?.trim() !== "" &&
-          achievement?.date?.trim() !== "" &&
-          achievement?.description?.trim() !== ""
+        const isValid = data.every(
+          (achievement) =>
+            achievement?.title?.trim() !== "" &&
+            achievement?.date?.trim() !== "" &&
+            achievement?.description?.trim() !== "",
         );
         console.log("Achievements validation result:", isValid);
         return isValid;
       case "skills":
         console.log("Checking skills completion:", data);
         if (!data?.technical || !Array.isArray(data.technical)) {
-          console.log("Skills validation failed: technical skills array is missing or invalid");
+          console.log(
+            "Skills validation failed: technical skills array is missing or invalid",
+          );
           return false;
         }
         const hasSkills = data.technical.length > 0;
-        console.log("Skills validation result:", hasSkills, "Technical skills:", data.technical);
+        console.log(
+          "Skills validation result:",
+          hasSkills,
+          "Technical skills:",
+          data.technical,
+        );
         return hasSkills;
       case "summary":
         return summarySchema.safeParse(data).success;
@@ -160,7 +177,7 @@ export function isSectionComplete(section: string, data: any): boolean {
         return false;
     }
   } catch (error) {
-    console.error('Validation error:', error);
+    console.error("Validation error:", error);
     return false;
   }
-} 
+}

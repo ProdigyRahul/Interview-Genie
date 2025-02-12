@@ -33,4 +33,4 @@ export function FeedbackPanel() {
       </CardContent>
     </Card>
   );
-} 
+}

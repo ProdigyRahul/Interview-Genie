@@ -4,4 +4,4 @@ export default function InterviewAnalysisPage() {
       <h1 className="text-3xl font-bold">Performance Analysis</h1>
     </div>
   );
-} 
+}

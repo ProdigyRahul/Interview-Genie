@@ -10,4 +10,4 @@ export function AccountSettings() {
       </div>
     </div>
   );
-} 
+}
