@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { Button } from "@/components/ui/button";
-import { TabId, getPreviousTab, getNextTab } from "@/lib/resume-tabs";
+import { type TabId, getPreviousTab, getNextTab } from "@/lib/resume-tabs";
 import { Loader2, ArrowLeft, ArrowRight, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";

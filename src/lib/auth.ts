@@ -68,8 +68,8 @@ export const authConfig = {
       },
     }),
     GitHubProvider({
-      clientId: env.AUTH_GITHUB_ID!,
-      clientSecret: env.AUTH_GITHUB_SECRET!,
+      clientId: env.AUTH_GITHUB_ID,
+      clientSecret: env.AUTH_GITHUB_SECRET,
       authorization: {
         params: {
           scope: "read:user user:email",

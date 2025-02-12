@@ -35,7 +35,7 @@ import { isSectionComplete } from "@/lib/validations/resume";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SectionNavigation } from "@/components/resume/section-navigation";
 import { TemplateSelector } from "@/components/resume/template-selector";
-import { TemplateType } from "@/lib/types/resume";
+import { type TemplateType } from "@/lib/types/resume";
 
 // Animation variants
 const fadeIn = {
