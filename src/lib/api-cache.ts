@@ -15,25 +15,26 @@ export function createCachedResponse(data: any, init?: ResponseInit) {
 }
 
 // Cache user data fetching
-export const getUserData = (userId: string) => cache(
-  `user:${userId}`,
-  async () => {
-    const user = await db.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        image: true,
-        credits: true,
-        subscriptionStatus: true,
-        isVerified: true,
-      }
-    });
-    return user;
-  },
-  {
-    ttl: 300, // Cache for 5 minutes
-    tags: ['user']
-  }
-); 
+export const getUserData = (userId: string) =>
+  cache(
+    `user:${userId}`,
+    async () => {
+      const user = await db.user.findUnique({
+        where: { id: userId },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          image: true,
+          credits: true,
+          subscriptionStatus: true,
+          isVerified: true,
+        },
+      });
+      return user;
+    },
+    {
+      ttl: 300, // Cache for 5 minutes
+      tags: ["user"],
+    },
+  );

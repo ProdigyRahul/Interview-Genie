@@ -3,7 +3,13 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Briefcase, Building2, MessageSquare, ThumbsUp } from "lucide-react";
+import {
+  ArrowLeft,
+  Briefcase,
+  Building2,
+  MessageSquare,
+  ThumbsUp,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 
 // Dummy data - replace with real data later
@@ -35,23 +41,19 @@ export function InterviewQuestionsClient() {
   const router = useRouter();
 
   return (
-    <div className="container mx-auto py-6 space-y-8">
+    <div className="container mx-auto space-y-8 py-6">
       <div className="space-y-4">
-        <Button
-          variant="ghost"
-          className="gap-2"
-          onClick={() => router.back()}
-        >
-          <ArrowLeft className="w-4 h-4" />
+        <Button variant="ghost" className="gap-2" onClick={() => router.back()}>
+          <ArrowLeft className="h-4 w-4" />
           Back
         </Button>
 
         <div className="flex flex-col gap-2">
-          <h1 className="text-4xl font-bold tracking-tight flex items-center gap-3">
+          <h1 className="flex items-center gap-3 text-4xl font-bold tracking-tight">
             <Briefcase className="h-8 w-8 text-primary" />
             {JOB_DATA.title}
           </h1>
-          <p className="text-xl text-muted-foreground flex items-center gap-2">
+          <p className="flex items-center gap-2 text-xl text-muted-foreground">
             <Building2 className="h-5 w-5" />
             {JOB_DATA.company}
           </p>
@@ -59,7 +61,7 @@ export function InterviewQuestionsClient() {
       </div>
 
       <Tabs defaultValue="technical" className="space-y-6">
-        <TabsList className="grid grid-cols-3 w-[400px]">
+        <TabsList className="grid w-[400px] grid-cols-3">
           <TabsTrigger value="technical">Technical</TabsTrigger>
           <TabsTrigger value="behavioral">Behavioral</TabsTrigger>
           <TabsTrigger value="situational">Situational</TabsTrigger>
@@ -89,35 +91,33 @@ export function InterviewQuestionsClient() {
   );
 }
 
-function QuestionCard({ question, index }: { question: string; index: number }) {
+function QuestionCard({
+  question,
+  index,
+}: {
+  question: string;
+  index: number;
+}) {
   return (
-    <Card className="group relative overflow-hidden border bg-card hover:shadow-xl transition-all">
+    <Card className="group relative overflow-hidden border bg-card transition-all hover:shadow-xl">
       <CardHeader>
-        <CardTitle className="text-xl flex items-start gap-4">
+        <CardTitle className="flex items-start gap-4 text-xl">
           <span className="text-primary">Q{index + 1}.</span>
           {question}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-2"
-          >
-            <MessageSquare className="w-4 h-4" />
+          <Button variant="outline" size="sm" className="gap-2">
+            <MessageSquare className="h-4 w-4" />
             Practice Answer
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-2"
-          >
-            <ThumbsUp className="w-4 h-4" />
+          <Button variant="outline" size="sm" className="gap-2">
+            <ThumbsUp className="h-4 w-4" />
             View Sample Answer
           </Button>
         </div>
       </CardContent>
     </Card>
   );
-} 
+}

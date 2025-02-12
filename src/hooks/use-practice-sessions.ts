@@ -1,8 +1,8 @@
-import useSWR from 'swr';
-import type { PracticeSessionBatch } from '@/lib/batch-queries';
-import { fetcher } from './use-fetcher';
-import { cacheKeys, mutationUtils } from './use-cache-keys';
-import { useSession } from 'next-auth/react';
+import useSWR from "swr";
+import type { PracticeSessionBatch } from "@/lib/batch-queries";
+import { fetcher } from "./use-fetcher";
+import { cacheKeys, mutationUtils } from "./use-cache-keys";
+import { useSession } from "next-auth/react";
 
 export function usePracticeSessions() {
   const { data: session } = useSession();
@@ -24,15 +24,14 @@ export function usePracticeSessions() {
         averageScore: 0,
         completionRate: 0,
       },
-    }
+    },
   );
 
   const updateSessions = async (newSession: any) => {
     // Optimistically update the cache
-    await mutate(
-      mutationUtils.updatePracticeSessions(data, newSession),
-      { revalidate: false }
-    );
+    await mutate(mutationUtils.updatePracticeSessions(data, newSession), {
+      revalidate: false,
+    });
 
     try {
       // Trigger revalidation
@@ -50,4 +49,4 @@ export function usePracticeSessions() {
     isError: error,
     mutate: updateSessions,
   };
-} 
+}

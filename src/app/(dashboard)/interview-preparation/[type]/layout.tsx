@@ -20,11 +20,11 @@ export default function InterviewPreparationLayout({
   return (
     <div className="space-y-8">
       <div className="space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight capitalize">
+        <h2 className="text-3xl font-bold capitalize tracking-tight">
           {params.type} Interview Preparation
         </h2>
       </div>
       {children}
     </div>
   );
-} 
+}

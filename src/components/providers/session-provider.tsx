@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { SessionProvider as NextAuthSessionProvider } from 'next-auth/react';
-import type { Session } from 'next-auth';
+import { SessionProvider as NextAuthSessionProvider } from "next-auth/react";
+import type { Session } from "next-auth";
 
 export function SessionProvider({
   children,
@@ -15,4 +15,4 @@ export function SessionProvider({
       {children}
     </NextAuthSessionProvider>
   );
-} 
+}

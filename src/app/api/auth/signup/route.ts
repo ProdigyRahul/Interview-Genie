@@ -18,7 +18,11 @@ function generateOTP(): string {
 }
 
 // Helper function to send emails in background
-async function sendEmailsInBackground(email: string, name: string, otp: string) {
+async function sendEmailsInBackground(
+  email: string,
+  name: string,
+  otp: string,
+) {
   try {
     // Send verification email first and wait for it
     const verificationResult = await sendEmail({
@@ -28,7 +32,10 @@ async function sendEmailsInBackground(email: string, name: string, otp: string) 
     });
 
     if (!verificationResult.success) {
-      console.error("Failed to send verification email:", verificationResult.error);
+      console.error(
+        "Failed to send verification email:",
+        verificationResult.error,
+      );
       return false;
     }
 
@@ -37,7 +44,7 @@ async function sendEmailsInBackground(email: string, name: string, otp: string) 
       to: email,
       subject: "Welcome to Interview Genie! 🎉",
       html: generateWelcomeEmail(name),
-    }).catch(error => {
+    }).catch((error) => {
       console.error("Failed to send welcome email:", error);
     });
 
@@ -64,13 +71,13 @@ export async function POST(req: Request): Promise<NextResponse> {
         id: true,
         email: true,
         name: true,
-      }
+      },
     });
 
     if (existingUser) {
       return new NextResponse(
-        JSON.stringify({ error: "Email already registered" }), 
-        { status: 400 }
+        JSON.stringify({ error: "Email already registered" }),
+        { status: 400 },
       );
     }
 
@@ -91,7 +98,7 @@ export async function POST(req: Request): Promise<NextResponse> {
         id: true,
         name: true,
         email: true,
-      }
+      },
     });
 
     // Generate OTP
@@ -117,22 +124,21 @@ export async function POST(req: Request): Promise<NextResponse> {
 
     // Return success response
     return new NextResponse(
-      JSON.stringify({ 
-        success: true, 
+      JSON.stringify({
+        success: true,
         user: {
           id: user.id,
           name: user.name,
-          email: user.email
-        }
+          email: user.email,
+        },
       }),
-      { status: 200 }
+      { status: 200 },
     );
-
   } catch (error) {
     console.error("Signup error:", error);
     return new NextResponse(
       JSON.stringify({ error: "Failed to create account" }),
-      { status: 500 }
+      { status: 500 },
     );
   }
-} 
+}

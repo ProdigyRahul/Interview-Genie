@@ -1,5 +1,11 @@
 import Link from "next/link";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Mic, Video, Brain, Target } from "lucide-react";
 
 const interviewTypes = [
@@ -18,7 +24,8 @@ const interviewTypes = [
   },
   {
     title: "Video Interview",
-    description: "Practice with AI video interviews with posture and expression analysis",
+    description:
+      "Practice with AI video interviews with posture and expression analysis",
     icon: Video,
     href: "/interview-preparation/video",
     roles: [
@@ -75,7 +82,7 @@ export function InterviewPreparationTab() {
                   {type.roles.slice(0, 3).join(", ")}
                   {type.roles.length > 3 && "..."}
                 </div>
-                <div className="text-sm text-primary mt-2">
+                <div className="mt-2 text-sm text-primary">
                   Click to explore →
                 </div>
               </div>
@@ -85,4 +92,4 @@ export function InterviewPreparationTab() {
       ))}
     </div>
   );
-} 
+}

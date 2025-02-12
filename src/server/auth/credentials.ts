@@ -18,22 +18,23 @@ declare module "next-auth" {
 async function verifyCredentials(
   email: string,
   password: string,
-  req: Request
+  req: Request,
 ): Promise<{ user: User | null; error?: string }> {
   try {
     // Rate limiting: 3 attempts per 5 minutes per IP
-    const ipAddress = req.headers.get("x-forwarded-for") ??
+    const ipAddress =
+      req.headers.get("x-forwarded-for") ??
       req.headers.get("x-real-ip") ??
       "127.0.0.1";
-    
+
     const rateLimitKey = `login:${email}:${ipAddress}`;
     const isAllowed = await authCache.checkRateLimit(rateLimitKey);
 
     if (!isAllowed) {
       const remainingTime = await authCache.getRemainingAttempts(rateLimitKey);
-      return { 
-        user: null, 
-        error: `Too many attempts. Please try again in ${Math.ceil(remainingTime / 60)} minutes.` 
+      return {
+        user: null,
+        error: `Too many attempts. Please try again in ${Math.ceil(remainingTime / 60)} minutes.`,
       };
     }
 
@@ -56,7 +57,10 @@ async function verifyCredentials(
     }
 
     if (!user.isVerified) {
-      return { user: null, error: "Please verify your email before logging in" };
+      return {
+        user: null,
+        error: "Please verify your email before logging in",
+      };
     }
 
     const isValid = await compare(password, user.hashedPassword);
@@ -70,7 +74,7 @@ async function verifyCredentials(
     // Clear rate limit on successful login
     await authCache.clearRateLimit(rateLimitKey);
 
-    return { 
+    return {
       user: {
         id: user.id,
         name: user.name ?? null,
@@ -79,9 +83,8 @@ async function verifyCredentials(
         credits: user.credits,
         subscriptionStatus: user.subscriptionStatus ?? "free",
         isVerified: user.isVerified,
-      }
+      },
     };
-
   } catch (error) {
     // Only log unexpected errors, not auth failures
     if (!(error instanceof Error)) {
@@ -96,13 +99,13 @@ export const credentialsProvider = CredentialsProvider({
   id: "credentials",
   name: "credentials",
   credentials: {
-    email: { 
-      label: "Email", 
+    email: {
+      label: "Email",
       type: "email",
       placeholder: "hello@example.com",
     },
-    password: { 
-      label: "Password", 
+    password: {
+      label: "Password",
       type: "password",
       placeholder: "••••••••",
     },
@@ -120,7 +123,7 @@ export const credentialsProvider = CredentialsProvider({
     const { user, error } = await verifyCredentials(
       credentials.email as string,
       credentials.password as string,
-      req
+      req,
     );
 
     // Return null for expected auth failures without throwing

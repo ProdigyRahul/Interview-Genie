@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
 
     const practiceSession = await prisma.practiceSession.findUnique({
       where: { id: sessionId },
-      select: { userId: true }
+      select: { userId: true },
     });
 
     if (!practiceSession) {
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
     console.error("Error pinging practice session:", error);
     return Response.json(
       { error: "Failed to ping practice session" },
-      { status: 500 }
+      { status: 500 },
     );
   }
-} 
+}

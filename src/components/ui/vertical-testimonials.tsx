@@ -5,65 +5,74 @@ import React, { useEffect, useState } from "react";
 
 const testimonials = [
   {
-    quote: "This AI interview platform helped me land my dream job at Google. The technical interview practice was incredibly realistic!",
+    quote:
+      "This AI interview platform helped me land my dream job at Google. The technical interview practice was incredibly realistic!",
     name: "Sarah Chen",
     title: "Software Engineer at Google",
-    rating: 5
+    rating: 5,
   },
   {
-    quote: "The behavioral interview scenarios were spot-on. I felt much more confident during my actual interviews.",
+    quote:
+      "The behavioral interview scenarios were spot-on. I felt much more confident during my actual interviews.",
     name: "Michael Rodriguez",
     title: "Product Manager at Microsoft",
-    rating: 5
+    rating: 5,
   },
   {
-    quote: "The instant feedback on my responses helped me improve rapidly. Worth every penny!",
+    quote:
+      "The instant feedback on my responses helped me improve rapidly. Worth every penny!",
     name: "Priya Patel",
     title: "Data Scientist at Amazon",
-    rating: 5
+    rating: 5,
   },
   {
-    quote: "The system design practice interviews were particularly helpful. Great platform!",
+    quote:
+      "The system design practice interviews were particularly helpful. Great platform!",
     name: "James Wilson",
     title: "Senior Engineer at Meta",
-    rating: 5
+    rating: 5,
   },
   {
-    quote: "I love how the AI adapts to my skill level. It's like having a personal interview coach.",
+    quote:
+      "I love how the AI adapts to my skill level. It's like having a personal interview coach.",
     name: "Emma Thompson",
     title: "Frontend Developer at Spotify",
-    rating: 5
+    rating: 5,
   },
   {
-    quote: "The variety of interview types and questions kept me well-prepared for anything.",
+    quote:
+      "The variety of interview types and questions kept me well-prepared for anything.",
     name: "David Kim",
     title: "Full Stack Developer at Netflix",
-    rating: 5
+    rating: 5,
   },
   {
     quote: "The detailed feedback on my communication skills was invaluable.",
     name: "Lisa Zhang",
     title: "Engineering Manager at Apple",
-    rating: 5
+    rating: 5,
   },
   {
-    quote: "Best interview prep tool I've used. The AI's responses feel very natural.",
+    quote:
+      "Best interview prep tool I've used. The AI's responses feel very natural.",
     name: "Alex Morgan",
     title: "Backend Engineer at Twitter",
-    rating: 5
+    rating: 5,
   },
   {
-    quote: "Great for practicing both technical and soft skills. Highly recommend!",
+    quote:
+      "Great for practicing both technical and soft skills. Highly recommend!",
     name: "Tom Anderson",
     title: "DevOps Engineer at LinkedIn",
-    rating: 5
+    rating: 5,
   },
   {
-    quote: "The mock interviews helped me overcome my interview anxiety. Thank you!",
+    quote:
+      "The mock interviews helped me overcome my interview anxiety. Thank you!",
     name: "Nina Patel",
     title: "iOS Developer at Uber",
-    rating: 5
-  }
+    rating: 5,
+  },
 ];
 
 export const VerticalTestimonials = ({
@@ -107,7 +116,7 @@ export const VerticalTestimonials = ({
       ref={containerRef}
       className={cn(
         "scroller relative z-20 overflow-hidden [mask-image:linear-gradient(to_bottom,transparent,white_20%,white_80%,transparent)]",
-        className
+        className,
       )}
     >
       <div
@@ -115,16 +124,16 @@ export const VerticalTestimonials = ({
         className={cn(
           "grid grid-cols-2 gap-4 py-4",
           start && "animate-scroll-vertical",
-          "hover:[animation-play-state:paused]"
+          "hover:[animation-play-state:paused]",
         )}
       >
         {testimonials.map((item, idx) => (
           <div
             key={item.name + idx}
-            className="relative rounded-xl border bg-card/30 backdrop-blur-sm p-6 shadow-sm"
+            className="relative rounded-xl border bg-card/30 p-6 shadow-sm backdrop-blur-sm"
           >
             <blockquote className="space-y-4">
-              <span className="relative block text-sm text-foreground/90 leading-relaxed">
+              <span className="relative block text-sm leading-relaxed text-foreground/90">
                 {item.quote}
               </span>
               <footer className="flex flex-col space-y-1">
@@ -141,4 +150,4 @@ export const VerticalTestimonials = ({
       </div>
     </div>
   );
-}; 
+};

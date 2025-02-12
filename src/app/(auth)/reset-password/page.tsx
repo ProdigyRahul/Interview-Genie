@@ -4,7 +4,7 @@ import { ResetPasswordForm } from "./reset-password-form";
 
 export default async function ResetPasswordPage() {
   const session = await auth();
-  
+
   if (session?.user) {
     redirect("/dashboard");
   }
@@ -20,4 +20,4 @@ export default async function ResetPasswordPage() {
       <ResetPasswordForm />
     </div>
   );
-} 
+}

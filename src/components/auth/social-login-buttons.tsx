@@ -13,9 +13,9 @@ interface SocialLoginButtonsProps {
   isLoading?: boolean;
 }
 
-export function SocialLoginButtons({ 
+export function SocialLoginButtons({
   callbackUrl = "/dashboard",
-  isLoading: externalLoading = false 
+  isLoading: externalLoading = false,
 }: SocialLoginButtonsProps) {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isGitHubLoading, setIsGitHubLoading] = useState(false);
@@ -58,7 +58,8 @@ export function SocialLoginButtons({
     }
   };
 
-  const isButtonsDisabled = externalLoading || isGoogleLoading || isGitHubLoading;
+  const isButtonsDisabled =
+    externalLoading || isGoogleLoading || isGitHubLoading;
 
   return (
     <motion.div
@@ -76,10 +77,10 @@ export function SocialLoginButtons({
           variant="social"
           disabled={isButtonsDisabled}
           onClick={handleGoogleLogin}
-          className="relative w-full h-11 font-medium"
+          className="relative h-11 w-full font-medium"
         >
           <motion.div
-            className="flex items-center justify-center w-full"
+            className="flex w-full items-center justify-center"
             initial={false}
             animate={isGoogleLoading ? { opacity: 0 } : { opacity: 1 }}
           >
@@ -108,10 +109,10 @@ export function SocialLoginButtons({
           variant="social"
           disabled={isButtonsDisabled}
           onClick={handleGitHubLogin}
-          className="relative w-full h-11 font-medium"
+          className="relative h-11 w-full font-medium"
         >
           <motion.div
-            className="flex items-center justify-center w-full"
+            className="flex w-full items-center justify-center"
             initial={false}
             animate={isGitHubLoading ? { opacity: 0 } : { opacity: 1 }}
           >
@@ -132,4 +133,4 @@ export function SocialLoginButtons({
       </motion.div>
     </motion.div>
   );
-} 
+}

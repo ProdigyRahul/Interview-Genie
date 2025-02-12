@@ -9,11 +9,11 @@ export const redis = new Redis({
 
 // Cache key prefixes
 export const CACHE_KEYS = {
-  USER: 'user:',
-  SESSION: 'session:',
-  RATE_LIMIT: 'rate-limit:',
-  HEALTH: 'health:',
-  METRICS: 'metrics:',
+  USER: "user:",
+  SESSION: "session:",
+  RATE_LIMIT: "rate-limit:",
+  HEALTH: "health:",
+  METRICS: "metrics:",
 } as const;
 
 // Cache TTLs in seconds
@@ -46,30 +46,30 @@ function formatCacheKey(prefix: string, key: string): string {
 export async function cache<T>(
   key: string,
   getData: () => Promise<T>,
-  options: CacheOptions = {}
+  options: CacheOptions = {},
 ): Promise<T> {
   const {
     ttl = TTL.MEDIUM,
     tags = [],
-    prefix = '',
+    prefix = "",
     staleWhileRevalidate = true,
   } = options;
 
   const cacheKey = formatCacheKey(prefix, key);
-  
+
   try {
     // Try to get data from cache
     const cachedValue = await redis.get(cacheKey);
-    
-    if (typeof cachedValue === 'string') {
+
+    if (typeof cachedValue === "string") {
       const parsed = JSON.parse(cachedValue) as CacheEntry<T>;
       const age = Date.now() - parsed.timestamp;
-      
+
       // If data is fresh, return it
       if (age < ttl * 1000) {
         return parsed.data;
       }
-      
+
       // If stale but staleWhileRevalidate is enabled
       if (staleWhileRevalidate) {
         // Revalidate in background
@@ -81,17 +81,20 @@ export async function cache<T>(
 
     // Get fresh data
     const freshData = await getData();
-    
+
     // Cache the fresh data
-    await redis.set(cacheKey, JSON.stringify({
-      data: freshData,
-      timestamp: Date.now(),
-      tags
-    }));
+    await redis.set(
+      cacheKey,
+      JSON.stringify({
+        data: freshData,
+        timestamp: Date.now(),
+        tags,
+      }),
+    );
 
     return freshData;
   } catch (error) {
-    console.error('Cache error:', error);
+    console.error("Cache error:", error);
     return getData();
   }
 }
@@ -100,7 +103,7 @@ export async function cache<T>(
 async function revalidateData<T>(
   key: string,
   getData: () => Promise<T>,
-  options: CacheOptions
+  options: CacheOptions,
 ): Promise<void> {
   try {
     const freshData = await getData();
@@ -111,14 +114,14 @@ async function revalidateData<T>(
     };
     await redis.set(key, entry, { ex: options.ttl ?? TTL.MEDIUM });
   } catch (error) {
-    console.error('Revalidation error:', error);
+    console.error("Revalidation error:", error);
   }
 }
 
 // Clear cache by tag
 export async function revalidateTag(tag: string): Promise<void> {
   try {
-    const keys = await redis.keys('*');
+    const keys = await redis.keys("*");
     const promises = keys.map(async (key) => {
       const entry = await redis.get<CacheEntry<unknown>>(key);
       if (entry?.tags.includes(tag)) {
@@ -127,7 +130,7 @@ export async function revalidateTag(tag: string): Promise<void> {
     });
     await Promise.all(promises);
   } catch (error) {
-    console.error('Tag revalidation error:', error);
+    console.error("Tag revalidation error:", error);
   }
 }
 
@@ -138,7 +141,7 @@ export async function clearCacheWithPrefix(prefix: string): Promise<void> {
     if (keys.length === 0) return;
     await redis.del(...keys);
   } catch (error) {
-    console.error('Cache clear error:', error);
+    console.error("Cache clear error:", error);
   }
 }
 
@@ -149,22 +152,22 @@ export async function checkRedisConnection(): Promise<{
   error?: string;
 }> {
   // Skip health check during static build
-  if (process.env.NEXT_PHASE === 'phase-production-build') {
+  if (process.env.NEXT_PHASE === "phase-production-build") {
     return {
       ok: true,
-      latency: 0
+      latency: 0,
     };
   }
 
   const start = Date.now();
-  
+
   try {
     // Test basic operations
-    const testKey = formatCacheKey(CACHE_KEYS.HEALTH, 'test');
-    await redis.set(testKey, 'health-check');
+    const testKey = formatCacheKey(CACHE_KEYS.HEALTH, "test");
+    await redis.set(testKey, "health-check");
     await redis.get(testKey);
     await redis.del(testKey);
-    
+
     return {
       ok: true,
       latency: Date.now() - start,
@@ -173,7 +176,7 @@ export async function checkRedisConnection(): Promise<{
     return {
       ok: false,
       latency: Date.now() - start,
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: error instanceof Error ? error.message : "Unknown error",
     };
   }
 }
@@ -181,14 +184,14 @@ export async function checkRedisConnection(): Promise<{
 // Test Redis features
 export async function testRedisFeatures() {
   // Skip Redis tests during static build
-  if (process.env.NEXT_PHASE === 'phase-production-build') {
+  if (process.env.NEXT_PHASE === "phase-production-build") {
     return {
       ok: true,
       results: {
         notifications: { ok: true },
         caching: { ok: true },
-        rateLimiting: { ok: true }
-      }
+        rateLimiting: { ok: true },
+      },
     };
   }
 
@@ -200,30 +203,29 @@ export async function testRedisFeatures() {
 
   try {
     // Test caching
-    const testKey = formatCacheKey(CACHE_KEYS.HEALTH, 'feature-test');
+    const testKey = formatCacheKey(CACHE_KEYS.HEALTH, "feature-test");
     await redis.set(testKey, { test: true });
     const cached = await redis.get(testKey);
     await redis.del(testKey);
-    
+
     if (!cached) {
       results.caching.ok = false;
     }
 
     // Test rate limiting
-    const rateKey = formatCacheKey(CACHE_KEYS.RATE_LIMIT, 'feature-test');
+    const rateKey = formatCacheKey(CACHE_KEYS.RATE_LIMIT, "feature-test");
     await rateLimiting.increment(rateKey, 60);
     const count = await rateLimiting.get(rateKey);
     await rateLimiting.reset(rateKey);
-    
+
     if (count !== 1) {
       results.rateLimiting.ok = false;
     }
-
   } catch (error) {
-    console.error('Redis feature test error:', error);
+    console.error("Redis feature test error:", error);
     return {
       ok: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: error instanceof Error ? error.message : "Unknown error",
       results,
     };
   }
@@ -238,15 +240,13 @@ export async function testRedisFeatures() {
 export async function warmCache<T>(
   keys: string[],
   getData: (key: string) => Promise<T>,
-  options: CacheOptions = {}
+  options: CacheOptions = {},
 ): Promise<void> {
   try {
-    const promises = keys.map(key => 
-      cache(key, () => getData(key), options)
-    );
+    const promises = keys.map((key) => cache(key, () => getData(key), options));
     await Promise.all(promises);
   } catch (error) {
-    console.error('Cache warming error:', error);
+    console.error("Cache warming error:", error);
   }
 }
 
@@ -256,12 +256,12 @@ export const sessionCache = {
     const key = formatCacheKey(CACHE_KEYS.SESSION, token);
     await redis.set(key, session, { ex: TTL.LONG });
   },
-  
+
   async get(token: string): Promise<any> {
     const key = formatCacheKey(CACHE_KEYS.SESSION, token);
     return redis.get(key);
   },
-  
+
   async delete(token: string): Promise<void> {
     const key = formatCacheKey(CACHE_KEYS.SESSION, token);
     await redis.del(key);
@@ -278,15 +278,15 @@ export const rateLimiting = {
     }
     return count;
   },
-  
+
   async get(key: string): Promise<number> {
     const rateKey = formatCacheKey(CACHE_KEYS.RATE_LIMIT, key);
     const value = await redis.get<string>(rateKey);
-    return parseInt(value ?? '0', 10);
+    return parseInt(value ?? "0", 10);
   },
-  
+
   async reset(key: string): Promise<void> {
     const rateKey = formatCacheKey(CACHE_KEYS.RATE_LIMIT, key);
     await redis.del(rateKey);
   },
-}; 
+};

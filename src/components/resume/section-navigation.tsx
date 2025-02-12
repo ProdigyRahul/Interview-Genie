@@ -62,13 +62,13 @@ export function SectionNavigation({
         </motion.div>
       )}
 
-      <div className="flex justify-between items-center pt-4 border-t">
+      <div className="flex items-center justify-between border-t pt-4">
         {previousTab ? (
           <Button
             variant="ghost"
             onClick={() => onTabChange(previousTab)}
             disabled={isSaving}
-            className="gap-2 text-muted-foreground hover:text-foreground transition-colors"
+            className="gap-2 text-muted-foreground transition-colors hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" />
             Previous
@@ -80,10 +80,10 @@ export function SectionNavigation({
         {nextTab && (
           <Button
             className={cn(
-              "relative group transition-all duration-300 ease-out hover:pl-4 hover:pr-6",
+              "group relative transition-all duration-300 ease-out hover:pl-4 hover:pr-6",
               "bg-gradient-to-r from-primary to-primary/90",
               "text-primary-foreground shadow-lg hover:shadow-primary/25",
-              "disabled:from-gray-400 disabled:to-gray-400/90"
+              "disabled:from-gray-400 disabled:to-gray-400/90",
             )}
             onClick={handleNext}
             disabled={!isValid || isSaving}
@@ -97,14 +97,14 @@ export function SectionNavigation({
               ) : (
                 <>
                   <span>Next</span>
-                  <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </>
               )}
             </div>
-            <div className="absolute inset-0 rounded-md p-[1px] bg-gradient-to-r from-primary/50 to-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="absolute inset-0 rounded-md bg-gradient-to-r from-primary/50 to-primary p-[1px] opacity-0 transition-opacity group-hover:opacity-100" />
           </Button>
         )}
       </div>
     </div>
   );
-} 
+}

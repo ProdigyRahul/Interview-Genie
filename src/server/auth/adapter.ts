@@ -96,4 +96,4 @@ export function CustomPrismaAdapter(p: PrismaClient): Adapter {
       return account.user as AdapterUser;
     },
   };
-} 
+}

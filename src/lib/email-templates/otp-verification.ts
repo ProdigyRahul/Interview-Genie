@@ -77,4 +77,4 @@ export function generateOTPEmail(userName: string, otp: string): string {
     </body>
     </html>
   `;
-} 
+}

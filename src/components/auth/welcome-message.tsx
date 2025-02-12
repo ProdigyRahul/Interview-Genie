@@ -5,7 +5,11 @@ const loginMessage = `Welcome back, let's continue your interview prep journey.`
 
 const signupMessage = `Ready to ace your next interview? Let's get started.`;
 
-export function WelcomeMessage({ type = "login" }: { type?: "login" | "signup" }) {
+export function WelcomeMessage({
+  type = "login",
+}: {
+  type?: "login" | "signup";
+}) {
   return (
     <TextGenerateEffect
       words={type === "login" ? loginMessage : signupMessage}
@@ -14,4 +18,4 @@ export function WelcomeMessage({ type = "login" }: { type?: "login" | "signup" }
       filter={false}
     />
   );
-} 
+}

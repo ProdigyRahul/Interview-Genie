@@ -79,7 +79,7 @@ const summarySchema = z.object({
 // GET endpoint to fetch resume data
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   try {
     const session = await auth();
@@ -113,7 +113,7 @@ export async function GET(
     console.error("Error fetching resume:", error);
     return NextResponse.json(
       { error: "Failed to fetch resume" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -121,7 +121,7 @@ export async function GET(
 // PATCH endpoint to update resume data
 export async function PATCH(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   try {
     const session = await auth();
@@ -148,7 +148,7 @@ export async function PATCH(
         await prisma.$transaction([
           prisma.experience.deleteMany({ where: { resumeId: params.id } }),
           prisma.experience.createMany({
-            data: validatedData.map(exp => ({ ...exp, resumeId: params.id })),
+            data: validatedData.map((exp) => ({ ...exp, resumeId: params.id })),
           }),
         ]);
         break;
@@ -158,7 +158,10 @@ export async function PATCH(
         await prisma.$transaction([
           prisma.project.deleteMany({ where: { resumeId: params.id } }),
           prisma.project.createMany({
-            data: validatedData.map(proj => ({ ...proj, resumeId: params.id })),
+            data: validatedData.map((proj) => ({
+              ...proj,
+              resumeId: params.id,
+            })),
           }),
         ]);
         break;
@@ -168,7 +171,7 @@ export async function PATCH(
         await prisma.$transaction([
           prisma.education.deleteMany({ where: { resumeId: params.id } }),
           prisma.education.createMany({
-            data: validatedData.map(edu => ({ ...edu, resumeId: params.id })),
+            data: validatedData.map((edu) => ({ ...edu, resumeId: params.id })),
           }),
         ]);
         break;
@@ -178,7 +181,10 @@ export async function PATCH(
         await prisma.$transaction([
           prisma.certification.deleteMany({ where: { resumeId: params.id } }),
           prisma.certification.createMany({
-            data: validatedData.map(cert => ({ ...cert, resumeId: params.id })),
+            data: validatedData.map((cert) => ({
+              ...cert,
+              resumeId: params.id,
+            })),
           }),
         ]);
         break;
@@ -188,7 +194,7 @@ export async function PATCH(
         await prisma.$transaction([
           prisma.achievement.deleteMany({ where: { resumeId: params.id } }),
           prisma.achievement.createMany({
-            data: validatedData.map(ach => ({ ...ach, resumeId: params.id })),
+            data: validatedData.map((ach) => ({ ...ach, resumeId: params.id })),
           }),
         ]);
         break;
@@ -227,7 +233,7 @@ export async function PATCH(
 
 export async function DELETE(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   try {
     const session = await auth();
@@ -236,7 +242,7 @@ export async function DELETE(
     }
 
     const user = await prisma.user.findUnique({
-      where: { email: session.user.email }
+      where: { email: session.user.email },
     });
 
     if (!user) {
@@ -247,20 +253,20 @@ export async function DELETE(
     const resume = await prisma.resume.findFirst({
       where: {
         id: params.id,
-        userId: user.id
-      }
+        userId: user.id,
+      },
     });
 
     if (!resume) {
       return NextResponse.json(
         { error: "Resume not found or unauthorized" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
     // Delete the resume (cascade delete will handle relations)
     await prisma.resume.delete({
-      where: { id: params.id }
+      where: { id: params.id },
     });
 
     return NextResponse.json({ success: true });
@@ -268,7 +274,7 @@ export async function DELETE(
     console.error("Error deleting resume:", error);
     return NextResponse.json(
       { error: "Failed to delete resume" },
-      { status: 500 }
+      { status: 500 },
     );
   }
-} 
+}

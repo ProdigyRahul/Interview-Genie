@@ -23,7 +23,7 @@ export async function POST(req: Request): Promise<NextResponse> {
     if (!isAllowed) {
       return NextResponse.json(
         { error: "Too many attempts. Please try again later." },
-        { status: 429 }
+        { status: 429 },
       );
     }
 
@@ -41,7 +41,7 @@ export async function POST(req: Request): Promise<NextResponse> {
     if (!otpRecord) {
       return NextResponse.json(
         { error: "Invalid or expired OTP" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -63,32 +63,36 @@ export async function POST(req: Request): Promise<NextResponse> {
       // Invalidate user sessions
       await authCache.invalidateUserSessions(userId);
 
-      return NextResponse.json({ 
+      return NextResponse.json({
         success: true,
-        message: "Email verified successfully" 
+        message: "Email verified successfully",
       });
-
     } catch (dbError) {
       console.error("Database operation failed:", dbError);
       return NextResponse.json(
         { error: "Failed to update verification status" },
-        { status: 500 }
+        { status: 500 },
+      );
+    }
+  } catch (error) {
+    console.error("OTP verification error:", error);
+
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        {
+          error: "Invalid input data",
+          details: error.errors,
+        },
+        { status: 400 },
       );
     }
 
-  } catch (error) {
-    console.error("OTP verification error:", error);
-    
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ 
-        error: "Invalid input data",
-        details: error.errors 
-      }, { status: 400 });
-    }
-
-    return NextResponse.json({ 
-      error: "Failed to verify OTP",
-      message: error instanceof Error ? error.message : "Unknown error"
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: "Failed to verify OTP",
+        message: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 },
+    );
   }
-} 
+}

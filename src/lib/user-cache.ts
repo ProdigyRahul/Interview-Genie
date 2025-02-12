@@ -22,9 +22,12 @@ const getUserCacheKey = (params: { id?: string; email?: string }) => {
 };
 
 // Get user with caching
-export async function getUser(params: { id?: string; email?: string }): Promise<CachedUser | null> {
+export async function getUser(params: {
+  id?: string;
+  email?: string;
+}): Promise<CachedUser | null> {
   const cacheKey = getUserCacheKey(params);
-  
+
   // Try to get from cache first
   const cached = await redis.get<CachedUser>(cacheKey);
   if (cached) return cached;
@@ -47,44 +50,43 @@ export async function getUser(params: { id?: string; email?: string }): Promise<
 
   // Cache the result
   await redis.set(cacheKey, user, { ex: CACHE_TTL.MEDIUM });
-  
+
   // Also cache by the other key if we have both id and email
   if (params.id && user.email) {
-    await redis.set(
-      getUserCacheKey({ email: user.email }), 
-      user, 
-      { ex: CACHE_TTL.MEDIUM }
-    );
+    await redis.set(getUserCacheKey({ email: user.email }), user, {
+      ex: CACHE_TTL.MEDIUM,
+    });
   } else if (params.email && user.id) {
-    await redis.set(
-      getUserCacheKey({ id: user.id }), 
-      user, 
-      { ex: CACHE_TTL.MEDIUM }
-    );
+    await redis.set(getUserCacheKey({ id: user.id }), user, {
+      ex: CACHE_TTL.MEDIUM,
+    });
   }
 
   return user;
 }
 
 // Invalidate user cache
-export async function invalidateUserCache(params: { id?: string; email?: string }) {
+export async function invalidateUserCache(params: {
+  id?: string;
+  email?: string;
+}) {
   const promises: Promise<any>[] = [];
-  
+
   if (params.id) {
     promises.push(redis.del(getUserCacheKey({ id: params.id })));
   }
-  
+
   if (params.email) {
     promises.push(redis.del(getUserCacheKey({ email: params.email })));
   }
-  
+
   await Promise.all(promises);
 }
 
 // Update user with cache invalidation
 export async function updateUser(
   where: { id: string } | { email: string },
-  data: Partial<User>
+  data: Partial<User>,
 ) {
   const user = await db.user.update({
     where,
@@ -98,4 +100,4 @@ export async function updateUser(
   });
 
   return user;
-} 
+}

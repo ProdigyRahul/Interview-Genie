@@ -4,4 +4,4 @@ export default function NewInterviewPage() {
       <h1 className="text-3xl font-bold">Start New Interview</h1>
     </div>
   );
-} 
+}

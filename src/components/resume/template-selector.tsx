@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState } from "react";
 import { TemplateType } from "@/lib/types/resume";
 import { TemplatePreview } from "./template-preview";
 import { TemplatePreviewDialog } from "./template-preview-dialog";
@@ -9,10 +9,16 @@ interface TemplateSelectorProps {
   className?: string;
 }
 
-const availableTemplates: TemplateType[] = ['modern', 'classic', 'minimalist'];
+const availableTemplates: TemplateType[] = ["modern", "classic", "minimalist"];
 
-export function TemplateSelector({ selectedTemplate, onTemplateChange, className }: TemplateSelectorProps) {
-  const [previewTemplate, setPreviewTemplate] = useState<TemplateType | null>(null);
+export function TemplateSelector({
+  selectedTemplate,
+  onTemplateChange,
+  className,
+}: TemplateSelectorProps) {
+  const [previewTemplate, setPreviewTemplate] = useState<TemplateType | null>(
+    null,
+  );
 
   const handlePreview = (template: TemplateType) => {
     setPreviewTemplate(template);
@@ -24,7 +30,7 @@ export function TemplateSelector({ selectedTemplate, onTemplateChange, className
 
   return (
     <div className={className}>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         {availableTemplates.map((template) => (
           <TemplatePreview
             key={template}
@@ -45,4 +51,4 @@ export function TemplateSelector({ selectedTemplate, onTemplateChange, className
       )}
     </div>
   );
-} 
+}

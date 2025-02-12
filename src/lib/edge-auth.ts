@@ -25,7 +25,9 @@ export async function withAuth(handler: (userId: string) => Promise<Response>) {
   }
 }
 
-export async function withOptionalAuth(handler: (userId: string | null) => Promise<Response>) {
+export async function withOptionalAuth(
+  handler: (userId: string | null) => Promise<Response>,
+) {
   try {
     const session = await auth();
     const userId = session?.user?.id ?? null;
@@ -34,4 +36,4 @@ export async function withOptionalAuth(handler: (userId: string | null) => Promi
     console.error("Auth error:", error);
     return edgeError("Internal server error", 500);
   }
-} 
+}

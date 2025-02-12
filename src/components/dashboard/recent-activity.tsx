@@ -1,7 +1,17 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Trophy, Video, FileText, Target, Clock, Star, Sparkles, Medal, Award } from "lucide-react";
+import {
+  Trophy,
+  Video,
+  FileText,
+  Target,
+  Clock,
+  Star,
+  Sparkles,
+  Medal,
+  Award,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 
@@ -83,7 +93,7 @@ export function RecentActivity({ className }: RecentActivityProps) {
         <CardTitle className="flex items-center justify-between">
           <span>Recent Activity</span>
           <Badge variant="secondary" className="font-normal">
-            <Trophy className="h-3 w-3 mr-1" />
+            <Trophy className="mr-1 h-3 w-3" />
             Level 5
           </Badge>
         </CardTitle>
@@ -97,8 +107,8 @@ export function RecentActivity({ className }: RecentActivityProps) {
             >
               <div
                 className={cn(
-                  "rounded-full p-2 bg-background transition-transform group-hover:scale-110",
-                  activity.color
+                  "rounded-full bg-background p-2 transition-transform group-hover:scale-110",
+                  activity.color,
                 )}
               >
                 <activity.icon className="h-4 w-4" />
@@ -111,13 +121,15 @@ export function RecentActivity({ className }: RecentActivityProps) {
                   <div className="flex items-center gap-2">
                     {activity.score && (
                       <div className="flex items-center text-yellow-500 animate-in slide-in-from-right-5">
-                        <Star className="h-3 w-3 mr-1 fill-current" />
-                        <span className="text-xs font-medium">{activity.score}</span>
+                        <Star className="mr-1 h-3 w-3 fill-current" />
+                        <span className="text-xs font-medium">
+                          {activity.score}
+                        </span>
                       </div>
                     )}
                     {activity.duration && (
                       <div className="flex items-center text-muted-foreground">
-                        <Clock className="h-3 w-3 mr-1" />
+                        <Clock className="mr-1 h-3 w-3" />
                         <span className="text-xs">{activity.duration}</span>
                       </div>
                     )}
@@ -131,22 +143,22 @@ export function RecentActivity({ className }: RecentActivityProps) {
                     {activity.timestamp}
                   </p>
                   {activity.rewards && (
-                    <div className="hidden group-hover:flex items-center gap-2 text-xs text-primary animate-in slide-in-from-right-5">
+                    <div className="hidden items-center gap-2 text-xs text-primary animate-in slide-in-from-right-5 group-hover:flex">
                       {activity.rewards.xp && (
                         <Badge variant="outline" className="h-5 px-1">
-                          <Sparkles className="h-3 w-3 mr-1" />
-                          +{activity.rewards.xp} XP
+                          <Sparkles className="mr-1 h-3 w-3" />+
+                          {activity.rewards.xp} XP
                         </Badge>
                       )}
                       {activity.rewards.credits && (
                         <Badge variant="outline" className="h-5 px-1">
-                          <Award className="h-3 w-3 mr-1" />
-                          +{activity.rewards.credits} Credits
+                          <Award className="mr-1 h-3 w-3" />+
+                          {activity.rewards.credits} Credits
                         </Badge>
                       )}
                       {activity.rewards.badge && (
                         <Badge variant="outline" className="h-5 px-1">
-                          <Medal className="h-3 w-3 mr-1" />
+                          <Medal className="mr-1 h-3 w-3" />
                           {activity.rewards.badge}
                         </Badge>
                       )}
@@ -154,7 +166,7 @@ export function RecentActivity({ className }: RecentActivityProps) {
                   )}
                 </div>
                 {(activity.feedback ?? activity.milestone) && (
-                  <div className="mt-2 text-xs text-primary hidden group-hover:block animate-in fade-in-0">
+                  <div className="mt-2 hidden text-xs text-primary animate-in fade-in-0 group-hover:block">
                     {activity.feedback && (
                       <div className="flex items-center gap-1">
                         <Star className="h-3 w-3" />
@@ -176,4 +188,4 @@ export function RecentActivity({ className }: RecentActivityProps) {
       </CardContent>
     </Card>
   );
-} 
+}

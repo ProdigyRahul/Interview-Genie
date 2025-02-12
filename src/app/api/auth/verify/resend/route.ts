@@ -10,7 +10,11 @@ const schema = z.object({
 });
 
 // Helper function to send OTP email
-async function sendOTPEmail(email: string, name: string, otp: string): Promise<boolean> {
+async function sendOTPEmail(
+  email: string,
+  name: string,
+  otp: string,
+): Promise<boolean> {
   try {
     const result = await sendEmail({
       to: email,
@@ -33,21 +37,22 @@ async function sendOTPEmail(email: string, name: string, otp: string): Promise<b
 export async function POST(req: Request) {
   try {
     // Rate limiting: 3 attempts per 5 minutes per IP
-    const ip = req.headers.get("x-forwarded-for") ?? 
-      req.headers.get("x-real-ip") ?? 
+    const ip =
+      req.headers.get("x-forwarded-for") ??
+      req.headers.get("x-real-ip") ??
       "127.0.0.1";
-    
+
     const rateLimitKey = `resend-otp:${ip}`;
     const isAllowed = await authCache.checkRateLimit(rateLimitKey, 3, 300);
-    
+
     if (!isAllowed) {
       const remainingTime = await authCache.getRemainingAttempts(rateLimitKey);
       return NextResponse.json(
-        { 
+        {
           error: "Too many attempts",
-          remainingSeconds: Math.ceil(remainingTime / 60)
+          remainingSeconds: Math.ceil(remainingTime / 60),
         },
-        { status: 429 }
+        { status: 429 },
       );
     }
 
@@ -62,23 +67,20 @@ export async function POST(req: Request) {
         name: true,
         isVerified: true,
         otpVerifications: {
-          orderBy: { createdAt: 'desc' },
+          orderBy: { createdAt: "desc" },
           take: 1,
         },
       },
     });
 
     if (!user) {
-      return NextResponse.json(
-        { error: "User not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     if (user.isVerified) {
       return NextResponse.json(
         { error: "Email is already verified" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -86,13 +88,14 @@ export async function POST(req: Request) {
     const lastOTP = user.otpVerifications[0];
     if (lastOTP) {
       const timeSinceLastOTP = Date.now() - lastOTP.createdAt.getTime();
-      if (timeSinceLastOTP < 60000) { // 60 seconds cooldown
+      if (timeSinceLastOTP < 60000) {
+        // 60 seconds cooldown
         return NextResponse.json(
-          { 
+          {
             error: "Please wait before requesting another code",
-            remainingSeconds: Math.ceil((60000 - timeSinceLastOTP) / 1000)
+            remainingSeconds: Math.ceil((60000 - timeSinceLastOTP) / 1000),
           },
-          { status: 429 }
+          { status: 429 },
         );
       }
     }
@@ -123,7 +126,7 @@ export async function POST(req: Request) {
       if (!emailSent) {
         return NextResponse.json(
           { error: "Failed to send verification code" },
-          { status: 500 }
+          { status: 500 },
         );
       }
     } else {
@@ -135,20 +138,19 @@ export async function POST(req: Request) {
       success: true,
       message: "New verification code sent",
     });
-
   } catch (error) {
     console.error("Resend OTP error:", error);
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: "Invalid email address" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     return NextResponse.json(
       { error: "Failed to resend verification code" },
-      { status: 500 }
+      { status: 500 },
     );
   }
-} 
+}

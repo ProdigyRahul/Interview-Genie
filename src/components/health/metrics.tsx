@@ -1,31 +1,44 @@
-'use client';
+"use client";
 
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 
 export function HealthMetrics() {
-  const [data, setData] = useState<Array<{ timestamp: string; latency: number }>>([]);
+  const [data, setData] = useState<
+    Array<{ timestamp: string; latency: number }>
+  >([]);
 
   useEffect(() => {
     let mounted = true;
 
     const fetchData = async () => {
       try {
-        const res = await fetch('/api/health');
+        const res = await fetch("/api/health");
         const health = await res.json();
-        
+
         if (!mounted) return;
-        
-        setData(prev => {
-          const newData = [...prev, {
-            timestamp: new Date().toLocaleTimeString(),
-            latency: health.latency ?? 0
-          }].slice(-30); // Keep last 30 data points
+
+        setData((prev) => {
+          const newData = [
+            ...prev,
+            {
+              timestamp: new Date().toLocaleTimeString(),
+              latency: health.latency ?? 0,
+            },
+          ].slice(-30); // Keep last 30 data points
           return newData;
         });
       } catch (error) {
-        console.error('Failed to fetch health data:', error);
+        console.error("Failed to fetch health data:", error);
       }
     };
 
@@ -64,4 +77,4 @@ export function HealthMetrics() {
       </CardContent>
     </Card>
   );
-} 
+}

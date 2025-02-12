@@ -1,100 +1,100 @@
-import { Text, View, StyleSheet, Page } from '@react-pdf/renderer';
-import { ResumeData } from '@/lib/types/resume';
+import { Text, View, StyleSheet, Page } from "@react-pdf/renderer";
+import { ResumeData } from "@/lib/types/resume";
 
 // Create styles
 const styles = StyleSheet.create({
   page: {
     padding: 30,
-    fontFamily: 'Helvetica',
-    color: '#000000',
-    backgroundColor: '#ffffff',
+    fontFamily: "Helvetica",
+    color: "#000000",
+    backgroundColor: "#ffffff",
   },
   header: {
     marginBottom: 20,
-    backgroundColor: '#ffffff',
+    backgroundColor: "#ffffff",
   },
   name: {
     fontSize: 24,
-    fontFamily: 'Helvetica-Bold',
-    color: '#000000',
+    fontFamily: "Helvetica-Bold",
+    color: "#000000",
     marginBottom: 4,
   },
   jobTitle: {
     fontSize: 16,
-    color: '#000000',
+    color: "#000000",
     opacity: 0.8,
     marginBottom: 8,
   },
   contactInfo: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 8,
     fontSize: 10,
-    color: '#000000',
+    color: "#000000",
   },
   section: {
     marginBottom: 15,
-    backgroundColor: '#ffffff',
+    backgroundColor: "#ffffff",
   },
   sectionTitle: {
     fontSize: 16,
-    fontFamily: 'Helvetica-Bold',
-    color: '#000000',
+    fontFamily: "Helvetica-Bold",
+    color: "#000000",
     borderBottomWidth: 1,
-    borderBottomColor: '#000000',
-    borderBottomStyle: 'solid',
+    borderBottomColor: "#000000",
+    borderBottomStyle: "solid",
     paddingBottom: 4,
     marginBottom: 8,
   },
   itemHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 4,
   },
   itemTitle: {
     fontSize: 12,
-    fontFamily: 'Helvetica-Bold',
-    color: '#000000',
+    fontFamily: "Helvetica-Bold",
+    color: "#000000",
   },
   itemDate: {
     fontSize: 10,
-    color: '#333333',
+    color: "#333333",
   },
   itemSubtitle: {
     fontSize: 10,
-    fontFamily: 'Helvetica-Oblique',
+    fontFamily: "Helvetica-Oblique",
     marginBottom: 4,
-    color: '#000000',
+    color: "#000000",
   },
   text: {
     fontSize: 10,
     lineHeight: 1.4,
     marginBottom: 4,
-    color: '#000000',
+    color: "#000000",
   },
   technologies: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 4,
     marginTop: 4,
   },
   tech: {
     fontSize: 9,
-    color: '#333333',
+    color: "#333333",
     marginTop: 4,
   },
   link: {
     fontSize: 10,
-    color: '#000000',
-    textDecoration: 'underline',
+    color: "#000000",
+    textDecoration: "underline",
     marginTop: 2,
   },
   bullet: {
     fontSize: 10,
-    color: '#000000',
+    color: "#000000",
     marginHorizontal: 4,
-  }
+  },
 });
 
 interface ModernPDFTemplateProps {
@@ -157,7 +157,8 @@ interface ModernPDFTemplateProps {
 
 export function ModernPDFTemplate({ data }: ModernPDFTemplateProps) {
   // Helper function to check if a section has content
-  const hasContent = (arr: any[] | undefined) => Array.isArray(arr) && arr.length > 0;
+  const hasContent = (arr: any[] | undefined) =>
+    Array.isArray(arr) && arr.length > 0;
 
   return (
     <Page size="A4" style={styles.page}>
@@ -197,9 +198,7 @@ export function ModernPDFTemplate({ data }: ModernPDFTemplateProps) {
               <Text style={styles.itemSubtitle}>{exp.jobTitle}</Text>
               <Text style={styles.text}>{exp.description}</Text>
               {hasContent(exp.technologies) && (
-                <Text style={styles.tech}>
-                  {exp.technologies.join(" • ")}
-                </Text>
+                <Text style={styles.tech}>{exp.technologies.join(" • ")}</Text>
               )}
             </View>
           ))}
@@ -236,19 +235,21 @@ export function ModernPDFTemplate({ data }: ModernPDFTemplateProps) {
           <Text style={styles.sectionTitle}>Skills</Text>
           {hasContent(data.skills.technical) && (
             <Text style={styles.text}>
-              <Text style={{ fontFamily: 'Helvetica-Bold' }}>Technical: </Text>
+              <Text style={{ fontFamily: "Helvetica-Bold" }}>Technical: </Text>
               {data.skills.technical.join(" • ")}
             </Text>
           )}
           {hasContent(data.skills.soft) && (
             <Text style={styles.text}>
-              <Text style={{ fontFamily: 'Helvetica-Bold' }}>Soft Skills: </Text>
+              <Text style={{ fontFamily: "Helvetica-Bold" }}>
+                Soft Skills:{" "}
+              </Text>
               {data.skills.soft.join(" • ")}
             </Text>
           )}
           {hasContent(data.skills.tools) && (
             <Text style={styles.text}>
-              <Text style={{ fontFamily: 'Helvetica-Bold' }}>Tools: </Text>
+              <Text style={{ fontFamily: "Helvetica-Bold" }}>Tools: </Text>
               {data.skills.tools.join(" • ")}
             </Text>
           )}
@@ -314,4 +315,4 @@ export function ModernPDFTemplate({ data }: ModernPDFTemplateProps) {
       )}
     </Page>
   );
-} 
+}

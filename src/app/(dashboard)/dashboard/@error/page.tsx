@@ -47,4 +47,4 @@ export default function DashboardError() {
       </Alert>
     </DashboardShell>
   );
-} 
+}
