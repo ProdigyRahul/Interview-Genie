@@ -167,16 +167,16 @@ export const authConfig = {
       return session;
     },
     async redirect({ url, baseUrl }) {
-      // Handle relative URLs
+      // If the url is relative, prefix it with the base URL
       if (url.startsWith("/")) {
         return `${baseUrl}${url}`;
       }
-      // Handle same origin URLs
-      if (new URL(url).origin === baseUrl) {
+      // If the url is already absolute but on the same origin, allow it
+      else if (new URL(url).origin === baseUrl) {
         return url;
       }
-      // Default to base URL
-      return baseUrl;
+      // Default to redirecting to the dashboard for new users
+      return `${baseUrl}/dashboard`;
     },
   },
   events: {
