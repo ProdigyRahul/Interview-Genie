@@ -236,20 +236,20 @@ model OTPVerification {
 }
 
 model ResumeAnalysis {
-  id                String   @id @default(cuid())
-  userId           String
-  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  originalFilename String
-  fileUrl          String
-  totalScore       Int
-  sectionScores    Json     // Store section scores as JSON
-  improvements     Json     // Store improvement suggestions as JSON
-  detailedBreakdown Json    // Store detailed breakdown as JSON
-  keywordMatchRate String?  // Store keyword match rate
-  missingKeywords  Json?    // Store missing keywords as JSON array
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id                    String   @id @default(cuid())
+  userId                String
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  originalFilename      String
+  fileUrl               String
+  totalScore           Int
+  sectionScores        Json     // { format: number, content: number, language: number, competencies: number, keywords: number }
+  detailedBreakdown    Json     // { format_analysis: {...}, content_analysis: {...}, language_analysis: {...}, competencies_analysis: {...} }
+  keywordMatchRate     String
+  missingKeywords      String[]
+  improvementSuggestions Json    // { high_priority: string[], content: [...], format: [...], language: [...], keywords: string[] }
+  improvementDetails    Json     // { bullet_points: [...], achievements: [...], skills: [...] }
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 
   @@index([userId])
-  @@index([createdAt])
 }

@@ -910,21 +910,6 @@ export default function ResumeEditorPage() {
     await saveSection("summary", { content: formData.summary });
   };
 
-  // Get save handler for current section
-  const getSaveHandler = (section: string) => {
-    const handlers: Record<string, () => Promise<void>> = {
-      personal: handleSavePersonal,
-      experience: handleSaveExperience,
-      projects: handleSaveProjects,
-      education: handleSaveEducation,
-      certifications: handleSaveCertifications,
-      achievements: handleSaveAchievements,
-      skills: handleSaveSkills,
-      summary: handleSaveSummary,
-    };
-    return handlers[section];
-  };
-
   // Check if current section is valid
   const isCurrentSectionValid = () => {
     console.log("Checking if current section is valid:", activeTab);
@@ -932,7 +917,7 @@ export default function ResumeEditorPage() {
       case "personal":
         // Map form field names to validation field names
         const personalData = {
-          fullName: formData.name,
+          fullName: formData.name,  
           jobTitle: formData.jobTitle,
           email: formData.email,
           phone: formData.phone,
@@ -1372,7 +1357,7 @@ export default function ResumeEditorPage() {
                             <Input
                               placeholder="Company Name"
                               value={
-                                formData.experiences[exp.id]?.companyName || ""
+                                formData.experiences[exp.id]?.companyName ?? ""
                               }
                               onChange={(e) =>
                                 handleInputChange(
@@ -1389,7 +1374,7 @@ export default function ResumeEditorPage() {
                             <Input
                               placeholder="Senior Software Engineer"
                               value={
-                                formData.experiences[exp.id]?.jobTitle || ""
+                                formData.experiences[exp.id]?.jobTitle ?? ""
                               }
                               onChange={(e) =>
                                 handleInputChange(
@@ -1406,7 +1391,7 @@ export default function ResumeEditorPage() {
                             <Input
                               type="date"
                               value={
-                                formData.experiences[exp.id]?.startDate || ""
+                                formData.experiences[exp.id]?.startDate ?? ""
                               }
                               onChange={(e) =>
                                 handleInputChange(
@@ -1423,7 +1408,7 @@ export default function ResumeEditorPage() {
                             <Input
                               type="date"
                               value={
-                                formData.experiences[exp.id]?.endDate || ""
+                                formData.experiences[exp.id]?.endDate ?? ""
                               }
                               onChange={(e) =>
                                 handleInputChange(
@@ -1441,8 +1426,7 @@ export default function ResumeEditorPage() {
                               <Textarea
                                 placeholder="Describe your role and achievements..."
                                 value={
-                                  formData.experiences[exp.id]?.description ||
-                                  ""
+                                  formData.experiences[exp.id]?.description ?? ""
                                 }
                                 onChange={(e) =>
                                   handleInputChange(
@@ -1473,7 +1457,7 @@ export default function ResumeEditorPage() {
                             <Label>Technologies Used</Label>
                             <SkillsInput
                               value={
-                                formData.experiences[exp.id]?.technologies || []
+                                formData.experiences[exp.id]?.technologies ?? []
                               }
                               onChange={(techs) =>
                                 handleInputChange(
@@ -1502,7 +1486,7 @@ export default function ResumeEditorPage() {
                   <SectionNavigation
                     currentTab="experience"
                     onTabChange={setActiveTab}
-                    isValid={isCurrentSectionValid()}
+                    isValid={isCurrentSectionValid()} 
                     isSaving={isSaving}
                     onSave={handleSaveExperience}
                     validationErrors={validationErrors}
@@ -1523,7 +1507,7 @@ export default function ResumeEditorPage() {
                             <Label>Project Name</Label>
                             <Input
                               placeholder="Project Name"
-                              value={formData.projects[project.id]?.name || ""}
+                              value={formData.projects[project.id]?.name ?? ""}
                               onChange={(e) =>
                                 handleInputChange(
                                   "projects",
@@ -1539,7 +1523,7 @@ export default function ResumeEditorPage() {
                             <Input
                               type="url"
                               placeholder="https://..."
-                              value={formData.projects[project.id]?.url || ""}
+                              value={formData.projects[project.id]?.url ?? ""}
                               onChange={(e) =>
                                 handleInputChange(
                                   "projects",
@@ -1555,7 +1539,7 @@ export default function ResumeEditorPage() {
                             <Input
                               type="date"
                               value={
-                                formData.projects[project.id]?.startDate || ""
+                                formData.projects[project.id]?.startDate ?? ""
                               }
                               onChange={(e) =>
                                 handleInputChange(
@@ -1572,7 +1556,7 @@ export default function ResumeEditorPage() {
                             <Input
                               type="date"
                               value={
-                                formData.projects[project.id]?.endDate || ""
+                                formData.projects[project.id]?.endDate ?? ""
                               }
                               onChange={(e) =>
                                 handleInputChange(
@@ -1590,8 +1574,7 @@ export default function ResumeEditorPage() {
                               <Textarea
                                 placeholder="Describe the project and your role..."
                                 value={
-                                  formData.projects[project.id]?.description ||
-                                  ""
+                                  formData.projects[project.id]?.description ?? ""
                                 }
                                 onChange={(e) =>
                                   handleInputChange(
@@ -1622,8 +1605,7 @@ export default function ResumeEditorPage() {
                             <Label>Technologies Used</Label>
                             <SkillsInput
                               value={
-                                formData.projects[project.id]?.technologies ||
-                                []
+                                formData.projects[project.id]?.technologies ?? []
                               }
                               onChange={(techs) =>
                                 handleInputChange(
@@ -1673,7 +1655,7 @@ export default function ResumeEditorPage() {
                             <Label>School/University</Label>
                             <Input
                               placeholder="Institution Name"
-                              value={formData.education[edu.id]?.school || ""}
+                              value={formData.education[edu.id]?.school ?? ""}
                               onChange={(e) =>
                                 handleInputChange(
                                   "education",
@@ -1688,7 +1670,7 @@ export default function ResumeEditorPage() {
                             <Label>Degree</Label>
                             <select
                               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                              value={formData.education[edu.id]?.degree || ""}
+                              value={formData.education[edu.id]?.degree ?? ""}
                               onChange={(e) =>
                                 handleInputChange(
                                   "education",
@@ -1711,7 +1693,7 @@ export default function ResumeEditorPage() {
                             <Input
                               placeholder="Computer Science"
                               value={
-                                formData.education[edu.id]?.fieldOfStudy || ""
+                                formData.education[edu.id]?.fieldOfStudy ?? ""
                               }
                               onChange={(e) =>
                                 handleInputChange(
@@ -1729,7 +1711,7 @@ export default function ResumeEditorPage() {
                               type="number"
                               step="0.01"
                               placeholder="3.8"
-                              value={formData.education[edu.id]?.gpa || ""}
+                              value={formData.education[edu.id]?.gpa ?? ""}
                               onChange={(e) =>
                                 handleInputChange(
                                   "education",
@@ -1745,10 +1727,10 @@ export default function ResumeEditorPage() {
                             <Input
                               type="date"
                               value={
-                                formData.education[edu.id]?.startDate || ""
+                                formData.education[edu.id]?.startDate ?? ""
                               }
                               onChange={(e) =>
-                                handleInputChange(
+                                handleInputChange(  
                                   "education",
                                   edu.id,
                                   "startDate",
@@ -1761,7 +1743,7 @@ export default function ResumeEditorPage() {
                             <Label>End Date</Label>
                             <Input
                               type="date"
-                              value={formData.education[edu.id]?.endDate || ""}
+                              value={formData.education[edu.id]?.endDate ?? ""}
                               onChange={(e) =>
                                 handleInputChange(
                                   "education",
@@ -1778,7 +1760,7 @@ export default function ResumeEditorPage() {
                               <Textarea
                                 placeholder="List your academic achievements..."
                                 value={
-                                  formData.education[edu.id]?.achievements || ""
+                                  formData.education[edu.id]?.achievements ?? ""
                                 }
                                 onChange={(e) =>
                                   handleInputChange(
@@ -1834,7 +1816,7 @@ export default function ResumeEditorPage() {
                   {renderSectionHeader(
                     "Certifications",
                     "Add your professional certifications",
-                  )}
+                  )}  
                   {certifications.map((cert) => (
                     <Card key={cert.id} className="space-y-4 p-4">
                       <div className="flex items-start justify-between">
@@ -1845,7 +1827,7 @@ export default function ResumeEditorPage() {
                               <Input
                                 placeholder="Certification Name"
                                 value={
-                                  formData.certifications[cert.id]?.name || ""
+                                  formData.certifications[cert.id]?.name ?? ""
                                 }
                                 onChange={(e) =>
                                   handleInputChange(
@@ -1888,8 +1870,7 @@ export default function ResumeEditorPage() {
                             <Input
                               placeholder="Organization Name"
                               value={
-                                formData.certifications[cert.id]?.issuingOrg ||
-                                ""
+                                formData.certifications[cert.id]?.issuingOrg ?? ""
                               }
                               onChange={(e) =>
                                 handleInputChange(
@@ -1906,8 +1887,7 @@ export default function ResumeEditorPage() {
                             <Input
                               type="date"
                               value={
-                                formData.certifications[cert.id]?.issueDate ||
-                                ""
+                                formData.certifications[cert.id]?.issueDate ?? ""
                               }
                               onChange={(e) =>
                                 handleInputChange(
@@ -1924,7 +1904,7 @@ export default function ResumeEditorPage() {
                             <Input
                               type="date"
                               value={
-                                formData.certifications[cert.id]?.expiryDate ||
+                                formData.certifications[cert.id]?.expiryDate ??
                                 ""
                               }
                               onChange={(e) =>
@@ -1942,8 +1922,7 @@ export default function ResumeEditorPage() {
                             <Input
                               placeholder="ABC123"
                               value={
-                                formData.certifications[cert.id]
-                                  ?.credentialId || ""
+                                formData.certifications[cert.id]?.credentialId ?? ""
                               }
                               onChange={(e) =>
                                 handleInputChange(
@@ -2012,8 +1991,7 @@ export default function ResumeEditorPage() {
                             <Input
                               placeholder="Achievement Title"
                               value={
-                                formData.achievements[achievement.id]?.title ||
-                                ""
+                                formData.achievements[achievement.id]?.title ?? ""
                               }
                               onChange={(e) =>
                                 handleInputChange(
@@ -2030,8 +2008,7 @@ export default function ResumeEditorPage() {
                             <Input
                               type="date"
                               value={
-                                formData.achievements[achievement.id]?.date ||
-                                ""
+                                formData.achievements[achievement.id]?.date ?? ""
                               }
                               onChange={(e) =>
                                 handleInputChange(
@@ -2050,7 +2027,7 @@ export default function ResumeEditorPage() {
                                 placeholder="Describe your achievement..."
                                 value={
                                   formData.achievements[achievement.id]
-                                    ?.description || ""
+                                    ?.description ?? ""
                                 }
                                 onChange={(e) =>
                                   handleInputChange(
