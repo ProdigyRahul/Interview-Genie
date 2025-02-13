@@ -214,41 +214,42 @@ export default function ResumeOptimizerPage() {
 
   const renderDetailedBreakdown = (
     title: string,
-    data: Record<string, number>,
+    data: Record<string, number> | {
+      length_depth_score: number;
+      bullet_usage_score: number;
+      bullet_length_score: number;
+      page_density_score: number;
+      formatting_score: number;
+    } | {
+      impact_score: number;
+      achievements_score: number;
+      relevance_score: number;
+      technical_depth_score: number;
+    } | {
+      verb_strength: number;
+      tense_consistency: number;
+      clarity: number;
+      spelling_grammar: number;
+      professional_tone: number;
+    } | {
+      leadership_initiative: number;
+      problem_solving: number;
+      collaboration: number;
+      results_orientation: number;
+    }
   ) => (
     <div className="space-y-4">
-      <h4 className="text-sm font-semibold">{title}</h4>
+      <h3 className="text-lg font-semibold">{title}</h3>
       <div className="space-y-3">
-        {Object.entries(data).map(([key, score]) => (
-          <div key={`${title}-${key}`} className="space-y-2">
+        {Object.entries(data).map(([key, value]) => (
+          <div key={key} className="space-y-2">
             <div className="flex items-center justify-between">
-              <p className="text-sm capitalize text-muted-foreground">
-                {key.replace(/_/g, " ")}
+              <p className="text-sm capitalize">
+                {key.replace(/_/g, " ").replace(/score$/, "")}
               </p>
-              <span
-                className={cn(
-                  "text-sm font-medium",
-                  score >= 80
-                    ? "text-green-500"
-                    : score >= 60
-                      ? "text-yellow-500"
-                      : "text-red-500",
-                )}
-              >
-                {score}/100
-              </span>
+              <p className="text-sm font-medium">{value}/5</p>
             </div>
-            <Progress
-              value={score}
-              className={cn(
-                "h-1.5",
-                score >= 80
-                  ? "bg-green-500"
-                  : score >= 60
-                    ? "bg-yellow-500"
-                    : "bg-red-500",
-              )}
-            />
+            <Progress value={value * 20} />
           </div>
         ))}
       </div>

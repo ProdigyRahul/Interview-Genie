@@ -36,17 +36,17 @@ export async function POST(request: Request) {
         detailedBreakdown: JSON.parse(JSON.stringify(data.ats_analysis.detailed_breakdown)),
         keywordMatchRate: data.ats_analysis.keyword_match_rate,
         missingKeywords: data.ats_analysis.missing_keywords || [],
-        improvements: JSON.parse(JSON.stringify({
+        improvementSuggestions: JSON.parse(JSON.stringify({
           high_priority: data.improvement_suggestions.high_priority,
           content: data.improvement_suggestions.content,
           format: data.improvement_suggestions.format,
           language: data.improvement_suggestions.language,
           keywords: data.improvement_suggestions.keywords,
-          details: {
-            bullet_points: data.improvement_details.bullet_points,
-            achievements: data.improvement_details.achievements,
-            skills: data.improvement_details.skills,
-          },
+        })),
+        improvementDetails: JSON.parse(JSON.stringify({
+          bullet_points: data.improvement_details.bullet_points,
+          achievements: data.improvement_details.achievements,
+          skills: data.improvement_details.skills,
         })),
       },
     });
