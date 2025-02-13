@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { TabId } from "@/lib/resume-tabs";
+import { type TabId } from "@/lib/resume-tabs";
 import { validateSection } from "@/lib/validations/resume";
 
 interface SaveResumeOptions {

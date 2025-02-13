@@ -23,12 +23,9 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
-import type { ResumeAnalysisResult } from "@/lib/gemini";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import { format } from "date-fns";
+import type { ResumeAnalysisResult, StoredResumeAnalysis } from "@/types/resume";
 
 const loadingStates = [
   { text: "Uploading your resume...", duration: 3000 },
@@ -51,101 +48,13 @@ const sections = [
   { id: "improvements", label: "Improvements", icon: Lightbulb },
 ];
 
-// Add ResumeAnalysis type
-interface ResumeAnalysis {
-  id: string;
-  originalFilename: string;
-  fileUrl: string;
-  totalScore: number;
-  sectionScores: {
-    format: number;
-    content: number;
-    language: number;
-    competencies: number;
-    keywords: number;
-  };
-  detailedBreakdown: {
-    format_analysis: {
-      length_depth_score: number;
-      bullet_usage_score: number;
-      bullet_length_score: number;
-      page_density_score: number;
-      formatting_score: number;
-    };
-    content_analysis: {
-      impact_score: number;
-      achievements_score: number;
-      relevance_score: number;
-      technical_depth_score: number;
-    };
-    language_analysis: {
-      verb_strength: number;
-      tense_consistency: number;
-      clarity: number;
-      spelling_grammar: number;
-      professional_tone: number;
-    };
-    competencies_analysis: {
-      leadership_initiative: number;
-      problem_solving: number;
-      collaboration: number;
-      results_orientation: number;
-    };
-  };
-  keywordMatchRate: string;
-  missingKeywords: string[];
-  improvements: {
-    high_priority: string[];
-    content: Array<{
-      current: string;
-      suggested: string;
-      impact: string;
-      section: string;
-    }>;
-    format: Array<{
-      current?: string;
-      suggested?: string;
-      reason?: string;
-    }>;
-    language: Array<{
-      original: string;
-      improved: string;
-      reason: string;
-    }>;
-    keywords: string[];
-    details: {
-      bullet_points: Array<{
-        original: string;
-        improved: string;
-        reason: string;
-      }>;
-      achievements: Array<{
-        section: string;
-        current: string;
-        suggested: string;
-        impact: string;
-      }>;
-      skills: Array<{
-        skill_area: string;
-        current: string;
-        improved: string;
-        explanation: string;
-      }>;
-    };
-  };
-  createdAt: string;
-  updatedAt: string;
-}
-
 export default function ResumeOptimizerPage() {
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [result, setResult] = useState<
-    (ResumeAnalysisResult & { metadata: { file_url?: string } }) | null
-  >(null);
+  const [result, setResult] = useState<ResumeAnalysisResult | null>(null);
   const [activeSection, setActiveSection] = useState("overview");
-  const [analyses, setAnalyses] = useState<ResumeAnalysis[]>([]);
+  const [analyses, setAnalyses] = useState<StoredResumeAnalysis[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
 
   useEffect(() => {
@@ -211,9 +120,9 @@ export default function ResumeOptimizerPage() {
       const formData = new FormData();
       formData.append("resume", fileToAnalyze);
 
-      const response = await fetch("/api/resumes", {
+      const response = await fetch("/api/resume-analysis", {
         method: "POST",
-        body: formData,
+        body: formData
       });
 
       if (!response.ok) {
@@ -221,26 +130,43 @@ export default function ResumeOptimizerPage() {
         throw new Error(errorText || "Failed to analyze resume");
       }
 
-      const analysis = await response.json();
+      const data = await response.json();
+      
+      if (!data.success) {
+        throw new Error(data.error || "Failed to analyze resume");
+      }
+
       setResult({
         success: true,
         ats_analysis: {
-          total_score: analysis.ats_analysis.total_score,
-          section_scores: analysis.ats_analysis.section_scores,
-          detailed_breakdown: analysis.ats_analysis.detailed_breakdown,
-          keyword_match_rate: analysis.ats_analysis.keyword_match_rate,
-          missing_keywords: analysis.ats_analysis.missing_keywords || [],
+          total_score: data.ats_analysis.total_score,
+          section_scores: data.ats_analysis.section_scores,
+          detailed_breakdown: data.ats_analysis.detailed_breakdown,
+          keyword_match_rate: data.ats_analysis.keyword_match_rate,
+          missing_keywords: data.ats_analysis.missing_keywords || [],
         },
-        improvement_suggestions: analysis.improvement_suggestions,
-        improvement_details: analysis.improvement_details,
+        improvement_suggestions: {
+          high_priority: data.improvement_suggestions.high_priority || [],
+          content: data.improvement_suggestions.content || [],
+          format: data.improvement_suggestions.format || [],
+          language: data.improvement_suggestions.language || [],
+          keywords: data.improvement_suggestions.keywords || [],
+        },
+        improvement_details: {
+          bullet_points: data.improvement_details.bullet_points || [],
+          achievements: data.improvement_details.achievements || [],
+          skills: data.improvement_details.skills || [],
+        },
         metadata: {
-          file_url: analysis.metadata.file_url,
-          filename: analysis.metadata.filename,
-          job_description_provided: analysis.metadata.job_description_provided,
-          timestamp: analysis.metadata.timestamp,
+          file_url: data.metadata.file_url,
+          filename: data.metadata.filename,
+          job_description_provided: data.metadata.job_description_provided,
+          timestamp: data.metadata.timestamp,
         },
       });
+
       toast.success("Analysis completed successfully!");
+      await fetchResumeHistory(); // Refresh the history after successful analysis
     } catch (error) {
       console.error("Error analyzing resume:", error);
       toast.error(
@@ -288,41 +214,42 @@ export default function ResumeOptimizerPage() {
 
   const renderDetailedBreakdown = (
     title: string,
-    data: Record<string, number>,
+    data: Record<string, number> | {
+      length_depth_score: number;
+      bullet_usage_score: number;
+      bullet_length_score: number;
+      page_density_score: number;
+      formatting_score: number;
+    } | {
+      impact_score: number;
+      achievements_score: number;
+      relevance_score: number;
+      technical_depth_score: number;
+    } | {
+      verb_strength: number;
+      tense_consistency: number;
+      clarity: number;
+      spelling_grammar: number;
+      professional_tone: number;
+    } | {
+      leadership_initiative: number;
+      problem_solving: number;
+      collaboration: number;
+      results_orientation: number;
+    }
   ) => (
     <div className="space-y-4">
-      <h4 className="text-sm font-semibold">{title}</h4>
+      <h3 className="text-lg font-semibold">{title}</h3>
       <div className="space-y-3">
-        {Object.entries(data).map(([key, score]) => (
+        {Object.entries(data).map(([key, value]) => (
           <div key={key} className="space-y-2">
             <div className="flex items-center justify-between">
-              <p className="text-sm capitalize text-muted-foreground">
-                {key.replace(/_/g, " ")}
+              <p className="text-sm capitalize">
+                {key.replace(/_/g, " ").replace(/score$/, "")}
               </p>
-              <span
-                className={cn(
-                  "text-sm font-medium",
-                  score >= 80
-                    ? "text-green-500"
-                    : score >= 60
-                      ? "text-yellow-500"
-                      : "text-red-500",
-                )}
-              >
-                {score}/100
-              </span>
+              <p className="text-sm font-medium">{value}/5</p>
             </div>
-            <Progress
-              value={score}
-              className={cn(
-                "h-1.5",
-                score >= 80
-                  ? "bg-green-500"
-                  : score >= 60
-                    ? "bg-yellow-500"
-                    : "bg-red-500",
-              )}
-            />
+            <Progress value={value * 20} />
           </div>
         ))}
       </div>
@@ -334,7 +261,7 @@ export default function ResumeOptimizerPage() {
       <h4 className="text-sm font-semibold">{title}</h4>
       <div className="space-y-4">
         {items.map((item, index) => (
-          <Card key={index} className="space-y-3 p-4">
+          <Card key={`${title}-item-${index}`} className="space-y-3 p-4">
             {item.current && (
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -379,86 +306,104 @@ export default function ResumeOptimizerPage() {
 
   const renderHistory = () => {
     return isLoadingHistory ? (
-      <div className="flex justify-center py-8">
-        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold">Previous Analyses</h3>
+        <div className="grid gap-4">
+          {[1, 2, 3].map((i) => (
+            <Card key={i} className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-3 w-full">
+                  <div className="h-4 w-1/3 bg-muted animate-pulse rounded" />
+                  <div className="h-3 w-1/4 bg-muted animate-pulse rounded" />
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="h-8 w-16 bg-muted animate-pulse rounded-full" />
+                  <div className="h-8 w-16 bg-muted animate-pulse rounded" />
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
       </div>
     ) : !analyses || analyses.length === 0 ? (
-      <p className="text-sm text-muted-foreground">
-        No previous analyses found
-      </p>
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold">Previous Analyses</h3>
+        <Card className="p-6">
+          <div className="flex flex-col items-center justify-center text-center space-y-2">
+            <div className="rounded-full bg-primary/10 p-3">
+              <FileText className="h-6 w-6 text-primary" />
+            </div>
+            <p className="text-sm text-muted-foreground">
+              No previous analyses found. Upload a resume to get started.
+            </p>
+          </div>
+        </Card>
+      </div>
     ) : (
       <div className="space-y-4">
-        {analyses.map((analysis) => (
-          <Card
-            key={analysis.id}
-            className="cursor-pointer p-4 transition-colors hover:bg-muted/50"
-            onClick={() => {
-              setResult({
-                success: true,
-                ats_analysis: {
-                  total_score: analysis.totalScore,
-                  section_scores: analysis.sectionScores,
-                  detailed_breakdown: analysis.detailedBreakdown,
-                  keyword_match_rate: analysis.keywordMatchRate || "0%",
-                  missing_keywords: analysis.missingKeywords || [],
-                },
-                improvement_suggestions: {
-                  high_priority: analysis.improvements?.high_priority || [],
-                  content: analysis.improvements?.content || [],
-                  format: analysis.improvements?.format || [],
-                  language: analysis.improvements?.language || [],
-                  keywords: analysis.improvements?.keywords || [],
-                },
-                improvement_details: {
-                  bullet_points:
-                    analysis.improvements?.details?.bullet_points || [],
-                  achievements:
-                    analysis.improvements?.details?.achievements || [],
-                  skills: analysis.improvements?.details?.skills || [],
-                },
-                metadata: {
-                  file_url: analysis.fileUrl,
-                  filename: analysis.originalFilename,
-                  job_description_provided: false,
-                  timestamp: analysis.createdAt,
-                },
-              });
-            }}
-          >
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="font-medium">{analysis.originalFilename}</p>
-                <p className="text-sm text-muted-foreground">
-                  {format(new Date(analysis.createdAt), "PPP")}
-                </p>
-              </div>
-              <div className="flex items-center gap-4">
-                <div
-                  className={cn(
-                    "rounded-full px-3 py-1.5 text-sm font-semibold",
-                    analysis.totalScore >= 80
-                      ? "bg-green-500/10 text-green-500"
-                      : analysis.totalScore >= 60
-                        ? "bg-yellow-500/10 text-yellow-500"
-                        : "bg-red-500/10 text-red-500",
-                  )}
-                >
-                  {analysis.totalScore}/100
+        <h3 className="text-lg font-semibold">Previous Analyses</h3>
+        <div className="grid gap-4">
+          {analyses.map((analysis) => (
+            <Card
+              key={analysis.id}
+              className="relative overflow-hidden group cursor-pointer"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="relative p-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <p className="font-medium">{analysis.originalFilename}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {format(new Date(analysis.createdAt), "PPP")}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div
+                      className={cn(
+                        "rounded-full px-3 py-1.5 text-sm font-semibold",
+                        analysis.totalScore >= 80
+                          ? "bg-green-500/10 text-green-500"
+                          : analysis.totalScore >= 60
+                            ? "bg-yellow-500/10 text-yellow-500"
+                            : "bg-red-500/10 text-red-500",
+                      )}
+                    >
+                      {analysis.totalScore}/100
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-2 transition-colors hover:bg-primary hover:text-primary-foreground"
+                      onClick={() => {
+                        setResult({
+                          success: true,
+                          ats_analysis: {
+                            total_score: analysis.totalScore,
+                            section_scores: analysis.sectionScores,
+                            detailed_breakdown: analysis.detailedBreakdown,
+                            keyword_match_rate: analysis.keywordMatchRate,
+                            missing_keywords: analysis.missingKeywords,
+                          },
+                          improvement_suggestions: analysis.improvementSuggestions,
+                          improvement_details: analysis.improvementDetails,
+                          metadata: {
+                            file_url: analysis.fileUrl,
+                            filename: analysis.originalFilename,
+                            job_description_provided: false,
+                            timestamp: analysis.createdAt,
+                          },
+                        });
+                      }}
+                    >
+                      <FileText className="h-4 w-4" />
+                      View
+                    </Button>
+                  </div>
                 </div>
-                <a
-                  href={analysis.fileUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-primary hover:underline"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <FileText className="h-4 w-4" />
-                  View
-                </a>
               </div>
-            </div>
-          </Card>
-        ))}
+            </Card>
+          ))}
+        </div>
       </div>
     );
   };
@@ -597,7 +542,7 @@ export default function ResumeOptimizerPage() {
                         {result.improvement_suggestions.high_priority.map(
                           (suggestion, index) => (
                             <div
-                              key={index}
+                              key={`high-priority-${index}`}
                               className="flex items-start gap-3 rounded-lg border border-destructive/10 bg-destructive/5 p-3"
                             >
                               <div className="rounded-full bg-destructive/10 p-1.5">
@@ -718,7 +663,7 @@ export default function ResumeOptimizerPage() {
                       {result.improvement_suggestions.high_priority.map(
                         (suggestion, index) => (
                           <div
-                            key={index}
+                            key={`improvement-${index}`}
                             className="flex items-start gap-3 rounded-lg border border-destructive/10 bg-destructive/5 p-3"
                           >
                             <div className="rounded-full bg-destructive/10 p-1.5">

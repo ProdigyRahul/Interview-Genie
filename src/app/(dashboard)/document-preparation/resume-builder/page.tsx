@@ -15,7 +15,6 @@ import {
 import { MultiStepLoader } from "@/components/ui/multi-step-loader";
 import { FileText, Plus, Upload, Clock, Star, Eye } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { generateResumeContent } from "@/lib/gemini";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { SkillsInput } from "@/components/ui/skills-input";
@@ -59,7 +58,7 @@ interface FormData {
 
 export default function ResumeBuilderPage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const [loading, _setLoading] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [isLoadingResumes, setIsLoadingResumes] = useState(true);

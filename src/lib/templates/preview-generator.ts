@@ -1,4 +1,4 @@
-import { ResumeData, TemplateType } from "@/lib/types/resume";
+import { type ResumeData, type TemplateType } from "@/lib/types/resume";
 
 export const sampleData: ResumeData = {
   personalInfo: {

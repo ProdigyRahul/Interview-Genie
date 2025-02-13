@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { TabId } from "@/lib/resume-tabs";
+import { type TabId } from "@/lib/resume-tabs";
 
 // Personal Section
 export const personalSchema = z.object({
