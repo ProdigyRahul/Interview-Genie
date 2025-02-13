@@ -242,7 +242,7 @@ export default function ResumeOptimizerPage() {
       <h3 className="text-lg font-semibold">{title}</h3>
       <div className="space-y-3">
         {Object.entries(data).map(([key, value]) => (
-          <div key={key} className="space-y-2">
+          <div key={`${title}-${key}`} className="space-y-2">
             <div className="flex items-center justify-between">
               <p className="text-sm capitalize">
                 {key.replace(/_/g, " ").replace(/score$/, "")}
@@ -519,7 +519,11 @@ export default function ResumeOptimizerPage() {
                       {/* Section Scores */}
                       <div className="grid gap-4">
                         {Object.entries(result.ats_analysis.section_scores).map(
-                          ([key, score]) => renderScoreCard(key, score),
+                          ([key, score]) => (
+                            <div key={`section-score-${key}`}>
+                              {renderScoreCard(key, score)}
+                            </div>
+                          ),
                         )}
                       </div>
                     </div>
