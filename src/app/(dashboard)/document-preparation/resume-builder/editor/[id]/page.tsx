@@ -20,6 +20,7 @@ import {
   Star,
   FileText,
   ArrowRight,
+  ArrowLeft,
   CheckCircle,
   Plus,
   Trash2,
@@ -44,7 +45,15 @@ const fadeIn = {
   exit: { opacity: 0, y: 20 },
 };
 
-const tabs = [
+// Add this type definition before the tabs array
+interface TabItem {
+  id: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  required: boolean;
+}
+
+const tabs: TabItem[] = [
   {
     id: "personal",
     label: "Personal",
@@ -216,18 +225,18 @@ function AIGenerateButton({
   );
 }
 
-// Add LoadingSkeleton component
+// Update LoadingSkeleton component for better mobile experience
 function LoadingSkeleton() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <div className="space-y-2">
         <Skeleton className="h-8 w-64" />
-        <Skeleton className="h-4 w-96" />
+        <Skeleton className="h-4 w-full max-w-[24rem]" />
       </div>
 
       <Card>
-        <div className="border-b p-4">
-          <div className="grid grid-cols-2 gap-2 md:grid-cols-4 lg:grid-cols-6">
+        <div className="border-b p-2 sm:p-4">
+          <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-1 sm:gap-2">
             {Array(6)
               .fill(0)
               .map((_, i) => (
@@ -236,14 +245,14 @@ function LoadingSkeleton() {
           </div>
         </div>
 
-        <div className="space-y-6 p-6">
+        <div className="space-y-4 sm:space-y-6 p-3 sm:p-6">
           <div className="space-y-2">
             <Skeleton className="h-6 w-48" />
-            <Skeleton className="h-4 w-96" />
+            <Skeleton className="h-4 w-full max-w-[24rem]" />
           </div>
 
-          <Card className="p-4">
-            <div className="grid gap-6 md:grid-cols-2">
+          <Card className="p-3 sm:p-4">
+            <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
               {Array(6)
                 .fill(0)
                 .map((_, i) => (
@@ -260,23 +269,20 @@ function LoadingSkeleton() {
   );
 }
 
-// Add InitialLoadingState component for the data fetching animation
+// Update InitialLoadingState component for better mobile experience
 function InitialLoadingState() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center space-y-4">
-      <div className="relative h-20 w-20">
-        <div className="absolute inset-0 flex items-center justify-center">
-          <FileText className="h-10 w-10 animate-pulse text-primary" />
+    <div className="flex min-h-[50vh] items-center justify-center">
+      <div className="flex flex-col items-center space-y-4 text-center">
+        <div className="relative h-10 w-10">
+          <div className="absolute inset-0">
+            <div className="h-full w-full animate-spin rounded-full border-4 border-primary/30 border-t-primary" />
+          </div>
         </div>
-        <div className="absolute inset-0">
-          <div className="h-full w-full animate-spin rounded-full border-4 border-primary/30 border-t-primary" />
+        <div className="space-y-2">
+          <h3 className="text-lg font-medium">Loading Resume</h3>
+          <p className="text-sm text-muted-foreground">Please wait while we load your resume data...</p>
         </div>
-      </div>
-      <div className="space-y-2 text-center">
-        <h3 className="text-lg font-semibold">Loading Your Resume</h3>
-        <p className="text-sm text-muted-foreground">
-          Please wait while we fetch your data...
-        </p>
       </div>
     </div>
   );
@@ -301,6 +307,92 @@ const degreeOptions = [
   "Ph.D",
   "Other",
 ];
+
+// Update the MobileTabNavigation component with proper types
+function MobileTabNavigation({
+  tabs,
+  activeTab,
+  onTabChange,
+  completedSections,
+}: {
+  tabs: TabItem[];
+  activeTab: string;
+  onTabChange: (tab: string) => void;
+  completedSections: Record<string, boolean>;
+}) {
+  const currentIndex = tabs.findIndex((tab) => tab.id === activeTab);
+  const showLeftArrow = currentIndex > 0;
+  const showRightArrow = currentIndex < tabs.length - 1;
+
+  const handlePrevious = () => {
+    const previousTab = tabs[currentIndex - 1];
+    if (currentIndex > 0 && previousTab) {
+      onTabChange(previousTab.id);
+    }
+  };
+
+  const handleNext = () => {
+    const nextTab = tabs[currentIndex + 1];
+    if (currentIndex < tabs.length - 1 && nextTab) {
+      onTabChange(nextTab.id);
+    }
+  };
+
+  // Add a fallback tab in case the current tab is not found
+  const currentTab = tabs[currentIndex] || tabs[0];
+
+  // If no valid tab is found, don't render anything
+  if (!currentTab) return null;
+
+  return (
+    <div className="flex items-center justify-between gap-2 md:hidden">
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={handlePrevious}
+        disabled={!showLeftArrow}
+        className={cn(
+          "h-10 w-10 shrink-0 transition-opacity",
+          !showLeftArrow && "opacity-0"
+        )}
+      >
+        <ArrowLeft className="h-4 w-4" />
+      </Button>
+
+      <TabsList className="flex-1 bg-transparent p-0">
+        <TabsTrigger
+          value={currentTab.id}
+          className={cn(
+            "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground",
+            "group flex w-full items-center justify-center gap-2 py-2 transition-all",
+            "hover:bg-primary/10",
+            "rounded-md"
+          )}
+        >
+          <currentTab.icon className="h-4 w-4 transition-transform group-hover:scale-110" />
+          <span>{currentTab.label}</span>
+          {currentTab.required && <span className="text-[10px] text-red-500">*</span>}
+          {completedSections[currentTab.id] && (
+            <CheckCircle className="h-3 w-3 text-green-500" />
+          )}
+        </TabsTrigger>
+      </TabsList>
+
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={handleNext}
+        disabled={!showRightArrow}
+        className={cn(
+          "h-10 w-10 shrink-0 transition-opacity",
+          !showRightArrow && "opacity-0"
+        )}
+      >
+        <ArrowRight className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+}
 
 export default function ResumeEditorPage() {
   const params = useParams();
@@ -798,7 +890,7 @@ export default function ResumeEditorPage() {
     </Button>
   );
 
-  const renderTabTrigger = (tab: (typeof tabs)[0]) => (
+  const renderTabTrigger = (tab: TabItem) => (
     <TabsTrigger
       key={tab.id}
       value={tab.id}
@@ -1189,13 +1281,22 @@ export default function ResumeEditorPage() {
 
       <Card>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <div className="border-b p-4">
-            <TabsList className="grid h-full w-full grid-cols-2 gap-2 md:grid-cols-4 lg:grid-cols-6">
+          <div className="border-b p-2 sm:p-4">
+            {/* Mobile Navigation */}
+            <MobileTabNavigation
+              tabs={tabs}
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+              completedSections={completedSections}
+            />
+            
+            {/* Desktop Navigation */}
+            <TabsList className="hidden md:grid h-full w-full grid-cols-4 lg:grid-cols-6 gap-2">
               {tabs.map(renderTabTrigger)}
             </TabsList>
           </div>
 
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeTab}
@@ -1206,13 +1307,13 @@ export default function ResumeEditorPage() {
                 transition={{ duration: 0.3 }}
               >
                 {/* Personal Tab */}
-                <TabsContent value="personal" className="space-y-6">
+                <TabsContent value="personal" className="space-y-4 sm:space-y-6">
                   {renderSectionHeader(
                     "Personal Information",
                     "Add your personal details and contact information",
                   )}
-                  <Card className="p-4">
-                    <div className="grid gap-6 md:grid-cols-2">
+                  <Card className="p-3 sm:p-4">
+                    <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
                       <div className="space-y-2">
                         <Label>Full Name</Label>
                         <div className="flex gap-2">
@@ -1343,15 +1444,15 @@ export default function ResumeEditorPage() {
                 </TabsContent>
 
                 {/* Experience Tab */}
-                <TabsContent value="experience" className="space-y-6">
+                <TabsContent value="experience" className="space-y-4 sm:space-y-6">
                   {renderSectionHeader(
                     "Work Experience",
                     "Add your professional work experience",
                   )}
                   {experiences.map((exp) => (
-                    <Card key={exp.id} className="space-y-4 p-4">
+                    <Card key={exp.id} className="space-y-4 p-3 sm:p-4">
                       <div className="flex items-start justify-between">
-                        <div className="grid w-full gap-6 md:grid-cols-2">
+                        <div className="grid w-full gap-4 sm:gap-6 md:grid-cols-2">
                           <div className="space-y-2">
                             <Label>Company Name</Label>
                             <Input
@@ -1474,7 +1575,7 @@ export default function ResumeEditorPage() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="text-destructive hover:text-destructive"
+                          className="ml-2 shrink-0"
                           onClick={() => removeItem("experience", exp.id)}
                         >
                           <Trash2 className="h-4 w-4" />
@@ -1494,24 +1595,24 @@ export default function ResumeEditorPage() {
                 </TabsContent>
 
                 {/* Projects Tab */}
-                <TabsContent value="projects" className="space-y-6">
+                <TabsContent value="projects" className="space-y-4 sm:space-y-6">
                   {renderSectionHeader(
                     "Projects",
-                    "Add your notable projects and achievements",
+                    "Add your notable projects",
                   )}
-                  {projects.map((project) => (
-                    <Card key={project.id} className="space-y-4 p-4">
+                  {projects.map((proj) => (
+                    <Card key={proj.id} className="space-y-4 p-3 sm:p-4">
                       <div className="flex items-start justify-between">
-                        <div className="grid w-full gap-6 md:grid-cols-2">
+                        <div className="grid w-full gap-4 sm:gap-6 md:grid-cols-2">
                           <div className="space-y-2">
                             <Label>Project Name</Label>
                             <Input
                               placeholder="Project Name"
-                              value={formData.projects[project.id]?.name ?? ""}
+                              value={formData.projects[proj.id]?.name ?? ""}
                               onChange={(e) =>
                                 handleInputChange(
                                   "projects",
-                                  project.id,
+                                  proj.id,
                                   "name",
                                   e.target.value,
                                 )
@@ -1523,11 +1624,11 @@ export default function ResumeEditorPage() {
                             <Input
                               type="url"
                               placeholder="https://..."
-                              value={formData.projects[project.id]?.url ?? ""}
+                              value={formData.projects[proj.id]?.url ?? ""}
                               onChange={(e) =>
                                 handleInputChange(
                                   "projects",
-                                  project.id,
+                                  proj.id,
                                   "url",
                                   e.target.value,
                                 )
@@ -1539,12 +1640,12 @@ export default function ResumeEditorPage() {
                             <Input
                               type="date"
                               value={
-                                formData.projects[project.id]?.startDate ?? ""
+                                formData.projects[proj.id]?.startDate ?? ""
                               }
                               onChange={(e) =>
                                 handleInputChange(
                                   "projects",
-                                  project.id,
+                                  proj.id,
                                   "startDate",
                                   e.target.value,
                                 )
@@ -1556,12 +1657,12 @@ export default function ResumeEditorPage() {
                             <Input
                               type="date"
                               value={
-                                formData.projects[project.id]?.endDate ?? ""
+                                formData.projects[proj.id]?.endDate ?? ""
                               }
                               onChange={(e) =>
                                 handleInputChange(
                                   "projects",
-                                  project.id,
+                                  proj.id,
                                   "endDate",
                                   e.target.value,
                                 )
@@ -1574,12 +1675,12 @@ export default function ResumeEditorPage() {
                               <Textarea
                                 placeholder="Describe the project and your role..."
                                 value={
-                                  formData.projects[project.id]?.description ?? ""
+                                  formData.projects[proj.id]?.description ?? ""
                                 }
                                 onChange={(e) =>
                                   handleInputChange(
                                     "projects",
-                                    project.id,
+                                    proj.id,
                                     "description",
                                     e.target.value,
                                   )
@@ -1589,13 +1690,13 @@ export default function ResumeEditorPage() {
                                 onClick={() =>
                                   handleGenerateAI(
                                     "project_description",
-                                    project.id,
+                                    proj.id,
                                     "description",
                                   )
                                 }
                                 isLoading={
                                   isGeneratingAI[
-                                    `project_description-${project.id}-description`
+                                    `project_description-${proj.id}-description`
                                   ]
                                 }
                               />
@@ -1605,12 +1706,12 @@ export default function ResumeEditorPage() {
                             <Label>Technologies Used</Label>
                             <SkillsInput
                               value={
-                                formData.projects[project.id]?.technologies ?? []
+                                formData.projects[proj.id]?.technologies ?? []
                               }
                               onChange={(techs) =>
                                 handleInputChange(
                                   "projects",
-                                  project.id,
+                                  proj.id,
                                   "technologies",
                                   techs,
                                 )
@@ -1622,8 +1723,8 @@ export default function ResumeEditorPage() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="text-destructive hover:text-destructive"
-                          onClick={() => removeItem("projects", project.id)}
+                          className="ml-2 shrink-0"
+                          onClick={() => removeItem("projects", proj.id)}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -1642,15 +1743,15 @@ export default function ResumeEditorPage() {
                 </TabsContent>
 
                 {/* Education Tab */}
-                <TabsContent value="education" className="space-y-6">
+                <TabsContent value="education" className="space-y-4 sm:space-y-6">
                   {renderSectionHeader(
                     "Education",
                     "Add your educational background",
                   )}
                   {education.map((edu) => (
-                    <Card key={edu.id} className="space-y-4 p-4">
+                    <Card key={edu.id} className="space-y-4 p-3 sm:p-4">
                       <div className="flex items-start justify-between">
-                        <div className="grid w-full gap-6 md:grid-cols-2">
+                        <div className="grid w-full gap-4 sm:gap-6 md:grid-cols-2">
                           <div className="space-y-2">
                             <Label>School/University</Label>
                             <Input
@@ -1792,7 +1893,7 @@ export default function ResumeEditorPage() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="text-destructive hover:text-destructive"
+                          className="ml-2 shrink-0"
                           onClick={() => removeItem("education", edu.id)}
                         >
                           <Trash2 className="h-4 w-4" />
@@ -1812,15 +1913,15 @@ export default function ResumeEditorPage() {
                 </TabsContent>
 
                 {/* Certifications Tab */}
-                <TabsContent value="certifications" className="space-y-6">
+                <TabsContent value="certifications" className="space-y-4 sm:space-y-6">
                   {renderSectionHeader(
                     "Certifications",
-                    "Add your professional certifications",
-                  )}  
+                    "Add your certifications and licenses",
+                  )}
                   {certifications.map((cert) => (
-                    <Card key={cert.id} className="space-y-4 p-4">
+                    <Card key={cert.id} className="space-y-4 p-3 sm:p-4">
                       <div className="flex items-start justify-between">
-                        <div className="grid w-full gap-6 md:grid-cols-2">
+                        <div className="grid w-full gap-4 sm:gap-6 md:grid-cols-2">
                           <div className="space-y-2">
                             <Label>Certification Name</Label>
                             <div className="flex gap-2">
@@ -1957,7 +2058,7 @@ export default function ResumeEditorPage() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="text-destructive hover:text-destructive"
+                          className="ml-2 shrink-0"
                           onClick={() => removeItem("certifications", cert.id)}
                         >
                           <Trash2 className="h-4 w-4" />
@@ -1977,26 +2078,26 @@ export default function ResumeEditorPage() {
                 </TabsContent>
 
                 {/* Achievements Tab */}
-                <TabsContent value="achievements" className="space-y-6">
+                <TabsContent value="achievements" className="space-y-4 sm:space-y-6">
                   {renderSectionHeader(
                     "Achievements",
-                    "Add your notable achievements and awards",
+                    "Add your notable achievements",
                   )}
-                  {achievements.map((achievement) => (
-                    <Card key={achievement.id} className="space-y-4 p-4">
+                  {achievements.map((ach) => (
+                    <Card key={ach.id} className="space-y-4 p-3 sm:p-4">
                       <div className="flex items-start justify-between">
-                        <div className="grid w-full gap-6 md:grid-cols-2">
+                        <div className="grid w-full gap-4 sm:gap-6 md:grid-cols-2">
                           <div className="space-y-2">
                             <Label>Achievement Title</Label>
                             <Input
                               placeholder="Achievement Title"
                               value={
-                                formData.achievements[achievement.id]?.title ?? ""
+                                formData.achievements[ach.id]?.title ?? ""
                               }
                               onChange={(e) =>
                                 handleInputChange(
                                   "achievements",
-                                  achievement.id,
+                                  ach.id,
                                   "title",
                                   e.target.value,
                                 )
@@ -2008,12 +2109,12 @@ export default function ResumeEditorPage() {
                             <Input
                               type="date"
                               value={
-                                formData.achievements[achievement.id]?.date ?? ""
+                                formData.achievements[ach.id]?.date ?? ""
                               }
                               onChange={(e) =>
                                 handleInputChange(
                                   "achievements",
-                                  achievement.id,
+                                  ach.id,
                                   "date",
                                   e.target.value,
                                 )
@@ -2026,13 +2127,13 @@ export default function ResumeEditorPage() {
                               <Textarea
                                 placeholder="Describe your achievement..."
                                 value={
-                                  formData.achievements[achievement.id]
+                                  formData.achievements[ach.id]
                                     ?.description ?? ""
                                 }
                                 onChange={(e) =>
                                   handleInputChange(
                                     "achievements",
-                                    achievement.id,
+                                    ach.id,
                                     "description",
                                     e.target.value,
                                   )
@@ -2042,13 +2143,13 @@ export default function ResumeEditorPage() {
                                 onClick={() =>
                                   handleGenerateAI(
                                     "achievement_description",
-                                    achievement.id,
+                                    ach.id,
                                     "description",
                                   )
                                 }
                                 isLoading={
                                   isGeneratingAI[
-                                    `achievement_description-${achievement.id}-description`
+                                    `achievement_description-${ach.id}-description`
                                   ]
                                 }
                               />
@@ -2058,9 +2159,9 @@ export default function ResumeEditorPage() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="text-destructive hover:text-destructive"
+                          className="ml-2 shrink-0"
                           onClick={() =>
-                            removeItem("achievements", achievement.id)
+                            removeItem("achievements", ach.id)
                           }
                         >
                           <Trash2 className="h-4 w-4" />
@@ -2080,13 +2181,13 @@ export default function ResumeEditorPage() {
                 </TabsContent>
 
                 {/* Skills Tab */}
-                <TabsContent value="skills" className="space-y-6">
+                <TabsContent value="skills" className="space-y-4 sm:space-y-6">
                   {renderSectionHeader(
                     "Skills",
-                    "Add your technical skills, soft skills, and tools you're proficient with",
+                    "Add your technical and soft skills",
                   )}
-                  <Card className="p-4">
-                    <div className="grid gap-6">
+                  <Card className="p-3 sm:p-4">
+                    <div className="grid gap-4 sm:gap-6">
                       <div className="space-y-2">
                         <Label>Technical Skills</Label>
                         <SkillsInput
@@ -2130,12 +2231,12 @@ export default function ResumeEditorPage() {
                 </TabsContent>
 
                 {/* Summary Tab */}
-                <TabsContent value="summary" className="space-y-6">
+                <TabsContent value="summary" className="space-y-4 sm:space-y-6">
                   {renderSectionHeader(
                     "Professional Summary",
-                    "Write a compelling summary of your professional background and goals",
+                    "Add a brief professional summary",
                   )}
-                  <Card className="p-4">
+                  <Card className="p-3 sm:p-4">
                     <div className="space-y-4">
                       <Textarea
                         placeholder="Write a professional summary..."
@@ -2164,12 +2265,12 @@ export default function ResumeEditorPage() {
                 </TabsContent>
 
                 {/* Finish Tab */}
-                <TabsContent value="finish" className="space-y-6">
+                <TabsContent value="finish" className="space-y-4 sm:space-y-6">
                   {renderSectionHeader(
                     "Finish Up",
                     "Review and generate your resume",
                   )}
-                  <Card className="p-4">
+                  <Card className="p-3 sm:p-4">
                     <div className="space-y-6">
                       <div className="space-y-2">
                         <Label>Resume Title</Label>

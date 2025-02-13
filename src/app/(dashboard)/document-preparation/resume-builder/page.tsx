@@ -18,6 +18,8 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { SkillsInput } from "@/components/ui/skills-input";
+import { Breadcrumb } from "@/components/ui/breadcrumb";
+import { FileSpreadsheet } from "lucide-react";
 
 interface Resume {
   id: string;
@@ -74,6 +76,19 @@ export default function ResumeBuilderPage() {
     linkedIn: "",
     portfolio: "",
   });
+
+  const breadcrumbItems = [
+    {
+      href: "/document-preparation",
+      label: "Document Preparation",
+      icon: FileSpreadsheet,
+    },
+    {
+      href: "/document-preparation/resume-builder",
+      label: "Resume Builder",
+      icon: FileText,
+    },
+  ];
 
   useEffect(() => {
     void fetchResumes();
@@ -194,270 +209,273 @@ export default function ResumeBuilderPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight">Resume Builder</h2>
-        <p className="text-muted-foreground">
-          Create a professional resume with AI assistance
-        </p>
-      </div>
+    <div className="space-y-8">
+      <Breadcrumb items={breadcrumbItems} className="mb-6" />
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">Resume Builder</h2>
+          <p className="text-muted-foreground">
+            Create a professional resume with AI assistance
+          </p>
+        </div>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {/* Create New Resume Card */}
-        <Card className="group h-full transition-all hover:border-primary hover:shadow-lg">
-          <div className="relative h-full">
-            {/* Animated gradient background */}
-            <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-primary/5 via-primary/10 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {/* Create New Resume Card */}
+          <Card className="group h-full transition-all hover:border-primary hover:shadow-lg">
+            <div className="relative h-full">
+              {/* Animated gradient background */}
+              <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-primary/5 via-primary/10 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
 
-            <button
-              onClick={handleCreateNew}
-              className="relative block h-full w-full p-8"
-            >
-              <div className="h-full space-y-6">
-                <div className="flex h-32 items-center justify-center">
-                  <div
-                    className={cn(
-                      "rounded-full bg-background/80 p-6 backdrop-blur-sm",
-                      "border-2 border-primary/20 group-hover:border-primary/40",
-                      "transition-all duration-300 group-hover:scale-110",
-                    )}
-                  >
-                    <Plus className="h-10 w-10 text-primary transition-transform duration-300 group-hover:scale-110" />
+              <button
+                onClick={handleCreateNew}
+                className="relative block h-full w-full p-8"
+              >
+                <div className="h-full space-y-6">
+                  <div className="flex h-32 items-center justify-center">
+                    <div
+                      className={cn(
+                        "rounded-full bg-background/80 p-6 backdrop-blur-sm",
+                        "border-2 border-primary/20 group-hover:border-primary/40",
+                        "transition-all duration-300 group-hover:scale-110",
+                      )}
+                    >
+                      <Plus className="h-10 w-10 text-primary transition-transform duration-300 group-hover:scale-110" />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 text-center">
+                    <h3 className="text-xl font-semibold">Create New Resume</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Start fresh with our AI-powered resume builder
+                    </p>
                   </div>
                 </div>
+              </button>
+            </div>
+          </Card>
 
-                <div className="space-y-2 text-center">
-                  <h3 className="text-xl font-semibold">Create New Resume</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Start fresh with our AI-powered resume builder
+          {/* Previous Resumes */}
+          {!isLoadingResumes &&
+            (resumes.length === 0 ? (
+              <Card className="flex items-center justify-center p-8">
+                <div className="text-center text-muted-foreground">
+                  <FileText className="mx-auto mb-4 h-12 w-12 opacity-50" />
+                  <p>No resumes created yet</p>
+                  <p className="text-sm">
+                    Create your first resume to get started
                   </p>
                 </div>
-              </div>
-            </button>
-          </div>
-        </Card>
+              </Card>
+            ) : (
+              resumes.map((resume) => (
+                <Card
+                  key={resume.id}
+                  className="group h-full transition-all hover:border-primary hover:shadow-lg"
+                >
+                  <div className="relative h-full">
+                    {/* Animated gradient background */}
+                    <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-primary/5 via-primary/10 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
 
-        {/* Previous Resumes */}
-        {!isLoadingResumes &&
-          (resumes.length === 0 ? (
-            <Card className="flex items-center justify-center p-8">
-              <div className="text-center text-muted-foreground">
-                <FileText className="mx-auto mb-4 h-12 w-12 opacity-50" />
-                <p>No resumes created yet</p>
-                <p className="text-sm">
-                  Create your first resume to get started
-                </p>
-              </div>
-            </Card>
-          ) : (
-            resumes.map((resume) => (
-              <Card
-                key={resume.id}
-                className="group h-full transition-all hover:border-primary hover:shadow-lg"
-              >
-                <div className="relative h-full">
-                  {/* Animated gradient background */}
-                  <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-primary/5 via-primary/10 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-
-                  <div className="relative flex h-full flex-col p-8">
-                    <div className="flex-1 space-y-6">
-                      <div className="flex items-center justify-between">
-                        <div
-                          className={cn(
-                            "rounded-xl bg-background/80 p-3 backdrop-blur-sm",
-                            "border-2 border-primary/20 group-hover:border-primary/40",
-                            "transition-all duration-300",
-                          )}
-                        >
-                          <FileText className="h-8 w-8 text-primary" />
-                        </div>
-                        {resume.atsScore && (
-                          <div className="flex items-center gap-2 rounded-full bg-yellow-500/10 px-3 py-1.5 font-medium text-yellow-500 backdrop-blur-sm">
-                            <Star className="h-4 w-4 fill-current" />
-                            <span>{resume.atsScore}</span>
+                    <div className="relative flex h-full flex-col p-8">
+                      <div className="flex-1 space-y-6">
+                        <div className="flex items-center justify-between">
+                          <div
+                            className={cn(
+                              "rounded-xl bg-background/80 p-3 backdrop-blur-sm",
+                              "border-2 border-primary/20 group-hover:border-primary/40",
+                              "transition-all duration-300",
+                            )}
+                          >
+                            <FileText className="h-8 w-8 text-primary" />
                           </div>
-                        )}
-                      </div>
+                          {resume.atsScore && (
+                            <div className="flex items-center gap-2 rounded-full bg-yellow-500/10 px-3 py-1.5 font-medium text-yellow-500 backdrop-blur-sm">
+                              <Star className="h-4 w-4 fill-current" />
+                              <span>{resume.atsScore}</span>
+                            </div>
+                          )}
+                        </div>
 
-                      <div className="space-y-2">
-                        <h3 className="text-xl font-semibold transition-colors group-hover:text-primary">
-                          {resume.title}
-                        </h3>
-                        <div className="flex items-center text-sm text-muted-foreground">
-                          <Clock className="mr-2 h-4 w-4" />
-                          {formatDate(resume.updatedAt)}
+                        <div className="space-y-2">
+                          <h3 className="text-xl font-semibold transition-colors group-hover:text-primary">
+                            {resume.title}
+                          </h3>
+                          <div className="flex items-center text-sm text-muted-foreground">
+                            <Clock className="mr-2 h-4 w-4" />
+                            {formatDate(resume.updatedAt)}
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="mt-6 grid grid-cols-2 gap-4 border-t border-border pt-6">
-                      <Button
-                        variant="outline"
-                        className="w-full backdrop-blur-sm transition-colors group-hover:border-primary/40 group-hover:bg-primary/5"
-                        onClick={() =>
-                          router.push(
-                            `/document-preparation/resume-builder/editor/${resume.id}`,
-                          )
-                        }
-                      >
-                        <Upload className="mr-2 h-4 w-4" />
-                        Update
-                      </Button>
-                      <Button
-                        className="w-full backdrop-blur-sm"
-                        onClick={() =>
-                          router.push(
-                            `/document-preparation/resume-builder/${resume.id}/view`,
-                          )
-                        }
-                      >
-                        <Eye className="mr-2 h-4 w-4" />
-                        View
-                      </Button>
+                      <div className="mt-6 grid grid-cols-2 gap-4 border-t border-border pt-6">
+                        <Button
+                          variant="outline"
+                          className="w-full backdrop-blur-sm transition-colors group-hover:border-primary/40 group-hover:bg-primary/5"
+                          onClick={() =>
+                            router.push(
+                              `/document-preparation/resume-builder/editor/${resume.id}`,
+                            )
+                          }
+                        >
+                          <Upload className="mr-2 h-4 w-4" />
+                          Update
+                        </Button>
+                        <Button
+                          className="w-full backdrop-blur-sm"
+                          onClick={() =>
+                            router.push(
+                              `/document-preparation/resume-builder/${resume.id}/view`,
+                            )
+                          }
+                        >
+                          <Eye className="mr-2 h-4 w-4" />
+                          View
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </Card>
-            ))
-          ))}
-      </div>
+                </Card>
+              ))
+            ))}
+        </div>
 
-      {/* Create Resume Dialog */}
-      <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>Create New Resume</DialogTitle>
-            <DialogDescription>
-              Fill in your basic information to get started with your
-              professional resume
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-6 py-4">
-            <div className="grid grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
-                <Input
-                  id="name"
-                  placeholder="John Doe"
-                  value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                  required
-                />
+        {/* Create Resume Dialog */}
+        <Dialog open={showDialog} onOpenChange={setShowDialog}>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>Create New Resume</DialogTitle>
+              <DialogDescription>
+                Fill in your basic information to get started with your
+                professional resume
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleSubmit} className="space-y-6 py-4">
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Full Name</Label>
+                  <Input
+                    id="name"
+                    placeholder="John Doe"
+                    value={formData.name}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="jobTitle">Professional Title</Label>
+                  <Input
+                    id="jobTitle"
+                    placeholder="Senior Software Engineer"
+                    value={formData.jobTitle}
+                    onChange={(e) =>
+                      setFormData({ ...formData, jobTitle: e.target.value })
+                    }
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="john@example.com"
+                    value={formData.email}
+                    onChange={(e) =>
+                      setFormData({ ...formData, email: e.target.value })
+                    }
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Phone</Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    placeholder="+1 234 567 8900"
+                    value={formData.phone}
+                    onChange={(e) =>
+                      setFormData({ ...formData, phone: e.target.value })
+                    }
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="location">Location</Label>
+                  <Input
+                    id="location"
+                    placeholder="City, Country"
+                    value={formData.location}
+                    onChange={(e) =>
+                      setFormData({ ...formData, location: e.target.value })
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="experience">Years of Experience</Label>
+                  <Input
+                    id="experience"
+                    type="number"
+                    placeholder="5"
+                    value={formData.experience}
+                    onChange={(e) =>
+                      setFormData({ ...formData, experience: e.target.value })
+                    }
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="linkedIn">LinkedIn</Label>
+                  <Input
+                    id="linkedIn"
+                    placeholder="linkedin.com/in/johndoe"
+                    value={formData.linkedIn}
+                    onChange={(e) =>
+                      setFormData({ ...formData, linkedIn: e.target.value })
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="portfolio">Portfolio Website</Label>
+                  <Input
+                    id="portfolio"
+                    placeholder="johndoe.com"
+                    value={formData.portfolio}
+                    onChange={(e) =>
+                      setFormData({ ...formData, portfolio: e.target.value })
+                    }
+                  />
+                </div>
+                <div className="col-span-2 space-y-2">
+                  <Label htmlFor="skills">Key Skills</Label>
+                  <SkillsInput
+                    value={formData.skills}
+                    onChange={(skills) => setFormData({ ...formData, skills })}
+                    placeholder="Type skills and press Enter or comma (e.g. React, Node.js)"
+                  />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="jobTitle">Professional Title</Label>
-                <Input
-                  id="jobTitle"
-                  placeholder="Senior Software Engineer"
-                  value={formData.jobTitle}
-                  onChange={(e) =>
-                    setFormData({ ...formData, jobTitle: e.target.value })
-                  }
-                  required
-                />
+              <div className="flex justify-end gap-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowDialog(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  className="min-w-[120px]"
+                  disabled={loading}
+                >
+                  {loading ? "Creating..." : "Generate Resume"}
+                </Button>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="john@example.com"
-                  value={formData.email}
-                  onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value })
-                  }
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone</Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  placeholder="+1 234 567 8900"
-                  value={formData.phone}
-                  onChange={(e) =>
-                    setFormData({ ...formData, phone: e.target.value })
-                  }
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="location">Location</Label>
-                <Input
-                  id="location"
-                  placeholder="City, Country"
-                  value={formData.location}
-                  onChange={(e) =>
-                    setFormData({ ...formData, location: e.target.value })
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="experience">Years of Experience</Label>
-                <Input
-                  id="experience"
-                  type="number"
-                  placeholder="5"
-                  value={formData.experience}
-                  onChange={(e) =>
-                    setFormData({ ...formData, experience: e.target.value })
-                  }
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="linkedIn">LinkedIn</Label>
-                <Input
-                  id="linkedIn"
-                  placeholder="linkedin.com/in/johndoe"
-                  value={formData.linkedIn}
-                  onChange={(e) =>
-                    setFormData({ ...formData, linkedIn: e.target.value })
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="portfolio">Portfolio Website</Label>
-                <Input
-                  id="portfolio"
-                  placeholder="johndoe.com"
-                  value={formData.portfolio}
-                  onChange={(e) =>
-                    setFormData({ ...formData, portfolio: e.target.value })
-                  }
-                />
-              </div>
-              <div className="col-span-2 space-y-2">
-                <Label htmlFor="skills">Key Skills</Label>
-                <SkillsInput
-                  value={formData.skills}
-                  onChange={(skills) => setFormData({ ...formData, skills })}
-                  placeholder="Type skills and press Enter or comma (e.g. React, Node.js)"
-                />
-              </div>
-            </div>
-            <div className="flex justify-end gap-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setShowDialog(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                className="min-w-[120px]"
-                disabled={loading}
-              >
-                {loading ? "Creating..." : "Generate Resume"}
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
     </div>
   );
 }

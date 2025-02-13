@@ -4,6 +4,8 @@ import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { FileText, Linkedin, FileEdit, Sparkles } from "lucide-react";
+import { Breadcrumb } from "@/components/ui/breadcrumb";
+import { FileSpreadsheet } from "lucide-react";
 
 const features = [
   {
@@ -50,8 +52,17 @@ const features = [
 ];
 
 export default function DocumentPreparationPage() {
+  const breadcrumbItems = [
+    {
+      href: "/document-preparation",
+      label: "Document Preparation",
+      icon: FileSpreadsheet,
+    },
+  ];
+
   return (
     <div className="space-y-8">
+      <Breadcrumb items={breadcrumbItems} className="mb-6" />
       <div className="space-y-2">
         <h2 className="text-3xl font-bold tracking-tight">
           Document Preparation
