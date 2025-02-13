@@ -20,6 +20,7 @@ import {
   Star,
   FileText,
   ArrowRight,
+  ArrowLeft,
   CheckCircle,
   Plus,
   Trash2,
@@ -44,7 +45,15 @@ const fadeIn = {
   exit: { opacity: 0, y: 20 },
 };
 
-const tabs = [
+// Add this type definition before the tabs array
+interface TabItem {
+  id: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  required: boolean;
+}
+
+const tabs: TabItem[] = [
   {
     id: "personal",
     label: "Personal",
@@ -298,6 +307,92 @@ const degreeOptions = [
   "Ph.D",
   "Other",
 ];
+
+// Update the MobileTabNavigation component with proper types
+function MobileTabNavigation({
+  tabs,
+  activeTab,
+  onTabChange,
+  completedSections,
+}: {
+  tabs: TabItem[];
+  activeTab: string;
+  onTabChange: (tab: string) => void;
+  completedSections: Record<string, boolean>;
+}) {
+  const currentIndex = tabs.findIndex((tab) => tab.id === activeTab);
+  const showLeftArrow = currentIndex > 0;
+  const showRightArrow = currentIndex < tabs.length - 1;
+
+  const handlePrevious = () => {
+    const previousTab = tabs[currentIndex - 1];
+    if (currentIndex > 0 && previousTab) {
+      onTabChange(previousTab.id);
+    }
+  };
+
+  const handleNext = () => {
+    const nextTab = tabs[currentIndex + 1];
+    if (currentIndex < tabs.length - 1 && nextTab) {
+      onTabChange(nextTab.id);
+    }
+  };
+
+  // Add a fallback tab in case the current tab is not found
+  const currentTab = tabs[currentIndex] || tabs[0];
+
+  // If no valid tab is found, don't render anything
+  if (!currentTab) return null;
+
+  return (
+    <div className="flex items-center justify-between gap-2 md:hidden">
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={handlePrevious}
+        disabled={!showLeftArrow}
+        className={cn(
+          "h-10 w-10 shrink-0 transition-opacity",
+          !showLeftArrow && "opacity-0"
+        )}
+      >
+        <ArrowLeft className="h-4 w-4" />
+      </Button>
+
+      <TabsList className="flex-1 bg-transparent p-0">
+        <TabsTrigger
+          value={currentTab.id}
+          className={cn(
+            "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground",
+            "group flex w-full items-center justify-center gap-2 py-2 transition-all",
+            "hover:bg-primary/10",
+            "rounded-md"
+          )}
+        >
+          <currentTab.icon className="h-4 w-4 transition-transform group-hover:scale-110" />
+          <span>{currentTab.label}</span>
+          {currentTab.required && <span className="text-[10px] text-red-500">*</span>}
+          {completedSections[currentTab.id] && (
+            <CheckCircle className="h-3 w-3 text-green-500" />
+          )}
+        </TabsTrigger>
+      </TabsList>
+
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={handleNext}
+        disabled={!showRightArrow}
+        className={cn(
+          "h-10 w-10 shrink-0 transition-opacity",
+          !showRightArrow && "opacity-0"
+        )}
+      >
+        <ArrowRight className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+}
 
 export default function ResumeEditorPage() {
   const params = useParams();
@@ -795,7 +890,7 @@ export default function ResumeEditorPage() {
     </Button>
   );
 
-  const renderTabTrigger = (tab: (typeof tabs)[0]) => (
+  const renderTabTrigger = (tab: TabItem) => (
     <TabsTrigger
       key={tab.id}
       value={tab.id}
@@ -1186,8 +1281,17 @@ export default function ResumeEditorPage() {
 
       <Card>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <div className="border-b p-2 sm:p-4 overflow-x-auto">
-            <TabsList className="grid h-full w-full min-w-[600px] sm:min-w-0 grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-1 sm:gap-2">
+          <div className="border-b p-2 sm:p-4">
+            {/* Mobile Navigation */}
+            <MobileTabNavigation
+              tabs={tabs}
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+              completedSections={completedSections}
+            />
+            
+            {/* Desktop Navigation */}
+            <TabsList className="hidden md:grid h-full w-full grid-cols-4 lg:grid-cols-6 gap-2">
               {tabs.map(renderTabTrigger)}
             </TabsList>
           </div>
