@@ -1,4 +1,4 @@
-import { ResumeData, TemplateType } from "../types/resume";
+import { type ResumeData, type TemplateType } from "../types/resume";
 
 export async function generateResumePDF(
   data: ResumeData,

@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
-import { ResumeData, TemplateType } from "@/lib/types/resume";
+import { type NextRequest, NextResponse } from "next/server";
+import { type ResumeData, type TemplateType } from "@/lib/types/resume";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { GoogleGenerativeAI } from "@google/generative-ai";

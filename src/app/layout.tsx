@@ -1,5 +1,4 @@
 import { Inter } from "next/font/google";
-import { headers } from "next/headers";
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { SessionProvider } from "@/components/providers/session-provider";

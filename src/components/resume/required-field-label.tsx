@@ -1,5 +1,5 @@
 import { Label } from "@/components/ui/label";
-import { TabId, isFieldRequired, FieldMap } from "@/lib/resume-tabs";
+import { type TabId, isFieldRequired, type FieldMap } from "@/lib/resume-tabs";
 
 interface RequiredFieldLabelProps<T extends TabId> {
   tabId: T;

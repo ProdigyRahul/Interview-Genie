@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { generateTemplatePreview } from "@/lib/templates/preview-generator";
-import { TemplateType } from "@/lib/types/resume";
+import { type TemplateType } from "@/lib/types/resume";
 
 export async function GET(req: NextRequest) {
   try {

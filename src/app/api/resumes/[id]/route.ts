@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
-import { NextRequest } from "next/server";
+import { type NextRequest } from "next/server";
 
 // Define validation schemas for each section
 const personalSchema = z.object({

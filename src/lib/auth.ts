@@ -68,8 +68,8 @@ export const authConfig = {
       },
     }),
     GitHubProvider({
-      clientId: env.AUTH_GITHUB_ID!,
-      clientSecret: env.AUTH_GITHUB_SECRET!,
+      clientId: env.AUTH_GITHUB_ID,
+      clientSecret: env.AUTH_GITHUB_SECRET,
       authorization: {
         params: {
           scope: "read:user user:email",
@@ -167,13 +167,16 @@ export const authConfig = {
       return session;
     },
     async redirect({ url, baseUrl }) {
+      // Clean and normalize the URL
+      const cleanUrl = decodeURIComponent(url).trim();
+
       // If the url is relative, prefix it with the base URL
-      if (url.startsWith("/")) {
-        return `${baseUrl}${url}`;
+      if (cleanUrl.startsWith("/")) {
+        return `${baseUrl}${cleanUrl}`;
       }
       // If the url is already absolute but on the same origin, allow it
-      else if (new URL(url).origin === baseUrl) {
-        return url;
+      else if (new URL(cleanUrl).origin === baseUrl) {
+        return cleanUrl;
       }
       // Default to redirecting to the dashboard for new users
       return `${baseUrl}/dashboard`;
@@ -185,7 +188,7 @@ export const authConfig = {
 
       try {
         if (isNewUser) {
-          const updatedUser = await updateUser(
+          await updateUser(
             { email: user.email },
             {
               credits: 100,
@@ -198,7 +201,7 @@ export const authConfig = {
           );
           // Cache is already invalidated by updateUser
         } else if (account?.provider === "google") {
-          const updatedUser = await updateUser(
+          await updateUser(
             { email: user.email },
             {
               emailVerified: new Date(),

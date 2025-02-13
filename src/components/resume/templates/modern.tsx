@@ -1,4 +1,4 @@
-import { ResumeData } from "@/lib/types/resume";
+import { type ResumeData } from "@/lib/types/resume";
 import { cn } from "@/lib/utils";
 
 interface ModernResumeProps {

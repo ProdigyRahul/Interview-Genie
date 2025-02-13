@@ -85,14 +85,17 @@ function getCacheControlHeader(pathname: string): string {
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Clean and normalize the pathname
+  const cleanPathname = decodeURIComponent(pathname).trim();
+
   // Check if the path is public
   const isPublicPath = publicPaths.some(
-    (path) => pathname.startsWith(path) || pathname === path,
+    (path) => cleanPathname.startsWith(path) || cleanPathname === path,
   );
 
   // Check if it's an auth path (login, register, etc.)
   const isAuthPath = authPaths.some(
-    (path) => pathname.startsWith(path) || pathname === path,
+    (path) => cleanPathname.startsWith(path) || cleanPathname === path,
   );
 
   try {
@@ -109,7 +112,7 @@ export async function middleware(request: NextRequest) {
     // For protected paths, check authentication
     if (!isPublicPath && !token) {
       // Store the original URL as the callback URL
-      const callbackUrl = pathname;
+      const callbackUrl = cleanPathname;
       const response = NextResponse.redirect(new URL("/login", request.url));
       
       // Set callback URL in cookie
@@ -124,8 +127,8 @@ export async function middleware(request: NextRequest) {
     const response = NextResponse.next();
 
     // Add cache control headers for API routes
-    if (pathname.startsWith("/api/")) {
-      response.headers.set("Cache-Control", getCacheControlHeader(pathname));
+    if (cleanPathname.startsWith("/api/")) {
+      response.headers.set("Cache-Control", getCacheControlHeader(cleanPathname));
     }
 
     return response;

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { TemplateType } from "@/lib/types/resume";
+import { type TemplateType } from "@/lib/types/resume";
 import { X } from "lucide-react";
 import { ModernResume } from "./templates/modern";
 import { ClassicResume } from "./templates/classic";
