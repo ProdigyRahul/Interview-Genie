@@ -40,7 +40,7 @@ export async function POST(request: Request) {
       data: {
         userId: session.user.id,
         originalFilename: data.metadata.filename,
-        fileUrl: data.metadata.file_url,
+        fileUrl: data.file_url || data.metadata.file_url, // Use either file_url location
         totalScore: data.ats_analysis.total_score,
         sectionScores: JSON.parse(JSON.stringify(data.ats_analysis.section_scores)),
         detailedBreakdown: JSON.parse(JSON.stringify(data.ats_analysis.detailed_breakdown)),
@@ -86,9 +86,38 @@ export async function GET() {
       orderBy: {
         createdAt: 'desc',
       },
+      select: {
+        id: true,
+        userId: true,
+        originalFilename: true,
+        fileUrl: true,
+        totalScore: true,
+        sectionScores: true,
+        detailedBreakdown: true,
+        keywordMatchRate: true,
+        missingKeywords: true,
+        improvementSuggestions: true,
+        improvementDetails: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     });
 
-    return NextResponse.json({ success: true, analyses });
+    // Parse JSON fields
+    const formattedAnalyses = analyses.map(analysis => ({
+      ...analysis,
+      sectionScores: analysis.sectionScores as any,
+      detailedBreakdown: analysis.detailedBreakdown as any,
+      improvementSuggestions: analysis.improvementSuggestions as any,
+      improvementDetails: analysis.improvementDetails as any,
+      createdAt: analysis.createdAt.toISOString(),
+      updatedAt: analysis.updatedAt.toISOString(),
+    }));
+
+    return NextResponse.json({ 
+      success: true, 
+      analyses: formattedAnalyses 
+    });
   } catch (error) {
     console.error('Error fetching resume analyses:', error);
     return NextResponse.json(
