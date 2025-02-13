@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MultiStepLoader } from "@/components/ui/multi-step-loader";
+import { Breadcrumb } from "@/components/ui/breadcrumb";
 import {
   FileText,
   Upload,
@@ -20,6 +21,7 @@ import {
   ScrollText,
   Pencil,
   Download,
+  FileSpreadsheet,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -64,6 +66,19 @@ export default function ResumeOptimizerPage() {
   const [analyses, setAnalyses] = useState<StoredResumeAnalysis[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const [showAll, setShowAll] = useState(false);
+
+  const breadcrumbItems = [
+    {
+      href: "/document-preparation",
+      label: "Document Preparation",
+      icon: FileSpreadsheet,
+    },
+    {
+      href: "/document-preparation/resume-optimizer",
+      label: "Resume Optimizer",
+      icon: FileText,
+    },
+  ];
 
   useEffect(() => {
     void fetchResumeHistory();
@@ -679,6 +694,7 @@ export default function ResumeOptimizerPage() {
   if (isAnalyzing) {
     return (
       <div className="space-y-8">
+        <Breadcrumb items={breadcrumbItems} className="mb-6" />
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -709,6 +725,7 @@ export default function ResumeOptimizerPage() {
   if (result) {
     return (
       <div className="space-y-8">
+        <Breadcrumb items={breadcrumbItems} className="mb-6" />
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -1030,6 +1047,7 @@ export default function ResumeOptimizerPage() {
 
   return (
     <div className="space-y-8">
+      <Breadcrumb items={breadcrumbItems} className="mb-6" />
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
