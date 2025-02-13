@@ -2,9 +2,10 @@
 
 import { Card } from "@/components/ui/card";
 import { motion } from "framer-motion";
-import { Video, Mic, Brain, Users, FileText, Sparkles } from "lucide-react";
+import { Video, Mic, Brain, Users, FileText, Sparkles, Presentation } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { Breadcrumb } from "@/components/ui/breadcrumb";
 
 const container = {
   hidden: { opacity: 0 },
@@ -75,8 +76,17 @@ const interviewTypes = [
 ];
 
 export default function InterviewPreparationPage() {
+  const breadcrumbItems = [
+    {
+      href: "/interview-preparation",
+      label: "Interview Preparation",
+      icon: Presentation,
+    },
+  ];
+
   return (
     <div className="space-y-8">
+      <Breadcrumb items={breadcrumbItems} className="mb-6" />
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
