@@ -1366,7 +1366,10 @@ export default function ResumeEditorPage() {
                       <div className="space-y-2">
                         <Label>Phone</Label>
                         <Input
-                          placeholder="+1 234 567 8900"
+                          type="tel"
+                          placeholder="+1 (555) 555-5555"
+                          pattern="^\+?[1-9][0-9]{7,14}$"
+                          title="Please enter a valid phone number (7-15 digits, can start with +)"
                           value={formData.phone}
                           onChange={(e) => {
                             const newValue = e.target.value;
@@ -1375,7 +1378,6 @@ export default function ResumeEditorPage() {
                               phone: newValue,
                             }));
                           }}
-                          required
                         />
                       </div>
                       <div className="space-y-2">
@@ -1522,6 +1524,23 @@ export default function ResumeEditorPage() {
                             />
                           </div>
                           <div className="space-y-2 md:col-span-2">
+                            <Label>Technologies Used</Label>
+                            <SkillsInput
+                              value={
+                                formData.experiences[exp.id]?.technologies ?? []
+                              }
+                              onChange={(techs) =>
+                                handleInputChange(
+                                  "experiences",
+                                  exp.id,
+                                  "technologies",
+                                  techs,
+                                )
+                              }
+                              placeholder="Add technologies used in this role"
+                            />
+                          </div>
+                          <div className="space-y-2 md:col-span-2">
                             <Label>Description</Label>
                             <div className="flex flex-col gap-2">
                               <Textarea
@@ -1553,23 +1572,6 @@ export default function ResumeEditorPage() {
                                 }
                               />
                             </div>
-                          </div>
-                          <div className="space-y-2 md:col-span-2">
-                            <Label>Technologies Used</Label>
-                            <SkillsInput
-                              value={
-                                formData.experiences[exp.id]?.technologies ?? []
-                              }
-                              onChange={(techs) =>
-                                handleInputChange(
-                                  "experiences",
-                                  exp.id,
-                                  "technologies",
-                                  techs,
-                                )
-                              }
-                              placeholder="Add technologies used in this role"
-                            />
                           </div>
                         </div>
                         <Button
@@ -1670,6 +1672,23 @@ export default function ResumeEditorPage() {
                             />
                           </div>
                           <div className="space-y-2 md:col-span-2">
+                            <Label>Technologies Used</Label>
+                            <SkillsInput
+                              value={
+                                formData.projects[proj.id]?.technologies ?? []
+                              }
+                              onChange={(techs) =>
+                                handleInputChange(
+                                  "projects",
+                                  proj.id,
+                                  "technologies",
+                                  techs,
+                                )
+                              }
+                              placeholder="Add technologies used in this project"
+                            />
+                          </div>
+                          <div className="space-y-2 md:col-span-2">
                             <Label>Description</Label>
                             <div className="flex flex-col gap-2">
                               <Textarea
@@ -1701,23 +1720,6 @@ export default function ResumeEditorPage() {
                                 }
                               />
                             </div>
-                          </div>
-                          <div className="space-y-2 md:col-span-2">
-                            <Label>Technologies Used</Label>
-                            <SkillsInput
-                              value={
-                                formData.projects[proj.id]?.technologies ?? []
-                              }
-                              onChange={(techs) =>
-                                handleInputChange(
-                                  "projects",
-                                  proj.id,
-                                  "technologies",
-                                  techs,
-                                )
-                              }
-                              placeholder="Add technologies used in this project"
-                            />
                           </div>
                         </div>
                         <Button
@@ -1924,47 +1926,20 @@ export default function ResumeEditorPage() {
                         <div className="grid w-full gap-4 sm:gap-6 md:grid-cols-2">
                           <div className="space-y-2">
                             <Label>Certification Name</Label>
-                            <div className="flex gap-2">
-                              <Input
-                                placeholder="Certification Name"
-                                value={
-                                  formData.certifications[cert.id]?.name ?? ""
-                                }
-                                onChange={(e) =>
-                                  handleInputChange(
-                                    "certifications",
-                                    cert.id,
-                                    "name",
-                                    e.target.value,
-                                  )
-                                }
-                              />
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="icon"
-                                onClick={() =>
-                                  handleGenerateAI(
-                                    "certifications",
-                                    cert.id,
-                                    "name",
-                                  )
-                                }
-                                disabled={
-                                  isGeneratingAI[
-                                    `certifications-${cert.id}-name`
-                                  ]
-                                }
-                              >
-                                {isGeneratingAI[
-                                  `certifications-${cert.id}-name`
-                                ] ? (
-                                  <div className="animate-spin">⌛</div>
-                                ) : (
-                                  <Sparkles className="h-4 w-4" />
-                                )}
-                              </Button>
-                            </div>
+                            <Input
+                              placeholder="Certification Name"
+                              value={
+                                formData.certifications[cert.id]?.name ?? ""
+                              }
+                              onChange={(e) =>
+                                handleInputChange(
+                                  "certifications",
+                                  cert.id,
+                                  "name",
+                                  e.target.value,
+                                )
+                              }
+                            />
                           </div>
                           <div className="space-y-2">
                             <Label>Issuing Organization</Label>
