@@ -1013,11 +1013,28 @@ export default function ResumeOptimizerPage() {
                 </div>
                 <div className="h-full w-full overflow-hidden rounded-lg border bg-white">
                   {result?.metadata?.file_url ? (
-                    <iframe
-                      src={result.metadata.file_url}
+                    <object
+                      data={result.metadata.file_url}
+                      type="application/pdf"
                       className="h-full w-full"
-                      title="Resume Preview"
-                    />
+                    >
+                      <div className="flex h-full flex-col items-center justify-center gap-4 text-center text-muted-foreground">
+                        <FileText className="h-12 w-12" />
+                        <div>
+                          <p className="font-medium">PDF viewer not supported</p>
+                          <p className="text-sm">
+                            <a
+                              href={result.metadata.file_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-primary hover:underline"
+                            >
+                              Click here to view the PDF
+                            </a>
+                          </p>
+                        </div>
+                      </div>
+                    </object>
                   ) : (
                     <div className="flex h-full flex-col items-center justify-center gap-4 text-center text-muted-foreground">
                       <FileText className="h-12 w-12" />
