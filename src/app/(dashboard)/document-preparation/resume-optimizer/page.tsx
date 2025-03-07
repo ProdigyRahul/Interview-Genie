@@ -26,7 +26,6 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
-import { Progress } from "@/components/ui/progress";
 import { format } from "date-fns";
 import type { ResumeAnalysisResult, StoredResumeAnalysis } from "@/types/resume";
 import {
@@ -179,28 +178,28 @@ export default function ResumeOptimizerPage() {
             section?: string; 
             suggested?: string; 
           }) => ({
-            current: item.current || '',
-            impact: item.impact || '',
-            section: item.section || '',
-            suggested: item.suggested || '',
+            current: item.current ?? '',
+            impact: item.impact ?? '',
+            section: item.section ?? '',
+            suggested: item.suggested ?? '',
           })),
           format: (data.improvement_suggestions.format || []).map((item: {
             improved?: string;
             original?: string;
             reason?: string;
           }) => ({
-            improved: item.improved || '',
-            original: item.original || '',
-            reason: item.reason || '',
+            improved: item.improved ?? '',
+            original: item.original ?? '',
+            reason: item.reason ?? '',
           })),
           language: (data.improvement_suggestions.language || []).map((item: {
             improved?: string;
             original?: string;
             reason?: string;
           }) => ({
-            improved: item.improved || '',
-            original: item.original || '',
-            reason: item.reason || '',
+            improved: item.improved ?? '',
+            original: item.original ?? '',
+            reason: item.reason ?? '',
           })),
           keywords: data.improvement_suggestions.keywords || [],
         },
@@ -562,20 +561,20 @@ export default function ResumeOptimizerPage() {
                             improvement_suggestions: {
                               high_priority: storedSuggestions.high_priority || [],
                               content: (storedSuggestions.content || []).map(item => ({
-                                current: item.current || '',
-                                impact: item.impact || '',
-                                section: item.section || '',
-                                suggested: item.suggested || '',
+                                current: item.current ?? '',
+                                impact: item.impact ?? '',
+                                section: item.section ?? '',
+                                suggested: item.suggested ?? '',
                               })),
                               format: (storedSuggestions.format || []).map(item => ({
-                                improved: item.improved || '',
-                                original: item.original || '',
-                                reason: item.reason || '',
+                                improved: item.improved ?? '',
+                                original: item.original ?? '',
+                                reason: item.reason ?? '',
                               })),
                               language: (storedSuggestions.language || []).map(item => ({
-                                improved: item.improved || '',
-                                original: item.original || '',
-                                reason: item.reason || '',
+                                improved: item.improved ?? '',
+                                original: item.original ?? '',
+                                reason: item.reason ?? '',
                               })),
                               keywords: storedSuggestions.keywords || [],
                             },
