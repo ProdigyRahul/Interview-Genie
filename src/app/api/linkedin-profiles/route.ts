@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 export const fetchCache = "force-no-store";
 
-export async function GET(req: Request) {
+export async function GET(_req: Request) {
   try {
     const session = await auth();
     if (!session?.user?.email) {
@@ -64,7 +64,7 @@ export async function GET(req: Request) {
 }
 
 // Handle preflight requests
-export async function OPTIONS(req: Request) {
+export async function OPTIONS(_req: Request) {
   return new NextResponse(null, {
     status: 204,
     headers: {

@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 export const fetchCache = "force-no-store";
 
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+export async function GET(_req: Request, { params }: { params: { id: string } }) {
   try {
     const session = await auth();
     if (!session?.user?.email) {
@@ -81,7 +81,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
 }
 
 // Handle preflight requests
-export async function OPTIONS(req: Request) {
+export async function OPTIONS(_req: Request) {
   return new NextResponse(null, {
     status: 204,
     headers: {

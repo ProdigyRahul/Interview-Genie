@@ -278,7 +278,7 @@ export async function POST(request: Request) {
     }
 
     // Store the analysis in the database and deduct credits
-    const [dbAnalysis, updatedUser] = await db.$transaction([
+    const [_, updatedUserIfNeeded] = await db.$transaction([
       // 1. Create the analysis record
       db.resumeAnalysis.create({
         data: {
