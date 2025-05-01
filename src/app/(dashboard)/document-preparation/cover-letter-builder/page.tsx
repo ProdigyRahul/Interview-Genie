@@ -35,21 +35,6 @@ interface CoverLetter {
   createdAt: string;
 }
 
-interface FormData {
-  fullName: string;
-  email: string;
-  phone: string;
-  companyName: string;
-  jobTitle: string;
-  hiringManager: string;
-  keyPoints: string[];
-  customization: {
-    tone: string;
-    style: string;
-    length: string;
-  };
-}
-
 export default function CoverLetterBuilderPage() {
   const router = useRouter();
   const [coverLetters, setCoverLetters] = useState<CoverLetter[]>([]);

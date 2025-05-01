@@ -624,7 +624,7 @@ export default function ResumeEditorPage() {
     if (resumeId) {
       void fetchResumeData();
     }
-  }, [resumeId]);
+  }, [resumeId, completedSections]);
 
   const handleGenerateAI = async (
     section: string,
