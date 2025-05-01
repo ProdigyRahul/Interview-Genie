@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
@@ -115,7 +115,7 @@ export default function ViewLinkedInOptimizationPage() {
     },
   ];
 
-  const fetchOptimization = async () => {
+  const fetchOptimization = useCallback(async () => {
     try {
       setIsLoading(true);
       // Replace mock data with actual API call
@@ -149,12 +149,12 @@ export default function ViewLinkedInOptimizationPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [params.id]);
 
   useEffect(() => {
     // Fix floating promise by using void operator
     void fetchOptimization();
-  }, [params.id]); // params.id is stable between renders
+  }, [fetchOptimization]); // fetchOptimization is now stable between renders
 
   const handleDownload = async () => {
     if (!optimization) return;

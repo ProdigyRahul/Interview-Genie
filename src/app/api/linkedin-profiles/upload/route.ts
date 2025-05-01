@@ -6,7 +6,7 @@ import { join } from "path";
 import { v4 as uuidv4 } from "uuid";
 import { google, MODEL_NAME } from "@/lib/google";
 import { generateText } from "ai";
-import { GoogleGenerativeAIProviderOptions } from '@ai-sdk/google';
+import type { GoogleGenerativeAIProviderOptions } from '@ai-sdk/google';
 import fs from "fs";
 
 // Define feature credit costs
@@ -260,7 +260,7 @@ export async function POST(req: Request) {
     // Save the profile to the database
     try {
       // Start a transaction to save profile and update credits
-      const [linkedInProfile, updatedUser] = await db.$transaction([
+      const [linkedInProfile, _] = await db.$transaction([
         // 1. Create the LinkedIn profile
         db.linkedInProfile.create({
           data: {
@@ -343,7 +343,7 @@ function sanitizeResponseData(data: any): any {
 }
 
 // Handle preflight requests
-export async function OPTIONS(req: Request) {
+export async function OPTIONS(_req: Request) {
   return new NextResponse(null, {
     status: 204,
     headers: {

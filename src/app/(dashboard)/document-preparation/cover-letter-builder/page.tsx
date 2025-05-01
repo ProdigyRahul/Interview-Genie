@@ -52,10 +52,10 @@ interface FormData {
 
 export default function CoverLetterBuilderPage() {
   const router = useRouter();
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [preview, setPreview] = useState<string | null>(null);
   const [coverLetters, setCoverLetters] = useState<CoverLetter[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [preview, setPreview] = useState<string | null>(null);
   const [selectedLetter, setSelectedLetter] = useState<CoverLetter | null>(null);
   const [formData, setFormData] = useState<FormData>({
     fullName: "",
@@ -100,7 +100,7 @@ export default function CoverLetterBuilderPage() {
   ];
 
   useEffect(() => {
-    fetchCoverLetters();
+    void fetchCoverLetters();
   }, []);
 
   const fetchCoverLetters = async () => {
@@ -120,65 +120,6 @@ export default function CoverLetterBuilderPage() {
       setCoverLetters([]);
     } finally {
       setIsLoadingHistory(false);
-    }
-  };
-
-  const handleGenerate = async () => {
-    try {
-      setIsGenerating(true);
-
-      // Validate form data before sending
-      if (!formData.fullName || !formData.email || !formData.phone) {
-        toast.error("Please fill in all personal information fields");
-        setIsGenerating(false);
-        return;
-      }
-
-      if (!formData.companyName || !formData.jobTitle) {
-        toast.error("Please fill in company and job information");
-        setIsGenerating(false);
-        return;
-      }
-
-      if (!formData.keyPoints || formData.keyPoints.length === 0) {
-        toast.error("Please add at least one key point");
-        setIsGenerating(false);
-        return;
-      }
-
-      const response = await fetch("/api/cover-letter", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to generate cover letter");
-      }
-
-      if (!data.success) {
-        throw new Error(data.error || "Failed to generate cover letter");
-      }
-
-      // Set the preview with the full letter
-      setPreview(data.content.full_letter);
-      toast.success("Cover letter generated successfully!");
-      
-      // Refresh the cover letter list
-      await fetchCoverLetters();
-    } catch (error) {
-      console.error("Error generating cover letter:", error);
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Failed to generate cover letter. Please try again.",
-      );
-    } finally {
-      setIsGenerating(false);
     }
   };
 

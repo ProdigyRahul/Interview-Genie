@@ -83,7 +83,7 @@ export async function POST(req: Request) {
   }
 }
 
-export async function GET(req: Request) {
+export async function GET(_req: Request) {
   try {
     const session = await auth();
     if (!session?.user?.email) {
@@ -210,11 +210,11 @@ export async function DELETE(req: Request) {
 }
 
 // Handle preflight requests
-export async function OPTIONS(req: Request) {
+export async function OPTIONS(_req: Request) {
   return new NextResponse(null, {
     status: 204,
     headers: {
-      Allow: "POST, OPTIONS",
+      Allow: "GET, OPTIONS",
       "Content-Type": "application/json",
     },
   });
