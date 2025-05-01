@@ -126,101 +126,31 @@ export default function ViewLinkedInOptimizationPage() {
   const fetchOptimization = async () => {
     try {
       setIsLoading(true);
-      // In a real implementation, this would fetch from an API
-      // For demo purposes, we'll simulate an API response
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      // Replace mock data with actual API call
+      const response = await fetch(`/api/linkedin-profiles/${params.id}`);
       
-      const mockOptimization: LinkedInOptimization = {
-        id: params.id as string,
-        profileName: "John Doe",
-        title: "Senior Software Developer",
-        profileUrl: "https://linkedin.com/in/johndoe",
-        optimizationScore: 68,
-        createdAt: new Date().toISOString(),
-        fileUrl: "/sample-report.pdf",
-        analysisResults: {
-          optimization_suggestions: {
-            headline_improvements: [
-              {
-                current_text: "Senior Software Developer at Tech Company",
-                issue: "Generic title lacks specific technologies and focus areas",
-                suggestion: "Senior Full-Stack Developer | React/Node.js Expert | Cloud Infrastructure (AWS) | Tech Leadership",
-                impact: "More discoverable by recruiters searching for specific technologies"
-              },
-              {
-                current_text: "Senior Software Developer at Tech Company",
-                issue: "Missing achievement or impact metrics",
-                suggestion: "Senior Software Developer driving 30% efficiency gains through automation | Full-Stack Developer building SaaS solutions",
-                impact: "Demonstrates value and outcomes rather than just position"
-              }
-            ],
-            summary_improvements: [
-              {
-                current_text: "Software developer with 7 years of experience building web applications.",
-                issue: "Too vague and lacks specific technologies and achievements",
-                suggestion: "Results-driven Full-Stack Developer with 7+ years crafting scalable web applications using React, Node.js, and AWS. Led 4 product launches generating $2M+ in revenue while reducing deployment time by 40% through CI/CD implementation. Passionate about clean code architecture and mentoring junior developers.",
-                impact: "Communicates specific value and capabilities to potential employers"
-              }
-            ],
-            experience_improvements: [
-              {
-                current_text: "Developed features for the company's main product",
-                issue: "Lacks specificity and measurable impact",
-                suggestion: "Architected and implemented a real-time notification system using WebSockets and Redis, increasing user engagement by 27% and reducing response latency by 300ms",
-                impact: "Shows specific technical skills and quantifiable business impact"
-              }
-            ],
-            education_improvements: [],
-            skills_improvements: [
-              {
-                current_text: "JavaScript, React, Node.js",
-                issue: "Missing specialized and in-demand skills that differentiate you",
-                suggestion: "Add: TypeScript, GraphQL, AWS Lambda, Docker, CI/CD, Redux, Jest, Microservices",
-                impact: "Improves keyword matching for specialized roles and demonstrates depth"
-              }
-            ]
-          },
-          section_priorities: [
-            {
-              section: "Headline",
-              priority: "high",
-              reason: "First thing recruiters see and critical for search visibility",
-              potential_impact: "Can increase profile views by up to 30% with optimized keywords"
-            },
-            {
-              section: "Summary",
-              priority: "high",
-              reason: "Currently too generic and missing achievements",
-              potential_impact: "Significantly improves first impression and communicates your unique value"
-            },
-            {
-              section: "Experience",
-              priority: "medium",
-              reason: "Lacks measurable achievements and impact metrics",
-              potential_impact: "Makes your contributions concrete and demonstrates business value"
-            }
-          ],
-          quick_wins: [
-            {
-              action: "Add 5+ relevant skills that include specific technologies",
-              effort: "low",
-              impact: "Improves search visibility by 15-20%"
-            },
-            {
-              action: "Update headline with specific technologies and specializations",
-              effort: "low",
-              impact: "Increases profile views from relevant recruiters"
-            },
-            {
-              action: "Add quantifiable results to each job experience (numbers, percentages)",
-              effort: "medium",
-              impact: "Makes achievements concrete and memorable"
-            }
-          ]
-        }
-      };
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to fetch LinkedIn profile");
+      }
       
-      setOptimization(mockOptimization);
+      const data = await response.json();
+      
+      if (!data.success || !data.profile) {
+        throw new Error("Failed to load profile data");
+      }
+      
+      // Use the actual profile data
+      setOptimization({
+        id: data.profile.id,
+        profileName: data.profile.profileName,
+        title: data.profile.title,
+        profileUrl: data.profile.profileUrl,
+        optimizationScore: data.profile.optimizationScore,
+        createdAt: data.profile.createdAt,
+        fileUrl: data.profile.fileUrl,
+        analysisResults: data.profile.analysisResults
+      });
     } catch (error) {
       console.error("Error fetching LinkedIn optimization:", error);
       toast.error("Failed to load optimization results");

@@ -17,6 +17,14 @@ export const dynamic = 'force-dynamic';
 // Configure longer timeout
 export const maxDuration = 60; // 60 seconds timeout
 
+// Define extended result type that includes credits
+interface ResumeAnalysisResultWithCredits extends ResumeAnalysisResult {
+  credits: {
+    cost: number;
+    remaining: number | "UNLIMITED";
+  };
+}
+
 export async function POST(request: Request) {
   try {
     const session = await auth();
@@ -317,7 +325,7 @@ export async function POST(request: Request) {
         cost: RESUME_OPTIMIZER_CREDITS,
         remaining: isPro ? "UNLIMITED" : (user.credits - RESUME_OPTIMIZER_CREDITS)
       }
-    });
+    } as ResumeAnalysisResultWithCredits);
   } catch (error) {
     console.error('Error in resume analysis:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';

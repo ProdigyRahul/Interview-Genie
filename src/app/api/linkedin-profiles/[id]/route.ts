@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { db } from "@/lib/db";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -20,7 +20,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
       );
     }
 
-    const user = await prisma.user.findUnique({
+    const user = await db.user.findUnique({
       where: { email: session.user.email },
     });
 
@@ -37,7 +37,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     const { id } = params;
 
     // Fetch the LinkedIn profile from the database
-    const profile = await prisma.linkedInProfile.findUnique({
+    const profile = await db.linkedInProfile.findUnique({
       where: {
         id,
       },
