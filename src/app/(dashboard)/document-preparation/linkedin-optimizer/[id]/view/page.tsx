@@ -16,7 +16,7 @@ import {
   Info,
   ChevronDown,
   ChevronUp,
-  Sparkles
+  Sparkle
 } from "lucide-react";
 import { toast } from "sonner";
 import { useParams, useRouter } from "next/navigation";
@@ -574,7 +574,7 @@ export default function ViewLinkedInOptimizationPage() {
             <Card className="p-6 bg-muted/30">
               <div className="flex items-start gap-4">
                 <div className="rounded-full bg-primary/10 p-2 mt-1">
-                  <Sparkles className="h-5 w-5 text-primary" />
+                  <Sparkle className="h-5 w-5 text-primary" />
                 </div>
                 <div>
                   <h3 className="font-semibold mb-1">Pro Tip</h3>

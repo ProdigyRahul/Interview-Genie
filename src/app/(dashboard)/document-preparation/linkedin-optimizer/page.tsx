@@ -63,7 +63,7 @@ export default function LinkedInOptimizerPage() {
   const fetchProfiles = async () => {
     try {
       setIsLoadingProfiles(true);
-      // In a real implementation, this would fetch from a real API endpoint
+      // In a real implementation, this would fetch profiles processed by the Gemini API
       const response = await fetch("/api/linkedin-profiles");
       const data = await response.json();
 
@@ -189,7 +189,7 @@ export default function LinkedInOptimizerPage() {
                 <Linkedin className="mx-auto mb-4 h-12 w-12 opacity-50" />
                 <p>No LinkedIn profiles optimized yet</p>
                 <p className="text-sm">
-                  Optimize your first profile to get started
+                  Upload your LinkedIn profile PDF to get started
                 </p>
               </div>
             </Card>
