@@ -230,7 +230,7 @@ The cover letter should be formal, persuasive, and highlight the candidate's rel
 }
 
 // GET endpoint to retrieve user's cover letters
-export async function GET(request: Request) {
+export async function GET(_request: Request) {
   try {
     const session = await auth();
     if (!session?.user) {
