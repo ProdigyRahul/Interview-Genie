@@ -361,7 +361,7 @@ export default function NewCoverLetterPage() {
               
               <div className="rounded-lg bg-muted p-4">
                 <h4 className="font-medium mb-2">Keep It Concise</h4>
-                <p className="text-sm text-muted-foreground">A great cover letter is typically 250-400 words. Be clear and direct about why you're a good fit for the role.</p>
+                <p className="text-sm text-muted-foreground">A great cover letter is typically 250-400 words. Be clear and direct about why you&apos;re a good fit for the role.</p>
               </div>
               
               <div className="rounded-lg bg-muted p-4">

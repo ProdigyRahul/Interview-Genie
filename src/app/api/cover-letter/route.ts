@@ -178,7 +178,7 @@ The cover letter should be formal, persuasive, and highlight the candidate's rel
     }
 
     // Store in database and deduct credits
-    const [coverLetter, _] = await db.$transaction([
+    const [coverLetter] = await db.$transaction([
       // 1. Create the cover letter
       db.coverLetter.create({
         data: {

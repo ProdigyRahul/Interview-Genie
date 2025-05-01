@@ -55,8 +55,6 @@ export default function CoverLetterBuilderPage() {
   const [coverLetters, setCoverLetters] = useState<CoverLetter[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [preview, setPreview] = useState<string | null>(null);
-  const [selectedLetter, setSelectedLetter] = useState<CoverLetter | null>(null);
   const [formData, setFormData] = useState<FormData>({
     fullName: "",
     email: "",

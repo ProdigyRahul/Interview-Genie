@@ -260,7 +260,7 @@ export async function POST(req: Request) {
     // Save the profile to the database
     try {
       // Start a transaction to save profile and update credits
-      const [linkedInProfile, _] = await db.$transaction([
+      const [linkedInProfile] = await db.$transaction([
         // 1. Create the LinkedIn profile
         db.linkedInProfile.create({
           data: {
