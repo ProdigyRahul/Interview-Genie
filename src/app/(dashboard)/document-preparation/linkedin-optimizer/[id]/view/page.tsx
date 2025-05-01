@@ -96,7 +96,6 @@ export default function ViewLinkedInOptimizationPage() {
   const router = useRouter();
   const [optimization, setOptimization] = useState<LinkedInOptimization | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [expandedSections, setExpandedSections] = useState<string[]>([]);
 
   const breadcrumbItems = [
     {
@@ -115,10 +114,6 @@ export default function ViewLinkedInOptimizationPage() {
       icon: FileText,
     },
   ];
-
-  useEffect(() => {
-    fetchOptimization();
-  }, [params.id]);
 
   const fetchOptimization = async () => {
     try {
@@ -156,6 +151,11 @@ export default function ViewLinkedInOptimizationPage() {
     }
   };
 
+  useEffect(() => {
+    // Fix floating promise by using void operator
+    void fetchOptimization();
+  }, [params.id]); // params.id is stable between renders
+
   const handleDownload = async () => {
     if (!optimization) return;
     
@@ -170,14 +170,6 @@ export default function ViewLinkedInOptimizationPage() {
 
   const handleBack = () => {
     router.push("/document-preparation/linkedin-optimizer");
-  };
-
-  const toggleSection = (section: string) => {
-    setExpandedSections(prev => 
-      prev.includes(section) 
-        ? prev.filter(s => s !== section)
-        : [...prev, section]
-    );
   };
 
   const isPriorityHigh = (priority: string) => priority === "high";
