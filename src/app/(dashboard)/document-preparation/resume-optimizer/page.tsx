@@ -142,7 +142,7 @@ export default function ResumeOptimizerPage() {
       setIsAnalyzing(true);
 
       const formData = new FormData();
-      formData.append("resume", fileToAnalyze);
+      formData.append("file", fileToAnalyze);
 
       const response = await fetch("/api/resume-analysis", {
         method: "POST",
@@ -150,72 +150,12 @@ export default function ResumeOptimizerPage() {
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || "Failed to analyze resume");
+        const errorText = await response.json();
+        throw new Error(errorText.error || "Failed to analyze resume");
       }
 
       const data = await response.json();
-      
-      if (!data.success) {
-        throw new Error(data.error || "Failed to analyze resume");
-      }
-
-      setResult({
-        success: true,
-        file_url: data.metadata.file_url,
-        ats_analysis: {
-          total_score: data.ats_analysis.total_score,
-          section_scores: data.ats_analysis.section_scores,
-          detailed_breakdown: data.ats_analysis.detailed_breakdown,
-          keyword_match_rate: data.ats_analysis.keyword_match_rate,
-          missing_keywords: data.ats_analysis.missing_keywords || [],
-        },
-        improvement_suggestions: {
-          high_priority: data.improvement_suggestions.high_priority || [],
-          content: (data.improvement_suggestions.content || []).map((item: { 
-            current?: string; 
-            impact?: string; 
-            section?: string; 
-            suggested?: string; 
-          }) => ({
-            current: item.current ?? '',
-            impact: item.impact ?? '',
-            section: item.section ?? '',
-            suggested: item.suggested ?? '',
-          })),
-          format: (data.improvement_suggestions.format || []).map((item: {
-            improved?: string;
-            original?: string;
-            reason?: string;
-          }) => ({
-            improved: item.improved ?? '',
-            original: item.original ?? '',
-            reason: item.reason ?? '',
-          })),
-          language: (data.improvement_suggestions.language || []).map((item: {
-            improved?: string;
-            original?: string;
-            reason?: string;
-          }) => ({
-            improved: item.improved ?? '',
-            original: item.original ?? '',
-            reason: item.reason ?? '',
-          })),
-          keywords: data.improvement_suggestions.keywords || [],
-        },
-        improvement_details: {
-          bullet_points: data.improvement_details.bullet_points || [],
-          achievements: data.improvement_details.achievements || [],
-          skills: data.improvement_details.skills || [],
-        },
-        metadata: {
-          filename: data.metadata.filename,
-          job_description_provided: data.metadata.job_description_provided,
-          timestamp: data.metadata.timestamp,
-          file_url: data.metadata.file_url,
-        },
-      });
-
+      setResult(data);
       toast.success("Analysis completed successfully!");
       await fetchResumeHistory(); // Refresh the history after successful analysis
     } catch (error) {
