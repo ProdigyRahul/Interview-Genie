@@ -43,23 +43,28 @@ export default function LinkedInOptimizerPage() {
     const fetchProfiles = async () => {
       try {
         setIsLoadingProfiles(true);
+        // Replace this with a real API call
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+        
         const response = await fetch("/api/linkedin-profiles");
+        if (!response.ok) {
+          throw new Error("Failed to fetch profiles");
+        }
+        
         const data = await response.json();
-
         if (data.success) {
           setProfiles(data.profiles);
-        } else {
-          toast.error(data.error || "Failed to fetch LinkedIn profiles");
         }
       } catch (error) {
         console.error("Error fetching LinkedIn profiles:", error);
-        toast.error("Failed to fetch LinkedIn profiles");
+        toast.error("Failed to load LinkedIn profiles");
       } finally {
         setIsLoadingProfiles(false);
       }
     };
 
-    fetchProfiles();
+    // Fix floating promise by using void operator
+    void fetchProfiles();
   }, []);
 
   const handleCreateNew = () => {
