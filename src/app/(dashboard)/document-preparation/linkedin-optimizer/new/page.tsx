@@ -11,6 +11,8 @@ import {
   Upload,
   FileSpreadsheet,
   Linkedin,
+  Download,
+  Check,
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
@@ -194,37 +196,60 @@ export default function NewLinkedInOptimizerPage() {
           <h3 className="text-lg font-semibold mb-6">Upload LinkedIn Profile PDF</h3>
           
           <div
-            className={`flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+            className={`flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-10 text-center transition-all ${
               isDragging
-                ? "border-primary bg-primary/5"
-                : "border-muted-foreground/25"
+                ? "border-primary bg-primary/5 shadow-lg"
+                : "border-muted-foreground/25 hover:border-primary/40 hover:bg-muted/30"
             }`}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
           >
-            <div className="mx-auto flex max-w-[420px] flex-col items-center justify-center text-center">
-              <div className="rounded-full bg-primary/10 p-4">
-                <Upload className="h-8 w-8 text-primary" />
-              </div>
-              <div className="mt-4 space-y-2">
-                <h3 className="text-lg font-semibold">
-                  {formData.uploadedFile 
-                    ? `File selected: ${formData.uploadedFile.name}` 
-                    : "Drop your PDF here or click to upload"}
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  Upload your LinkedIn profile PDF for AI-powered analysis and optimization
-                </p>
-              </div>
+            <div className="mx-auto flex max-w-[500px] flex-col items-center justify-center text-center">
+              {formData.uploadedFile ? (
+                <div className="flex flex-col items-center space-y-4">
+                  <div className="rounded-full bg-green-500/10 p-5">
+                    <FileText className="h-10 w-10 text-green-500" />
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="text-xl font-semibold text-green-600 flex items-center gap-2">
+                      <Check className="h-5 w-5" />
+                      File Selected
+                    </h3>
+                    <p className="text-base font-medium">{formData.uploadedFile.name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {(formData.uploadedFile.size / (1024 * 1024)).toFixed(2)} MB
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="relative">
+                    <div className="absolute -inset-1 rounded-full bg-primary/20 blur-md" />
+                    <div className="relative rounded-full bg-primary/10 p-5">
+                      <Upload className="h-10 w-10 text-primary" />
+                    </div>
+                  </div>
+                  <div className="mt-5 space-y-2">
+                    <h3 className="text-xl font-semibold">
+                      Drop your LinkedIn PDF here
+                    </h3>
+                    <p className="text-base text-muted-foreground">
+                      or click to browse files from your device
+                    </p>
+                  </div>
+                </>
+              )}
+              
               <Button
                 onClick={() =>
                   document.querySelector<HTMLInputElement>("#file-upload")?.click()
                 }
-                className="mt-4"
+                className={`mt-6 ${formData.uploadedFile ? 'bg-muted/80 hover:bg-muted text-foreground' : ''}`}
                 variant={formData.uploadedFile ? "outline" : "default"}
+                size="lg"
               >
-                {formData.uploadedFile ? "Choose Different File" : "Choose File"}
+                {formData.uploadedFile ? "Choose Different File" : "Select PDF File"}
               </Button>
               <input
                 id="file-upload"
@@ -233,10 +258,13 @@ export default function NewLinkedInOptimizerPage() {
                 className="hidden"
                 onChange={handleFileChange}
               />
-              <div className="mt-4 flex items-center text-sm text-muted-foreground">
-                <Sparkle className="mr-2 h-4 w-4 text-yellow-500" />
-                Our AI will analyze your profile and provide tailored recommendations
-              </div>
+              
+              {!formData.uploadedFile && (
+                <div className="mt-5 flex items-center text-sm text-muted-foreground">
+                  <Sparkle className="mr-2 h-4 w-4 text-yellow-500" />
+                  Our AI will analyze your profile and provide tailored recommendations
+                </div>
+              )}
             </div>
           </div>
 
@@ -254,26 +282,40 @@ export default function NewLinkedInOptimizerPage() {
         </Card>
 
         {/* Tips Card */}
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4">How To Get The Best Results</h3>
+        <Card className="p-6 border-t-4 border-t-primary/70 shadow-md">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="rounded-full bg-primary/10 p-2.5">
+              <Sparkle className="h-5 w-5 text-primary" />
+            </div>
+            <h3 className="text-xl font-semibold">How To Get The Best Results</h3>
+          </div>
           
-          <div className="space-y-4">
-            <div className="rounded-lg bg-muted p-4">
-              <h4 className="font-medium mb-2">Complete Your Profile</h4>
+          <div className="grid gap-5 md:grid-cols-3">
+            <div className="rounded-xl border bg-card p-5 shadow-sm transition-all hover:shadow-md">
+              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                <FileText className="h-5 w-5 text-primary" />
+              </div>
+              <h4 className="text-lg font-medium mb-2">Complete Your Profile</h4>
               <p className="text-sm text-muted-foreground">
                 For the most accurate analysis, ensure your LinkedIn profile is as complete as possible, including your experience, education, skills, and achievements.
               </p>
             </div>
             
-            <div className="rounded-lg bg-muted p-4">
-              <h4 className="font-medium mb-2">PDF Export Instructions</h4>
+            <div className="rounded-xl border bg-card p-5 shadow-sm transition-all hover:shadow-md">
+              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                <Download className="h-5 w-5 text-primary" />
+              </div>
+              <h4 className="text-lg font-medium mb-2">PDF Export Instructions</h4>
               <p className="text-sm text-muted-foreground">
                 To export your LinkedIn profile as PDF: Go to your profile → Click "More" button → Select "Save to PDF" → Upload the saved file here.
               </p>
             </div>
             
-            <div className="rounded-lg bg-muted p-4">
-              <h4 className="font-medium mb-2">AI-Powered Analysis</h4>
+            <div className="rounded-xl border bg-card p-5 shadow-sm transition-all hover:shadow-md">
+              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                <Sparkle className="h-5 w-5 text-primary" />
+              </div>
+              <h4 className="text-lg font-medium mb-2">AI-Powered Analysis</h4>
               <p className="text-sm text-muted-foreground">
                 Our advanced AI will analyze your LinkedIn profile PDF to provide tailored recommendations for optimization, focusing on content quality, keyword effectiveness, and profile structure.
               </p>

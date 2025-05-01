@@ -65,17 +65,24 @@ export default function LinkedInOptimizerPage() {
       setIsLoadingProfiles(true);
       // In a real implementation, this would fetch profiles processed by the Gemini API
       const response = await fetch("/api/linkedin-profiles");
+      
+      if (!response.ok) {
+        console.error("Failed to fetch LinkedIn profiles:", response.statusText);
+        setProfiles([]);
+        return;
+      }
+      
       const data = await response.json();
 
       if (data.success) {
-        setProfiles(data.profiles);
+        setProfiles(data.profiles || []);
       } else {
         console.error("Failed to fetch LinkedIn profiles:", data.error);
         setProfiles([]);
       }
     } catch (error) {
       console.error("Error fetching LinkedIn profiles:", error);
-      // For now, set to empty array for demo purposes
+      // Set to empty array to prevent UI from breaking
       setProfiles([]);
     } finally {
       setIsLoadingProfiles(false);
@@ -184,13 +191,24 @@ export default function LinkedInOptimizerPage() {
 
           {/* Previous Profiles */}
           {profiles.length === 0 ? (
-            <Card className="flex items-center justify-center p-8">
-              <div className="text-center text-muted-foreground">
-                <Linkedin className="mx-auto mb-4 h-12 w-12 opacity-50" />
-                <p>No LinkedIn profiles optimized yet</p>
-                <p className="text-sm">
-                  Upload your LinkedIn profile PDF to get started
-                </p>
+            <Card className="group h-full transition-all hover:border-primary/40 hover:shadow-lg">
+              <div className="flex flex-col items-center justify-center p-8 text-center h-full space-y-4">
+                <div className="rounded-full bg-muted/60 p-6 mb-2">
+                  <Linkedin className="h-12 w-12 text-muted-foreground/60" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-xl font-semibold">No Optimizations Yet</h3>
+                  <p className="text-muted-foreground max-w-sm">
+                    Upload your LinkedIn profile PDF to receive AI-powered optimization recommendations and improve your professional presence.
+                  </p>
+                  <Button 
+                    className="mt-4" 
+                    onClick={handleCreateNew}
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Create Your First Optimization
+                  </Button>
+                </div>
               </div>
             </Card>
           ) : (
