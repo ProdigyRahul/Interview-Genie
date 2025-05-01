@@ -5,7 +5,9 @@ import type { ResumeAnalysisResult } from "@/types/resume";
 import { google, MODEL_NAME } from "@/lib/google";
 import { generateText } from "ai";
 import { GoogleGenerativeAIProviderOptions } from '@ai-sdk/google';
-import { HarmCategory } from "@/types/resume";
+import path from 'path';
+import fs from 'fs';
+import { v4 as uuidv4 } from 'uuid';
 
 // Remove edge runtime and use Node.js runtime
 export const dynamic = 'force-dynamic';
@@ -30,7 +32,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Only PDF files are supported" }, { status: 400 });
     }
 
+    // Save the file to public/uploads/resumes
     const fileBuffer = Buffer.from(await file.arrayBuffer());
+    const fileExtension = path.extname(file.name).toLowerCase();
+    const uniqueFilename = `${uuidv4()}${fileExtension}`;
+    const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'resumes');
+    const filePath = path.join(uploadDir, uniqueFilename);
+    
+    // Ensure upload directory exists
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    
+    // Write file to disk
+    fs.writeFileSync(filePath, fileBuffer);
+    
+    // Generate the public URL
+    const fileUrl = `/uploads/resumes/${uniqueFilename}`;
 
     const { text: analysis } = await generateText({
       model: google(MODEL_NAME, {
@@ -131,7 +149,7 @@ export async function POST(request: Request) {
       // Transform the data to match our expected structure
       data = {
         success: true,
-        file_url: '',
+        file_url: fileUrl,
         ats_analysis: {
           total_score: rawData.ats_analysis?.total_score || rawData.ats_analysis?.overall_score || 50,
           section_scores: {
@@ -217,7 +235,7 @@ export async function POST(request: Request) {
         },
         metadata: {
           filename: file.name,
-          file_url: '',
+          file_url: fileUrl,
           job_description_provided: false,
           timestamp: new Date().toISOString()
         }
@@ -233,7 +251,7 @@ export async function POST(request: Request) {
       data: {
         userId: session.user.id,
         originalFilename: file.name,
-        fileUrl: '', // File URL is not needed with direct file processing
+        fileUrl: fileUrl, // Now we're saving the file URL
         totalScore: data.ats_analysis.total_score,
         sectionScores: data.ats_analysis.section_scores,
         detailedBreakdown: data.ats_analysis.detailed_breakdown,
