@@ -1,6 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY ?? "");
 
 // Types and Interfaces
 export interface GeminiResponse {
@@ -356,5 +356,5 @@ const getPromptForSection = (
     references: `Create a professional reference description for ${context.name} who is a ${context.position} at ${context.company}.`,
   };
 
-  return prompts[section] || "Please provide content for this section.";
+  return prompts[section] ?? "Please provide content for this section.";
 };

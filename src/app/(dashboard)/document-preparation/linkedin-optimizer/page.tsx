@@ -5,7 +5,6 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import {
-  FileText,
   Plus,
   Download,
   Eye,
@@ -14,8 +13,6 @@ import {
   Linkedin,
 } from "lucide-react";
 import { toast } from "sonner";
-import { motion } from "framer-motion";
-import { format } from "date-fns";
 import { MultiStepLoader } from "@/components/ui/multi-step-loader";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";

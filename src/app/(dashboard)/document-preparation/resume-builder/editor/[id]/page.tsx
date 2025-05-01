@@ -339,7 +339,7 @@ function MobileTabNavigation({
   };
 
   // Add a fallback tab in case the current tab is not found
-  const currentTab = tabs[currentIndex] || tabs[0];
+  const currentTab = tabs[currentIndex] ?? tabs[0];
 
   // If no valid tab is found, don't render anything
   if (!currentTab) return null;
@@ -2017,7 +2017,7 @@ export default function ResumeEditorPage() {
                               placeholder="https://..."
                               value={
                                 formData.certifications[cert.id]
-                                  ?.credentialUrl || ""
+                                  ?.credentialUrl ?? ""
                               }
                               onChange={(e) =>
                                 handleInputChange(

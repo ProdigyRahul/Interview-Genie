@@ -8,10 +8,9 @@ import type { NextAuthConfig } from "next-auth";
 import type { JWT } from "next-auth/jwt";
 import type { User } from "next-auth";
 import type { AdapterSession } from "next-auth/adapters";
-import type { Session } from "next-auth";
 import { env } from "@/env";
 import { redis } from "@/server/redis";
-import { getUser, invalidateUserCache, updateUser } from "@/lib/user-cache";
+import { getUser, updateUser } from "@/lib/user-cache";
 
 // Extend the User type to include our custom fields
 interface CustomUser extends User {

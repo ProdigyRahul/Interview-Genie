@@ -379,7 +379,7 @@ export default function NewLinkedInOptimizerPage() {
               </div>
               <h4 className="text-lg font-medium mb-2">PDF Export Instructions</h4>
               <p className="text-sm text-muted-foreground">
-                To export your LinkedIn profile as PDF: Go to your profile → Click "More" button → Select "Save to PDF" → Upload the saved file here.
+                To export your LinkedIn profile as PDF: Go to your profile → Click &quot;More&quot; button → Select &quot;Save to PDF&quot; → Upload the saved file here.
               </p>
             </div>
             

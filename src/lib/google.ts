@@ -1,5 +1,4 @@
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
-import { GoogleGenerativeAIProviderOptions } from '@ai-sdk/google';
 
 if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
   throw new Error('Missing GOOGLE_GENERATIVE_AI_API_KEY environment variable');

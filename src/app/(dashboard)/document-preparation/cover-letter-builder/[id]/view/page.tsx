@@ -125,7 +125,7 @@ export default function ViewCoverLetterPage() {
             </div>
             <h3 className="text-xl font-semibold">Cover Letter Not Found</h3>
             <p className="text-muted-foreground">
-              The cover letter you're looking for doesn't exist or you don't have permission to view it.
+              The cover letter you&apos;re looking for doesn&apos;t exist or you don&apos;t have permission to view it.
             </p>
             <Button onClick={handleBack} className="mt-4">
               <ArrowLeft className="mr-2 h-4 w-4" />
@@ -172,13 +172,13 @@ export default function ViewCoverLetterPage() {
             
             {/* Recipient */}
             <div className="mb-6">
-              <p className="font-medium">{letter.hiringManager || "Hiring Manager"}</p>
+              <p className="font-medium">{letter.hiringManager ?? "Hiring Manager"}</p>
               <p>{letter.companyName}</p>
               <p>[Company Address, if known, otherwise omit]</p>
             </div>
             
             {/* Salutation */}
-            <p className="mb-4">Dear {letter.hiringManager || "Hiring Manager"},</p>
+            <p className="mb-4">Dear {letter.hiringManager ?? "Hiring Manager"},</p>
             
             {/* Letter body - properly formatted paragraphs */}
             <div className="space-y-4 text-justify">

@@ -5,7 +5,6 @@ import {
   GraduationCap,
   Award,
   Medal,
-  Heart,
   Brain,
   FileText,
   CheckCircle,

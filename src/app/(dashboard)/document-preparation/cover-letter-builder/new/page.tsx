@@ -11,8 +11,6 @@ import { Breadcrumb } from "@/components/ui/breadcrumb";
 import {
   FileText,
   Sparkles,
-  Download,
-  Eye,
   FileSpreadsheet,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -44,7 +42,6 @@ interface FormData {
 export default function NewCoverLetterPage() {
   const router = useRouter();
   const [isGenerating, setIsGenerating] = useState(false);
-  const [preview, setPreview] = useState<string | null>(null);
   const [formData, setFormData] = useState<FormData>({
     fullName: "",
     email: "",

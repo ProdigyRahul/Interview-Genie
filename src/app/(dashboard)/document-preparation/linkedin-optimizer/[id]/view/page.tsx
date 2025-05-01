@@ -12,10 +12,7 @@ import {
   Linkedin, 
   Star, 
   CheckCircle, 
-  AlertCircle, 
   Info,
-  ChevronDown,
-  ChevronUp,
   Sparkle
 } from "lucide-react";
 import { toast } from "sonner";
@@ -185,7 +182,6 @@ export default function ViewLinkedInOptimizationPage() {
 
   const isPriorityHigh = (priority: string) => priority === "high";
   const isPriorityMedium = (priority: string) => priority === "medium";
-  const isPriorityLow = (priority: string) => priority === "low";
 
   if (isLoading) {
     return (
@@ -211,7 +207,7 @@ export default function ViewLinkedInOptimizationPage() {
             </div>
             <h3 className="text-xl font-semibold">Optimization Not Found</h3>
             <p className="text-muted-foreground">
-              The LinkedIn profile optimization you're looking for doesn't exist or you don't have permission to view it.
+              The LinkedIn profile optimization you&apos;re looking for doesn&apos;t exist or you don&apos;t have permission to view it.
             </p>
             <Button onClick={handleBack} className="mt-4">
               <ArrowLeft className="mr-2 h-4 w-4" />
@@ -472,7 +468,7 @@ export default function ViewLinkedInOptimizationPage() {
           <TabsContent value="quickwins" className="space-y-6">
             <Card className="p-6">
               <h3 className="text-lg font-semibold mb-4">Quick Wins</h3>
-              <p className="text-muted-foreground mb-6">Simple changes that can have a significant impact on your profile's effectiveness</p>
+              <p className="text-muted-foreground mb-6">Simple changes that can have a significant impact on your profile&apos;s effectiveness</p>
               
               <div className="space-y-4">
                 {optimization.analysisResults.quick_wins.map((win, index) => (
@@ -509,7 +505,7 @@ export default function ViewLinkedInOptimizationPage() {
                 <div>
                   <h3 className="font-semibold mb-1">Pro Tip</h3>
                   <p className="text-sm text-muted-foreground">
-                    Focus on these quick wins first to boost your profile's visibility before making more significant changes. 
+                    Focus on these quick wins first to boost your profile&apos;s visibility before making more significant changes. 
                     These simple adjustments can significantly improve how recruiters and connections perceive your profile.
                   </p>
                 </div>

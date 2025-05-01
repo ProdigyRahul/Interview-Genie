@@ -3,7 +3,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { google, MODEL_NAME } from "@/lib/google";
 import { generateText } from "ai";
-import { GoogleGenerativeAIProviderOptions } from '@ai-sdk/google';
+import {type GoogleGenerativeAIProviderOptions } from '@ai-sdk/google';
 import path from 'path';
 import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';

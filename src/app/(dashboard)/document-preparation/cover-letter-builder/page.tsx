@@ -3,27 +3,18 @@
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { MultiStepLoader } from "@/components/ui/multi-step-loader";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import {
   FileText,
-  Sparkles,
   Download,
   Eye,
-  ArrowRight,
-  Loader2,
   FileSpreadsheet,
-  Edit,
   Clock,
-  Trash,
   Plus,
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { format } from "date-fns";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 
@@ -189,11 +180,6 @@ export default function CoverLetterBuilderPage() {
     } finally {
       setIsGenerating(false);
     }
-  };
-
-  const handleViewLetter = (letter: CoverLetter) => {
-    setSelectedLetter(letter);
-    setPreview(letter.content);
   };
 
   const handleDownload = async (fileUrl: string, title: string) => {

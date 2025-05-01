@@ -76,9 +76,7 @@ export const sampleData: ResumeData = {
   ],
 };
 
-export async function generateTemplatePreview(
-  template: TemplateType,
-): Promise<ResumeData> {
+export async function generateTemplatePreview(): Promise<ResumeData> {
   try {
     // Return sample data for preview
     return sampleData;

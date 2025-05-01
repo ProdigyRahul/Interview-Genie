@@ -5,8 +5,6 @@ import { prisma } from "@/lib/prisma";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const API_URL = "http://23.94.74.248:5000/api/v1/ats-score";
-
 export const maxDuration = 60;
 export const fetchCache = "force-no-store";
 
