@@ -1,60 +1,47 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MultiStepLoader } from "@/components/ui/multi-step-loader";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import {
-  Upload,
-  Sparkles,
-  BarChart3,
-  Layout,
-  Target,
-  Lightbulb,
-  ScrollText,
+  FileText,
+  Plus,
+  Download,
+  Eye,
+  Clock,
   FileSpreadsheet,
   Linkedin,
-  Users,
-  MessageSquare,
-  Share2,
 } from "lucide-react";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { format } from "date-fns";
+import { MultiStepLoader } from "@/components/ui/multi-step-loader";
+import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
+
+interface LinkedInProfile {
+  id: string;
+  title: string;
+  profileUrl: string;
+  profileName: string;
+  optimizationScore?: number;
+  analysisResults: any;
+  createdAt: string;
+  fileUrl?: string;
+}
 
 const loadingStates = [
-  { text: "Uploading your LinkedIn profile...", duration: 3000 },
-  { text: "Extracting profile content...", duration: 4000 },
-  { text: "Analyzing profile structure...", duration: 4000 },
-  { text: "Evaluating content quality...", duration: 4000 },
-  { text: "Checking engagement metrics...", duration: 3000 },
-  { text: "Assessing network strength...", duration: 3000 },
-  { text: "Analyzing keyword optimization...", duration: 3000 },
-  { text: "Generating improvement suggestions...", duration: 4000 },
-  { text: "Preparing final results...", duration: 2000 },
-];
-
-const sections = [
-  { id: "overview", label: "Overview", icon: BarChart3 },
-  { id: "profile", label: "Profile Structure", icon: Layout },
-  { id: "content", label: "Content Quality", icon: ScrollText },
-  { id: "engagement", label: "Engagement", icon: Users },
-  { id: "networking", label: "Networking", icon: Share2 },
-  { id: "improvements", label: "Improvements", icon: Lightbulb },
+  { text: "Fetching your LinkedIn optimizations...", duration: 2000 },
+  { text: "Loading profile analyses...", duration: 2000 },
+  { text: "Preparing your workspace...", duration: 2000 },
+  { text: "Almost ready...", duration: 2000 },
 ];
 
 export default function LinkedInOptimizerPage() {
-  const [file, setFile] = useState<File | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [activeSection, setActiveSection] = useState("overview");
+  const router = useRouter();
+  const [profiles, setProfiles] = useState<LinkedInProfile[]>([]);
+  const [isLoadingProfiles, setIsLoadingProfiles] = useState(true);
 
   const breadcrumbItems = [
     {
@@ -69,53 +56,79 @@ export default function LinkedInOptimizerPage() {
     },
   ];
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
+  useEffect(() => {
+    fetchProfiles();
+  }, []);
 
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-  };
-
-  const handleDrop = async (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-
-    const droppedFile = e.dataTransfer.files[0];
-    if (droppedFile && droppedFile.type === "application/pdf") {
-      setFile(droppedFile);
-      await handleAnalyze(droppedFile);
-    } else {
-      toast.error("Please upload a PDF file");
-    }
-  };
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (selectedFile && selectedFile.type === "application/pdf") {
-      setFile(selectedFile);
-      await handleAnalyze(selectedFile);
-      e.target.value = "";
-    } else {
-      toast.error("Please upload a PDF file");
-    }
-  };
-
-  const handleAnalyze = async (fileToAnalyze: File) => {
+  const fetchProfiles = async () => {
     try {
-      setIsAnalyzing(true);
-      // Simulating analysis for frontend demo
-      await new Promise((resolve) => setTimeout(resolve, 30000));
-      toast.success("Analysis completed successfully!");
+      setIsLoadingProfiles(true);
+      // In a real implementation, this would fetch from a real API endpoint
+      const response = await fetch("/api/linkedin-profiles");
+      const data = await response.json();
+
+      if (data.success) {
+        setProfiles(data.profiles);
+      } else {
+        console.error("Failed to fetch LinkedIn profiles:", data.error);
+        setProfiles([]);
+      }
     } catch (error) {
-      console.error("Error analyzing LinkedIn profile:", error);
-      toast.error("Failed to analyze LinkedIn profile. Please try again.");
+      console.error("Error fetching LinkedIn profiles:", error);
+      // For now, set to empty array for demo purposes
+      setProfiles([]);
     } finally {
-      setIsAnalyzing(false);
+      setIsLoadingProfiles(false);
     }
   };
+
+  const handleCreateNew = () => {
+    router.push("/document-preparation/linkedin-optimizer/new");
+  };
+
+  const handleDownload = async (fileUrl: string, title: string) => {
+    try {
+      // Create a link element to download the file
+      const link = document.createElement('a');
+      link.href = fileUrl;
+      link.download = `${title.replace(/\s+/g, "_")}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast.success("LinkedIn optimization report downloaded successfully!");
+    } catch (error) {
+      console.error("Error downloading report:", error);
+      toast.error("Failed to download report. Please try again.");
+    }
+  };
+
+  const formatDate = (date: string) => {
+    const now = new Date();
+    const d = new Date(date);
+    const diff = now.getTime() - d.getTime();
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+    if (days === 0) return "Today";
+    if (days === 1) return "Yesterday";
+    if (days < 7) return `${days} days ago`;
+    if (days < 30) return `${Math.floor(days / 7)} weeks ago`;
+    if (days < 365) return `${Math.floor(days / 30)} months ago`;
+    return `${Math.floor(days / 365)} years ago`;
+  };
+
+  if (isLoadingProfiles) {
+    return (
+      <div className="flex min-h-[80vh] flex-col items-center justify-center p-4">
+        <MultiStepLoader
+          loadingStates={loadingStates}
+          loading={true}
+          duration={2000}
+          loop={true}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -127,241 +140,130 @@ export default function LinkedInOptimizerPage() {
       >
         <div>
           <h2 className="text-3xl font-bold tracking-tight">
-            LinkedIn Optimizer
+            LinkedIn Profile Optimizer
           </h2>
           <p className="text-muted-foreground">
-            Upload your LinkedIn profile and we&apos;ll help you optimize it for better
-            visibility and engagement
+            Enhance your LinkedIn profile with AI-powered optimization and professional recommendations
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-6">
-          {/* Main Content */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.3 }}
-          >
-            <div className="grid gap-6 md:grid-cols-12">
-              <div className="md:col-span-8">
-                <Card className="h-full border-0">
-                  {!isAnalyzing && !file && (
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {/* Create New LinkedIn Optimization Card */}
+          <Card className="group h-full transition-all hover:border-primary hover:shadow-lg">
+            <div className="relative h-full">
+              {/* Animated gradient background */}
+              <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-primary/5 via-primary/10 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+
+              <button
+                onClick={handleCreateNew}
+                className="relative block h-full w-full p-8"
+              >
+                <div className="h-full space-y-6">
+                  <div className="flex h-32 items-center justify-center">
                     <div
                       className={cn(
-                        "flex h-full flex-col items-center justify-center border-2 border-dashed rounded-lg p-8 text-center transition-colors",
-                        isDragging
-                          ? "border-primary bg-primary/5"
-                          : "border-muted-foreground/25",
+                        "rounded-full bg-background/80 p-6 backdrop-blur-sm",
+                        "border-2 border-primary/20 group-hover:border-primary/40",
+                        "transition-all duration-300 group-hover:scale-110",
                       )}
-                      onDragOver={handleDragOver}
-                      onDragLeave={handleDragLeave}
-                      onDrop={handleDrop}
                     >
-                      <div className="mx-auto flex max-w-[420px] flex-col items-center justify-center text-center">
-                        <div className="rounded-full bg-primary/10 p-4">
-                          <Upload className="h-8 w-8 text-primary" />
-                        </div>
-                        <div className="mt-4 space-y-2">
-                          <h3 className="text-lg font-semibold">
-                            Drop your PDF here or click to upload
-                          </h3>
-                          <p className="text-sm text-muted-foreground">
-                            Export your LinkedIn profile as PDF and upload it here for
-                            analysis
-                          </p>
-                        </div>
-                        <Button
-                          onClick={() =>
-                            document.querySelector<HTMLInputElement>("#file-upload")?.click()
-                          }
-                          className="mt-4"
-                        >
-                          Choose File
-                        </Button>
-                        <input
-                          id="file-upload"
-                          type="file"
-                          accept=".pdf"
-                          className="hidden"
-                          onChange={handleFileChange}
-                        />
-                        <div className="mt-4 flex items-center text-sm text-muted-foreground">
-                          <Sparkles className="mr-2 h-4 w-4 text-yellow-500" />
-                          Uses 40 credits
-                        </div>
-                      </div>
+                      <Plus className="h-10 w-10 text-primary transition-transform duration-300 group-hover:scale-110" />
                     </div>
-                  )}
-
-                  {isAnalyzing && (
-                    <div className="space-y-6 p-6">
-                      <MultiStepLoader loadingStates={loadingStates} />
-                    </div>
-                  )}
-
-                  {!isAnalyzing && file && (
-                    <Card className="p-6">
-                      <div className="space-y-6">
-                        <div className="flex items-center justify-between">
-                          <h2 className="text-xl font-semibold">Analysis Results</h2>
-                          <Button
-                            variant="outline"
-                            onClick={() => {
-                              setFile(null);
-                            }}
-                          >
-                            Analyze Another Profile
-                          </Button>
-                        </div>
-
-                        <div className="grid gap-4 md:grid-cols-3">
-                          {sections.map((section) => (
-                            <Button
-                              key={section.id}
-                              variant={activeSection === section.id ? "default" : "outline"}
-                              className="justify-start"
-                              onClick={() => setActiveSection(section.id)}
-                            >
-                              <section.icon className="mr-2 h-4 w-4" />
-                              {section.label}
-                            </Button>
-                          ))}
-                        </div>
-
-                        <Accordion type="single" collapsible className="w-full">
-                          <AccordionItem value="profile-strength">
-                            <AccordionTrigger className="text-lg font-semibold">
-                              Profile Strength Score
-                            </AccordionTrigger>
-                            <AccordionContent>
-                              <div className="grid gap-4 md:grid-cols-2">
-                                <Card className="p-4">
-                                  <div className="flex items-center justify-between mb-2">
-                                    <span className="text-sm font-medium">Overall Score</span>
-                                    <span className="text-emerald-500 font-semibold">85%</span>
-                                  </div>
-                                  <div className="w-full bg-secondary rounded-full h-2">
-                                    <div
-                                      className="bg-emerald-500 h-2 rounded-full"
-                                      style={{ width: "85%" }}
-                                    />
-                                  </div>
-                                </Card>
-                              </div>
-                            </AccordionContent>
-                          </AccordionItem>
-
-                          <AccordionItem value="improvement-suggestions">
-                            <AccordionTrigger className="text-lg font-semibold">
-                              Improvement Suggestions
-                            </AccordionTrigger>
-                            <AccordionContent>
-                              <div className="space-y-4">
-                                <Card className="p-4">
-                                  <h4 className="font-medium mb-2">High Priority</h4>
-                                  <ul className="list-disc list-inside space-y-2 text-sm">
-                                    <li>Add a professional profile photo</li>
-                                    <li>Complete the &quot;About&quot; section with relevant keywords</li>
-                                    <li>Add more relevant skills to your profile</li>
-                                  </ul>
-                                </Card>
-                              </div>
-                            </AccordionContent>
-                          </AccordionItem>
-
-                          <AccordionItem value="engagement-metrics">
-                            <AccordionTrigger className="text-lg font-semibold">
-                              Engagement Metrics
-                            </AccordionTrigger>
-                            <AccordionContent>
-                              <div className="grid gap-4 md:grid-cols-2">
-                                <Card className="p-4">
-                                  <h4 className="font-medium mb-2">Profile Views</h4>
-                                  <div className="flex items-center gap-2">
-                                    <Users className="h-4 w-4 text-muted-foreground" />
-                                    <span className="text-lg font-semibold">152</span>
-                                    <span className="text-sm text-emerald-500">+12%</span>
-                                  </div>
-                                </Card>
-                                <Card className="p-4">
-                                  <h4 className="font-medium mb-2">Post Engagement</h4>
-                                  <div className="flex items-center gap-2">
-                                    <MessageSquare className="h-4 w-4 text-muted-foreground" />
-                                    <span className="text-lg font-semibold">48</span>
-                                    <span className="text-sm text-emerald-500">+8%</span>
-                                  </div>
-                                </Card>
-                              </div>
-                            </AccordionContent>
-                          </AccordionItem>
-                        </Accordion>
-                      </div>
-                    </Card>
-                  )}
-                </Card>
-              </div>
-
-              {/* Sidebar */}
-              <div className="md:col-span-4">
-                <Card className="h-full p-6">
-                  <div className="space-y-6">
-                    <div className="flex items-center gap-2">
-                      <div className="rounded-full bg-primary/10 p-2">
-                        <Sparkles className="h-5 w-5 text-primary" />
-                      </div>
-                      <h3 className="text-lg font-semibold">Tips for Success</h3>
-                    </div>
-                    <ul className="space-y-4">
-                      <li className="group flex items-start gap-4 rounded-lg border p-4 transition-colors hover:bg-muted/50">
-                        <div className="rounded-lg bg-primary/10 p-2">
-                          <Sparkles className="h-5 w-5 text-primary" />
-                        </div>
-                        <div className="space-y-1">
-                          <p className="font-medium">Professional Photo</p>
-                          <p className="text-sm text-muted-foreground">
-                            Use a high-quality, professional headshot
-                          </p>
-                        </div>
-                      </li>
-                      <li className="group flex items-start gap-4 rounded-lg border p-4 transition-colors hover:bg-muted/50">
-                        <div className="rounded-lg bg-primary/10 p-2">
-                          <Target className="h-5 w-5 text-primary" />
-                        </div>
-                        <div className="space-y-1">
-                          <p className="font-medium">Headline Optimization</p>
-                          <p className="text-sm text-muted-foreground">
-                            Include keywords relevant to your industry
-                          </p>
-                        </div>
-                      </li>
-                      <li className="group flex items-start gap-4 rounded-lg border p-4 transition-colors hover:bg-muted/50">
-                        <div className="rounded-lg bg-primary/10 p-2">
-                          <ScrollText className="h-5 w-5 text-primary" />
-                        </div>
-                        <div className="space-y-1">
-                          <p className="font-medium">Compelling Summary</p>
-                          <p className="text-sm text-muted-foreground">
-                            Write an engaging &quot;About&quot; section
-                          </p>
-                        </div>
-                      </li>
-                      <li className="group flex items-start gap-4 rounded-lg border p-4 transition-colors hover:bg-muted/50">
-                        <div className="rounded-lg bg-primary/10 p-2">
-                          <Share2 className="h-5 w-5 text-primary" />
-                        </div>
-                        <div className="space-y-1">
-                          <p className="font-medium">Active Networking</p>
-                          <p className="text-sm text-muted-foreground">
-                            Regularly engage with your network
-                          </p>
-                        </div>
-                      </li>
-                    </ul>
                   </div>
-                </Card>
-              </div>
+
+                  <div className="space-y-2 text-center">
+                    <h3 className="text-xl font-semibold">Create New Optimization</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Get professional recommendations to enhance your LinkedIn profile
+                    </p>
+                  </div>
+                </div>
+              </button>
             </div>
-          </motion.div>
+          </Card>
+
+          {/* Previous Profiles */}
+          {profiles.length === 0 ? (
+            <Card className="flex items-center justify-center p-8">
+              <div className="text-center text-muted-foreground">
+                <Linkedin className="mx-auto mb-4 h-12 w-12 opacity-50" />
+                <p>No LinkedIn profiles optimized yet</p>
+                <p className="text-sm">
+                  Optimize your first profile to get started
+                </p>
+              </div>
+            </Card>
+          ) : (
+            profiles.map((profile) => (
+              <Card
+                key={profile.id}
+                className="group h-full transition-all hover:border-primary hover:shadow-lg"
+              >
+                <div className="relative h-full">
+                  {/* Animated gradient background */}
+                  <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-primary/5 via-primary/10 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+
+                  <div className="relative flex h-full flex-col p-8">
+                    <div className="flex-1 space-y-6">
+                      <div className="flex items-center justify-between">
+                        <div
+                          className={cn(
+                            "rounded-xl bg-background/80 p-3 backdrop-blur-sm",
+                            "border-2 border-primary/20 group-hover:border-primary/40",
+                            "transition-all duration-300",
+                          )}
+                        >
+                          <Linkedin className="h-8 w-8 text-primary" />
+                        </div>
+                        {profile.optimizationScore && (
+                          <div className="flex items-center gap-2 rounded-full bg-blue-500/10 px-3 py-1.5 font-medium text-blue-500 backdrop-blur-sm">
+                            <span>{profile.optimizationScore}%</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <h3 className="text-xl font-semibold transition-colors group-hover:text-primary">
+                          {profile.profileName}
+                        </h3>
+                        <div className="flex items-center text-sm text-muted-foreground">
+                          <Clock className="mr-2 h-4 w-4" />
+                          {formatDate(profile.createdAt)}
+                        </div>
+                        <p className="text-sm text-muted-foreground truncate">
+                          {profile.title}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-6 grid grid-cols-2 gap-4 border-t border-border pt-6">
+                      {profile.fileUrl && (
+                        <Button
+                          variant="outline"
+                          className="w-full backdrop-blur-sm transition-colors group-hover:border-primary/40 group-hover:bg-primary/5"
+                          onClick={() => handleDownload(profile.fileUrl!, profile.title)}
+                        >
+                          <Download className="mr-2 h-4 w-4" />
+                          Report
+                        </Button>
+                      )}
+                      <Button
+                        className="w-full backdrop-blur-sm"
+                        onClick={() =>
+                          router.push(
+                            `/document-preparation/linkedin-optimizer/${profile.id}/view`,
+                          )
+                        }
+                      >
+                        <Eye className="mr-2 h-4 w-4" />
+                        View
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            ))
+          )}
         </div>
       </motion.div>
     </div>
