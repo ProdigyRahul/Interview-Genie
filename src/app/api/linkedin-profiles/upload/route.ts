@@ -9,6 +9,9 @@ import { generateText } from "ai";
 import { GoogleGenerativeAIProviderOptions } from '@ai-sdk/google';
 import fs from "fs";
 
+// Define feature credit costs
+const LINKEDIN_OPTIMIZER_CREDITS = 40;
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 300; // Increased timeout for PDF processing
@@ -32,6 +35,18 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { success: false, error: "User not found" },
         { status: 404 }
+      );
+    }
+
+    // Check if user has enough credits or is a PRO member
+    const isPro = user.subscriptionStatus === "PRO";
+    if (!isPro && user.credits < LINKEDIN_OPTIMIZER_CREDITS) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: `Not enough credits. LinkedIn Optimizer requires ${LINKEDIN_OPTIMIZER_CREDITS} credits.` 
+        },
+        { status: 402 }
       );
     }
 
@@ -244,22 +259,40 @@ export async function POST(req: Request) {
 
     // Save the profile to the database
     try {
-      const linkedInProfile = await db.linkedInProfile.create({
-        data: {
-          userId: user.id,
-          title,
-          profileName,
-          profileUrl,
-          originalFilename: file.name,
-          fileUrl,
-          optimizationScore,
-          analysisResults: analysisData,
-        },
-      });
+      // Start a transaction to save profile and update credits
+      const [linkedInProfile, updatedUser] = await db.$transaction([
+        // 1. Create the LinkedIn profile
+        db.linkedInProfile.create({
+          data: {
+            userId: user.id,
+            title,
+            profileName,
+            profileUrl,
+            originalFilename: file.name,
+            fileUrl,
+            optimizationScore,
+            analysisResults: analysisData,
+          },
+        }),
+        
+        // 2. Deduct credits if not a PRO user
+        ...(!isPro ? [
+          db.user.update({
+            where: { id: user.id },
+            data: { 
+              credits: {
+                decrement: LINKEDIN_OPTIMIZER_CREDITS
+              }
+            },
+          })
+        ] : [])
+      ]);
 
       return NextResponse.json({
         success: true,
         profile: linkedInProfile,
+        creditsRemaining: isPro ? "UNLIMITED" : (user.credits - LINKEDIN_OPTIMIZER_CREDITS),
+        creditsCost: LINKEDIN_OPTIMIZER_CREDITS
       });
     } catch (dbError) {
       console.error("Database error creating LinkedIn profile:", dbError);

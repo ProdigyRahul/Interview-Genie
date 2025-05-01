@@ -1,9 +1,12 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { type ResumeData, type TemplateType } from "@/lib/types/resume";
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { db } from "@/lib/db";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { env } from "@/env";
+
+// Define feature credit costs
+const RESUME_BUILDER_CREDITS = 50;
 
 // Initialize Gemini on the server side
 const genAI = new GoogleGenerativeAI(env.GOOGLE_GEMINI_API);
@@ -256,7 +259,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Get user
-    const user = await prisma.user.findUnique({
+    const user = await db.user.findUnique({
       where: { email: session.user.email },
     });
 
@@ -264,9 +267,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    // Check if user has enough credits or is a PRO member
+    const isPro = user.subscriptionStatus === "PRO";
+    if (!isPro && user.credits < RESUME_BUILDER_CREDITS) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: `Not enough credits. Resume Builder requires ${RESUME_BUILDER_CREDITS} credits.` 
+        },
+        { status: 402 }
+      );
+    }
+
     // Update resume title
     console.log("Updating resume with title:", title);
-    await prisma.resume.update({
+    await db.resume.update({
       where: { id: resumeId },
       data: { title },
     });
@@ -281,7 +296,7 @@ export async function POST(req: NextRequest) {
     if (analysis?.ats_analysis?.total_score) {
       console.log("Updating ATS score:", analysis.ats_analysis.total_score);
 
-      await prisma.resume.update({
+      await db.resume.update({
         where: { id: resumeId },
         data: {
           atsScore: analysis.ats_analysis.total_score,
@@ -353,6 +368,18 @@ export async function POST(req: NextRequest) {
       totalScore: Math.round(totalScore),
     });
 
+    // Deduct credits if not a PRO user
+    if (!isPro) {
+      await db.user.update({
+        where: { id: user.id },
+        data: { 
+          credits: {
+            decrement: RESUME_BUILDER_CREDITS
+          }
+        },
+      });
+    }
+
     // Return success response with data for client-side PDF generation
     return NextResponse.json({
       success: true,
@@ -360,6 +387,8 @@ export async function POST(req: NextRequest) {
       template,
       analysis,
       score: Math.round(totalScore),
+      creditsRemaining: isPro ? "UNLIMITED" : (user.credits - RESUME_BUILDER_CREDITS),
+      creditsCost: RESUME_BUILDER_CREDITS
     });
   } catch (error) {
     console.error("Error generating resume:", error);

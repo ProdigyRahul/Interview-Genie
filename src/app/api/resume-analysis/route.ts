@@ -9,6 +9,9 @@ import path from 'path';
 import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 
+// Define feature credit costs
+const RESUME_OPTIMIZER_CREDITS = 30;
+
 // Remove edge runtime and use Node.js runtime
 export const dynamic = 'force-dynamic';
 // Configure longer timeout
@@ -19,6 +22,26 @@ export async function POST(request: Request) {
     const session = await auth();
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const user = await db.user.findUnique({
+      where: { email: session.user.email },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    // Check if user has enough credits or is a PRO member
+    const isPro = user.subscriptionStatus === "PRO";
+    if (!isPro && user.credits < RESUME_OPTIMIZER_CREDITS) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: `Not enough credits. Resume Optimizer requires ${RESUME_OPTIMIZER_CREDITS} credits.` 
+        },
+        { status: 402 }
+      );
     }
 
     const formData = await request.formData();
@@ -246,33 +269,55 @@ export async function POST(request: Request) {
       throw new Error('Failed to parse AI response into valid JSON');
     }
 
-    // Store the analysis in the database
-    const dbAnalysis = await db.resumeAnalysis.create({
-      data: {
-        userId: session.user.id,
-        originalFilename: file.name,
-        fileUrl: fileUrl, // Now we're saving the file URL
-        totalScore: data.ats_analysis.total_score,
-        sectionScores: data.ats_analysis.section_scores,
-        detailedBreakdown: data.ats_analysis.detailed_breakdown,
-        keywordMatchRate: data.ats_analysis.keyword_match_rate,
-        missingKeywords: data.ats_analysis.missing_keywords || [],
-        improvementSuggestions: {
-          high_priority: data.improvement_suggestions.high_priority,
-          content: data.improvement_suggestions.content,
-          format: data.improvement_suggestions.format,
-          language: data.improvement_suggestions.language,
-          keywords: data.improvement_suggestions.keywords,
+    // Store the analysis in the database and deduct credits
+    const [dbAnalysis, updatedUser] = await db.$transaction([
+      // 1. Create the analysis record
+      db.resumeAnalysis.create({
+        data: {
+          userId: session.user.id,
+          originalFilename: file.name,
+          fileUrl: fileUrl,
+          totalScore: data.ats_analysis.total_score,
+          sectionScores: data.ats_analysis.section_scores,
+          detailedBreakdown: data.ats_analysis.detailed_breakdown,
+          keywordMatchRate: data.ats_analysis.keyword_match_rate,
+          missingKeywords: data.ats_analysis.missing_keywords || [],
+          improvementSuggestions: {
+            high_priority: data.improvement_suggestions.high_priority,
+            content: data.improvement_suggestions.content,
+            format: data.improvement_suggestions.format,
+            language: data.improvement_suggestions.language,
+            keywords: data.improvement_suggestions.keywords,
+          },
+          improvementDetails: {
+            bullet_points: data.improvement_details.bullet_points,
+            achievements: data.improvement_details.achievements,
+            skills: data.improvement_details.skills,
+          },
         },
-        improvementDetails: {
-          bullet_points: data.improvement_details.bullet_points,
-          achievements: data.improvement_details.achievements,
-          skills: data.improvement_details.skills,
-        },
-      },
-    });
+      }),
+      
+      // 2. Deduct credits if not a PRO user
+      ...(!isPro ? [
+        db.user.update({
+          where: { id: user.id },
+          data: { 
+            credits: {
+              decrement: RESUME_OPTIMIZER_CREDITS
+            }
+          },
+        })
+      ] : [])
+    ]);
 
-    return NextResponse.json(data);
+    // Add credit information to the response
+    return NextResponse.json({
+      ...data,
+      credits: {
+        cost: RESUME_OPTIMIZER_CREDITS,
+        remaining: isPro ? "UNLIMITED" : (user.credits - RESUME_OPTIMIZER_CREDITS)
+      }
+    });
   } catch (error) {
     console.error('Error in resume analysis:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';

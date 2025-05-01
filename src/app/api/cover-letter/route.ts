@@ -9,6 +9,9 @@ import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 import { jsPDF } from "jspdf";
 
+// Define feature credit costs
+const COVER_LETTER_CREDITS = 20;
+
 // Use Node.js runtime
 export const dynamic = 'force-dynamic';
 // Configure longer timeout for AI processing
@@ -19,6 +22,26 @@ export async function POST(request: Request) {
     const session = await auth();
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const user = await db.user.findUnique({
+      where: { email: session.user.email },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    // Check if user has enough credits or is a PRO member
+    const isPro = user.subscriptionStatus === "PRO";
+    if (!isPro && user.credits < COVER_LETTER_CREDITS) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: `Not enough credits. Cover Letter Builder requires ${COVER_LETTER_CREDITS} credits.` 
+        },
+        { status: 402 }
+      );
     }
 
     const data = await request.json();
@@ -154,30 +177,47 @@ The cover letter should be formal, persuasive, and highlight the candidate's rel
       // Continue even if PDF fails - we'll still save the content
     }
 
-    // Store in database
-    const coverLetter = await db.coverLetter.create({
-      data: {
-        userId: session.user.id,
-        title: `Cover Letter for ${data.jobTitle} at ${data.companyName}`,
-        fullName: data.fullName,
-        email: data.email,
-        phone: data.phone,
-        companyName: data.companyName,
-        jobTitle: data.jobTitle,
-        hiringManager: data.hiringManager || null,
-        keyPoints: data.keyPoints || [],
-        customization: data.customization || { tone: "professional", style: "modern", length: "medium" },
-        content: coverLetterData.content.full_letter,
-        fileUrl: fileUrl
-      }
-    });
+    // Store in database and deduct credits
+    const [coverLetter, updatedUser] = await db.$transaction([
+      // 1. Create the cover letter
+      db.coverLetter.create({
+        data: {
+          userId: session.user.id,
+          title: `Cover Letter for ${data.jobTitle} at ${data.companyName}`,
+          fullName: data.fullName,
+          email: data.email,
+          phone: data.phone,
+          companyName: data.companyName,
+          jobTitle: data.jobTitle,
+          hiringManager: data.hiringManager || null,
+          keyPoints: data.keyPoints || [],
+          customization: data.customization || { tone: "professional", style: "modern", length: "medium" },
+          content: coverLetterData.content.full_letter,
+          fileUrl: fileUrl
+        }
+      }),
+      
+      // 2. Deduct credits if not a PRO user
+      ...(!isPro ? [
+        db.user.update({
+          where: { id: user.id },
+          data: { 
+            credits: {
+              decrement: COVER_LETTER_CREDITS
+            }
+          },
+        })
+      ] : [])
+    ]);
 
     // Return success response with cover letter data
     return NextResponse.json({
       success: true,
       id: coverLetter.id,
       content: coverLetterData.content,
-      fileUrl: fileUrl
+      fileUrl: fileUrl,
+      creditsRemaining: isPro ? "UNLIMITED" : (user.credits - COVER_LETTER_CREDITS),
+      creditsCost: COVER_LETTER_CREDITS
     });
   } catch (error) {
     console.error('Error in cover letter generation:', error);
