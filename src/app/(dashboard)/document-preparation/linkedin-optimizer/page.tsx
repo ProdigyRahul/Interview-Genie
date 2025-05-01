@@ -25,17 +25,16 @@ interface LinkedInProfile {
   title: string;
   profileUrl: string;
   profileName: string;
-  optimizationScore?: number;
+  optimizationScore: number;
   analysisResults: any;
   createdAt: string;
-  fileUrl?: string;
+  fileUrl: string;
 }
 
 const loadingStates = [
-  { text: "Fetching your LinkedIn optimizations...", duration: 2000 },
-  { text: "Loading profile analyses...", duration: 2000 },
-  { text: "Preparing your workspace...", duration: 2000 },
-  { text: "Almost ready...", duration: 2000 },
+  { text: "Fetching your LinkedIn profiles..." },
+  { text: "Preparing data..." },
+  { text: "Almost ready..." },
 ];
 
 export default function LinkedInOptimizerPage() {
@@ -43,54 +42,47 @@ export default function LinkedInOptimizerPage() {
   const [profiles, setProfiles] = useState<LinkedInProfile[]>([]);
   const [isLoadingProfiles, setIsLoadingProfiles] = useState(true);
 
-  const breadcrumbItems = [
-    {
-      href: "/document-preparation",
-      label: "Document Preparation",
-      icon: FileSpreadsheet,
-    },
-    {
-      href: "/document-preparation/linkedin-optimizer",
-      label: "LinkedIn Optimizer",
-      icon: Linkedin,
-    },
-  ];
-
   useEffect(() => {
+    const fetchProfiles = async () => {
+      try {
+        setIsLoadingProfiles(true);
+        const response = await fetch("/api/linkedin-profiles");
+        const data = await response.json();
+
+        if (data.success) {
+          setProfiles(data.profiles);
+        } else {
+          toast.error(data.error || "Failed to fetch LinkedIn profiles");
+        }
+      } catch (error) {
+        console.error("Error fetching LinkedIn profiles:", error);
+        toast.error("Failed to fetch LinkedIn profiles");
+      } finally {
+        setIsLoadingProfiles(false);
+      }
+    };
+
     fetchProfiles();
   }, []);
 
-  const fetchProfiles = async () => {
-    try {
-      setIsLoadingProfiles(true);
-      // In a real implementation, this would fetch profiles processed by the Gemini API
-      const response = await fetch("/api/linkedin-profiles");
-      
-      if (!response.ok) {
-        console.error("Failed to fetch LinkedIn profiles:", response.statusText);
-        setProfiles([]);
-        return;
-      }
-      
-      const data = await response.json();
-
-      if (data.success) {
-        setProfiles(data.profiles || []);
-      } else {
-        console.error("Failed to fetch LinkedIn profiles:", data.error);
-        setProfiles([]);
-      }
-    } catch (error) {
-      console.error("Error fetching LinkedIn profiles:", error);
-      // Set to empty array to prevent UI from breaking
-      setProfiles([]);
-    } finally {
-      setIsLoadingProfiles(false);
-    }
-  };
-
   const handleCreateNew = () => {
     router.push("/document-preparation/linkedin-optimizer/new");
+  };
+
+  const getScoreColor = (score: number) => {
+    if (score >= 85) return "text-green-500";
+    if (score >= 70) return "text-yellow-500";
+    return "text-red-500";
+  };
+
+  const getScoreBackgroundColor = (score: number) => {
+    if (score >= 85) return "bg-green-500/10";
+    if (score >= 70) return "bg-yellow-500/10";
+    return "bg-red-500/10";
+  };
+
+  const handleView = (id: string) => {
+    router.push(`/document-preparation/linkedin-optimizer/${id}/view`);
   };
 
   const handleDownload = async (fileUrl: string, title: string) => {
@@ -138,13 +130,8 @@ export default function LinkedInOptimizerPage() {
   }
 
   return (
-    <div className="space-y-8">
-      <Breadcrumb items={breadcrumbItems} className="mb-6" />
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="space-y-6"
-      >
+    <div className="space-y-10">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">
             LinkedIn Profile Optimizer
@@ -153,137 +140,125 @@ export default function LinkedInOptimizerPage() {
             Enhance your LinkedIn profile with AI-powered optimization and professional recommendations
           </p>
         </div>
+        <Button onClick={handleCreateNew} className="sm:w-auto">
+          <Plus className="mr-2 h-4 w-4" />
+          Create New Optimization
+        </Button>
+      </div>
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {/* Create New LinkedIn Optimization Card */}
-          <Card className="group h-full transition-all hover:border-primary hover:shadow-lg">
-            <div className="relative h-full">
-              {/* Animated gradient background */}
-              <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-primary/5 via-primary/10 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+      <Breadcrumb
+        items={[
+          {
+            href: "/document-preparation",
+            label: "Document Preparation",
+            icon: FileSpreadsheet,
+          },
+          {
+            href: "/document-preparation/linkedin-optimizer",
+            label: "LinkedIn Optimizer",
+            icon: Linkedin,
+          },
+        ]}
+      />
 
-              <button
-                onClick={handleCreateNew}
-                className="relative block h-full w-full p-8"
-              >
-                <div className="h-full space-y-6">
-                  <div className="flex h-32 items-center justify-center">
-                    <div
-                      className={cn(
-                        "rounded-full bg-background/80 p-6 backdrop-blur-sm",
-                        "border-2 border-primary/20 group-hover:border-primary/40",
-                        "transition-all duration-300 group-hover:scale-110",
-                      )}
-                    >
-                      <Plus className="h-10 w-10 text-primary transition-transform duration-300 group-hover:scale-110" />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2 text-center">
-                    <h3 className="text-xl font-semibold">Create New Optimization</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Get professional recommendations to enhance your LinkedIn profile
-                    </p>
-                  </div>
-                </div>
-              </button>
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        {profiles.length === 0 ? (
+          <Card className="group h-full transition-all hover:border-primary/40 hover:shadow-lg">
+            <div className="flex flex-col items-center justify-center p-8 text-center h-full space-y-4">
+              <div className="rounded-full bg-muted/60 p-6 mb-2">
+                <Linkedin className="h-12 w-12 text-muted-foreground/60" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-xl font-semibold">No Optimizations Yet</h3>
+                <p className="text-muted-foreground max-w-sm">
+                  Upload your LinkedIn profile PDF to receive AI-powered optimization recommendations and improve your professional presence.
+                </p>
+                <Button 
+                  className="mt-4" 
+                  onClick={handleCreateNew}
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create Your First Optimization
+                </Button>
+              </div>
             </div>
           </Card>
-
-          {/* Previous Profiles */}
-          {profiles.length === 0 ? (
-            <Card className="group h-full transition-all hover:border-primary/40 hover:shadow-lg">
-              <div className="flex flex-col items-center justify-center p-8 text-center h-full space-y-4">
-                <div className="rounded-full bg-muted/60 p-6 mb-2">
-                  <Linkedin className="h-12 w-12 text-muted-foreground/60" />
-                </div>
-                <div className="space-y-2">
-                  <h3 className="text-xl font-semibold">No Optimizations Yet</h3>
-                  <p className="text-muted-foreground max-w-sm">
-                    Upload your LinkedIn profile PDF to receive AI-powered optimization recommendations and improve your professional presence.
-                  </p>
-                  <Button 
-                    className="mt-4" 
-                    onClick={handleCreateNew}
+        ) : (
+          profiles.map((profile) => (
+            <Card
+              key={profile.id}
+              className="group transition-all hover:border-primary/40 hover:shadow-lg"
+            >
+              <div className="flex justify-between p-5 border-b">
+                <div className="flex items-center">
+                  <div
+                    className={cn(
+                      "mr-3 flex h-10 w-10 items-center justify-center rounded-full",
+                      getScoreBackgroundColor(profile.optimizationScore)
+                    )}
                   >
-                    <Plus className="mr-2 h-4 w-4" />
-                    Create Your First Optimization
+                    <span
+                      className={cn(
+                        "text-base font-semibold",
+                        getScoreColor(profile.optimizationScore)
+                      )}
+                    >
+                      {profile.optimizationScore}%
+                    </span>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold line-clamp-1">
+                      {profile.profileName}
+                    </h3>
+                    <div className="flex items-center text-xs text-muted-foreground">
+                      <Clock className="mr-1 h-3 w-3" />
+                      {formatDate(profile.createdAt)}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-start">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => handleDownload(profile.fileUrl, profile.title)}
+                    title="Download PDF"
+                  >
+                    <Download className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
-            </Card>
-          ) : (
-            profiles.map((profile) => (
-              <Card
-                key={profile.id}
-                className="group h-full transition-all hover:border-primary hover:shadow-lg"
-              >
-                <div className="relative h-full">
-                  {/* Animated gradient background */}
-                  <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-primary/5 via-primary/10 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-
-                  <div className="relative flex h-full flex-col p-8">
-                    <div className="flex-1 space-y-6">
-                      <div className="flex items-center justify-between">
-                        <div
-                          className={cn(
-                            "rounded-xl bg-background/80 p-3 backdrop-blur-sm",
-                            "border-2 border-primary/20 group-hover:border-primary/40",
-                            "transition-all duration-300",
-                          )}
-                        >
-                          <Linkedin className="h-8 w-8 text-primary" />
-                        </div>
-                        {profile.optimizationScore && (
-                          <div className="flex items-center gap-2 rounded-full bg-blue-500/10 px-3 py-1.5 font-medium text-blue-500 backdrop-blur-sm">
-                            <span>{profile.optimizationScore}%</span>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="space-y-2">
-                        <h3 className="text-xl font-semibold transition-colors group-hover:text-primary">
-                          {profile.profileName}
-                        </h3>
-                        <div className="flex items-center text-sm text-muted-foreground">
-                          <Clock className="mr-2 h-4 w-4" />
-                          {formatDate(profile.createdAt)}
-                        </div>
-                        <p className="text-sm text-muted-foreground truncate">
-                          {profile.title}
-                        </p>
-                      </div>
+              <div className="p-5">
+                <h4 className="text-base font-semibold mb-4">
+                  {profile.title}
+                </h4>
+                <div className="space-y-4 mb-5">
+                  {profile.analysisResults.quick_wins.length > 0 && (
+                    <div>
+                      <h5 className="text-sm font-medium mb-2">Quick Wins:</h5>
+                      <ul className="text-sm space-y-1 ml-5 list-disc">
+                        {profile.analysisResults.quick_wins
+                          .slice(0, 2)
+                          .map((win: any, index: number) => (
+                            <li key={index} className="text-muted-foreground">
+                              {win.action}
+                            </li>
+                          ))}
+                      </ul>
                     </div>
-
-                    <div className="mt-6 grid grid-cols-2 gap-4 border-t border-border pt-6">
-                      {profile.fileUrl && (
-                        <Button
-                          variant="outline"
-                          className="w-full backdrop-blur-sm transition-colors group-hover:border-primary/40 group-hover:bg-primary/5"
-                          onClick={() => handleDownload(profile.fileUrl!, profile.title)}
-                        >
-                          <Download className="mr-2 h-4 w-4" />
-                          Report
-                        </Button>
-                      )}
-                      <Button
-                        className="w-full backdrop-blur-sm"
-                        onClick={() =>
-                          router.push(
-                            `/document-preparation/linkedin-optimizer/${profile.id}/view`,
-                          )
-                        }
-                      >
-                        <Eye className="mr-2 h-4 w-4" />
-                        View
-                      </Button>
-                    </div>
-                  </div>
+                  )}
                 </div>
-              </Card>
-            ))
-          )}
-        </div>
-      </motion.div>
+                <Button
+                  className="w-full"
+                  onClick={() => handleView(profile.id)}
+                >
+                  <Eye className="mr-2 h-4 w-4" />
+                  View Report
+                </Button>
+              </div>
+            </Card>
+          ))
+        )}
+      </div>
     </div>
   );
 } 

@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 export const fetchCache = "force-no-store";
 
-export async function GET(req: Request) {
+export async function GET(req: Request, { params }: { params: { id: string } }) {
   try {
     const session = await auth();
     if (!session?.user?.email) {
@@ -15,7 +15,6 @@ export async function GET(req: Request) {
         {
           success: false,
           error: "Unauthorized",
-          profiles: [],
         },
         { status: 401 },
       );
@@ -30,33 +29,51 @@ export async function GET(req: Request) {
         {
           success: false,
           error: "User not found",
-          profiles: [],
         },
         { status: 404 },
       );
     }
 
-    // Fetch LinkedIn profiles from the database
-    const profiles = await prisma.linkedInProfile.findMany({
+    const { id } = params;
+
+    // Fetch the LinkedIn profile from the database
+    const profile = await prisma.linkedInProfile.findUnique({
       where: {
-        userId: user.id,
-      },
-      orderBy: {
-        createdAt: "desc",
+        id,
       },
     });
 
+    if (!profile) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "LinkedIn profile not found",
+        },
+        { status: 404 },
+      );
+    }
+
+    // Verify the profile belongs to the user
+    if (profile.userId !== user.id) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Unauthorized to access this profile",
+        },
+        { status: 403 },
+      );
+    }
+
     return NextResponse.json({
       success: true,
-      profiles,
+      profile,
     });
   } catch (error) {
-    console.error("Error fetching LinkedIn profiles:", error);
+    console.error("Error fetching LinkedIn profile:", error);
     return NextResponse.json(
       {
         success: false,
-        error: "Failed to fetch LinkedIn profiles",
-        profiles: [],
+        error: "Failed to fetch LinkedIn profile",
       },
       { status: 500 },
     );

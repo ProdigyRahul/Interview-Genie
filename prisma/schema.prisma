@@ -28,6 +28,7 @@ model User {
   otpVerifications   OTPVerification[]
   resumeAnalyses     ResumeAnalysis[]
   coverLetters       CoverLetter[]
+  linkedInProfiles   LinkedInProfile[]
 }
 
 model Resume {
@@ -272,6 +273,24 @@ model CoverLetter {
   fileUrl      String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model LinkedInProfile {
+  id                 String   @id @default(cuid())
+  userId             String
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title              String
+  profileName        String
+  profileUrl         String
+  originalFilename   String
+  fileUrl            String
+  optimizationScore  Int
+  analysisResults    Json     // { optimization_suggestions: {...}, section_priorities: [...], quick_wins: [...] }
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
   @@index([userId])
   @@index([createdAt])

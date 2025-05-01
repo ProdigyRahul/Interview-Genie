@@ -17,6 +17,7 @@ import {
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
+import { Input } from "@/components/ui/input";
 
 const loadingStates = [
   { text: "Analyzing your LinkedIn profile..." },
@@ -29,6 +30,8 @@ const loadingStates = [
 
 interface FormData {
   profileName: string;
+  profileUrl: string;
+  title: string;
   uploadedFile?: File | null;
 }
 
@@ -38,6 +41,8 @@ export default function NewLinkedInOptimizerPage() {
   const [isDragging, setIsDragging] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     profileName: "",
+    profileUrl: "",
+    title: "",
     uploadedFile: null,
   });
 
@@ -97,6 +102,14 @@ export default function NewLinkedInOptimizerPage() {
     }
   };
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
+  };
+
   const handleOptimize = async () => {
     try {
       if (!formData.uploadedFile) {
@@ -104,34 +117,36 @@ export default function NewLinkedInOptimizerPage() {
         return;
       }
 
+      if (!formData.profileName) {
+        toast.error("Please enter your LinkedIn profile name");
+        return;
+      }
+
       setIsAnalyzing(true);
 
-      // In a real implementation, you would send the form data to your API
-      // 1. Upload the PDF file to your server or storage
-      // 2. Process the PDF with Gemini API or similar AI service
-      // 3. Generate optimization recommendations
-      
-      // Implementation with Gemini API would look like:
-      // - Convert PDF to image or use Gemini's PDF processing capabilities
-      // - Send to Gemini API with appropriate prompts for LinkedIn profile analysis
-      // - Gemini can process the PDF natively and understand both text and visual content
-      // - Extract structured data about the profile (headline, summary, experience, etc.)
-      // - Generate improvement suggestions based on best practices
-      // - Calculate an optimization score based on completeness and quality
-      
-      // Simulate API call and processing
-      await new Promise((resolve) => setTimeout(resolve, 6000));
+      // Create form data object
+      const apiFormData = new FormData();
+      apiFormData.append("file", formData.uploadedFile);
+      apiFormData.append("profileName", formData.profileName);
+      apiFormData.append("profileUrl", formData.profileUrl);
+      apiFormData.append("title", formData.title || `${formData.profileName}'s LinkedIn Profile`);
 
-      // Simulate response with a generated ID
-      const mockResult = {
-        success: true,
-        id: `linkedin-${Math.random().toString(36).substring(2, 10)}`,
-      };
+      // Send to API
+      const response = await fetch("/api/linkedin-profiles/upload", {
+        method: "POST",
+        body: apiFormData,
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Failed to optimize LinkedIn profile");
+      }
 
       toast.success("LinkedIn profile optimization completed successfully!");
       
       // Redirect to the view page for the new optimization
-      router.push(`/document-preparation/linkedin-optimizer/${mockResult.id}/view`);
+      router.push(`/document-preparation/linkedin-optimizer/${result.profile.id}/view`);
     } catch (error) {
       console.error("Error optimizing LinkedIn profile:", error);
       toast.error(
@@ -195,94 +210,151 @@ export default function NewLinkedInOptimizerPage() {
         <Card className="p-6">
           <h3 className="text-lg font-semibold mb-6">Upload LinkedIn Profile PDF</h3>
           
-          <div
-            className={`flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-10 text-center transition-all ${
-              isDragging
-                ? "border-primary bg-primary/5 shadow-lg"
-                : "border-muted-foreground/25 hover:border-primary/40 hover:bg-muted/30"
-            }`}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-          >
-            <div className="mx-auto flex max-w-[500px] flex-col items-center justify-center text-center">
-              {formData.uploadedFile ? (
-                <div className="flex flex-col items-center space-y-4">
-                  <div className="rounded-full bg-green-500/10 p-5">
-                    <FileText className="h-10 w-10 text-green-500" />
-                  </div>
-                  <div className="space-y-1">
-                    <h3 className="text-xl font-semibold text-green-600 flex items-center gap-2">
-                      <Check className="h-5 w-5" />
-                      File Selected
-                    </h3>
-                    <p className="text-base font-medium">{formData.uploadedFile.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {(formData.uploadedFile.size / (1024 * 1024)).toFixed(2)} MB
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <div className="relative">
-                    <div className="absolute -inset-1 rounded-full bg-primary/20 blur-md" />
-                    <div className="relative rounded-full bg-primary/10 p-5">
-                      <Upload className="h-10 w-10 text-primary" />
+          <div className="space-y-6">
+            <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+              <div className="space-y-2">
+                <label htmlFor="profileName" className="text-sm font-medium">
+                  Full Name <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  id="profileName"
+                  name="profileName"
+                  value={formData.profileName}
+                  onChange={handleInputChange}
+                  placeholder="John Doe"
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label htmlFor="profileUrl" className="text-sm font-medium">
+                  LinkedIn Profile URL
+                </label>
+                <Input
+                  id="profileUrl"
+                  name="profileUrl"
+                  value={formData.profileUrl}
+                  onChange={handleInputChange}
+                  placeholder="https://linkedin.com/in/johndoe"
+                />
+              </div>
+
+              <div className="space-y-2 md:col-span-2">
+                <label htmlFor="title" className="text-sm font-medium">
+                  Optimization Title
+                </label>
+                <Input
+                  id="title"
+                  name="title"
+                  value={formData.title}
+                  onChange={handleInputChange}
+                  placeholder="Software Engineer Profile"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Optional: Give this optimization a descriptive title
+                </p>
+              </div>
+            </div>
+            
+            <div
+              className={`flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-10 text-center transition-all ${
+                isDragging
+                  ? "border-primary bg-primary/5 shadow-lg"
+                  : "border-muted-foreground/25 hover:border-primary/40 hover:bg-muted/30"
+              }`}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
+              
+                {formData.uploadedFile ? (
+                  <div className="flex flex-col items-center space-y-4">
+                    <div className="rounded-full bg-green-500/10 p-5">
+                      <FileText className="h-10 w-10 text-green-500" />
+                    </div>
+                    <div className="space-y-1">
+                      <h3 className="text-xl font-semibold text-green-600 flex items-center gap-2">
+                        <Check className="h-5 w-5" />
+                        File Selected
+                      </h3>
+                      <p className="text-base font-medium">{formData.uploadedFile.name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {(formData.uploadedFile.size / (1024 * 1024)).toFixed(2)} MB
+                      </p>
                     </div>
                   </div>
-                  <div className="mt-5 space-y-2">
-                    <h3 className="text-xl font-semibold">
-                      Drop your LinkedIn PDF here
-                    </h3>
-                    <p className="text-base text-muted-foreground">
-                      or click to browse files from your device
-                    </p>
+                ) : (
+                  <>
+                    <div className="relative">
+                      <div className="absolute -inset-1 rounded-full bg-primary/20 blur-md" />
+                      <div className="relative rounded-full bg-primary/10 p-5">
+                        <Upload className="h-10 w-10 text-primary" />
+                      </div>
+                    </div>
+                    <div className="mt-5 space-y-2">
+                      <h3 className="text-xl font-semibold">
+                        Drop your LinkedIn PDF here
+                      </h3>
+                      <p className="text-base text-muted-foreground">
+                        or click to browse files from your device
+                      </p>
+                    </div>
+                  </>
+                )}
+                
+                <Button
+                  onClick={() =>
+                    document.querySelector<HTMLInputElement>("#file-upload")?.click()
+                  }
+                  className={`mt-6 ${formData.uploadedFile ? 'bg-muted/80 hover:bg-muted text-foreground' : ''}`}
+                  variant={formData.uploadedFile ? "outline" : "default"}
+                  size="lg"
+                >
+                  {formData.uploadedFile ? "Choose Different File" : "Select PDF File"}
+                </Button>
+                <input
+                  id="file-upload"
+                  type="file"
+                  accept=".pdf"
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
+                
+                {!formData.uploadedFile && (
+                  <div className="mt-5 flex items-center text-sm text-muted-foreground">
+                    <Sparkle className="mr-2 h-4 w-4 text-yellow-500" />
+                    Our AI will analyze your profile and provide tailored recommendations
                   </div>
-                </>
-              )}
-              
-              <Button
-                onClick={() =>
-                  document.querySelector<HTMLInputElement>("#file-upload")?.click()
-                }
-                className={`mt-6 ${formData.uploadedFile ? 'bg-muted/80 hover:bg-muted text-foreground' : ''}`}
-                variant={formData.uploadedFile ? "outline" : "default"}
-                size="lg"
-              >
-                {formData.uploadedFile ? "Choose Different File" : "Select PDF File"}
-              </Button>
-              <input
-                id="file-upload"
-                type="file"
-                accept=".pdf"
-                className="hidden"
-                onChange={handleFileChange}
-              />
-              
-              {!formData.uploadedFile && (
-                <div className="mt-5 flex items-center text-sm text-muted-foreground">
-                  <Sparkle className="mr-2 h-4 w-4 text-yellow-500" />
-                  Our AI will analyze your profile and provide tailored recommendations
-                </div>
-              )}
+                )}
             </div>
           </div>
 
           <div className="pt-6 mt-6 border-t">
-            <Button 
-              onClick={handleOptimize}
-              className="w-full"
-              size="lg"
-              disabled={!formData.uploadedFile}
-            >
-              <Sparkle className="mr-2 h-4 w-4" />
-              Optimize LinkedIn Profile
-            </Button>
+            {isAnalyzing ? (
+              <div className="flex flex-col items-center justify-center p-4">
+                <MultiStepLoader 
+                  loadingStates={loadingStates} 
+                  loading={true} 
+                  duration={1500} 
+                  loop={true}
+                />
+              </div>
+            ) : (
+              <Button 
+                onClick={handleOptimize}
+                className="w-full"
+                size="lg"
+                disabled={!formData.uploadedFile || !formData.profileName}
+              >
+                <Sparkle className="mr-2 h-4 w-4" />
+                Optimize LinkedIn Profile
+              </Button>
+            )}
           </div>
         </Card>
 
         {/* Tips Card */}
-        <Card className="p-6 border-t-4 border-t-primary/70 shadow-md">
+        <Card className="p-6">
           <div className="flex items-center gap-3 mb-6">
             <div className="rounded-full bg-primary/10 p-2.5">
               <Sparkle className="h-5 w-5 text-primary" />
@@ -313,11 +385,11 @@ export default function NewLinkedInOptimizerPage() {
             
             <div className="rounded-xl border bg-card p-5 shadow-sm transition-all hover:shadow-md">
               <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                <Sparkle className="h-5 w-5 text-primary" />
+                <Linkedin className="h-5 w-5 text-primary" />
               </div>
-              <h4 className="text-lg font-medium mb-2">AI-Powered Analysis</h4>
+              <h4 className="text-lg font-medium mb-2">Optimization Benefits</h4>
               <p className="text-sm text-muted-foreground">
-                Our advanced AI will analyze your LinkedIn profile PDF to provide tailored recommendations for optimization, focusing on content quality, keyword effectiveness, and profile structure.
+                An optimized LinkedIn profile can increase your visibility to recruiters by up to 40%, improve connection request acceptance, and boost engagement on your posts.
               </p>
             </div>
           </div>
