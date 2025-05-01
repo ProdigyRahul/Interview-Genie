@@ -54,21 +54,7 @@ export default function CoverLetterBuilderPage() {
   const router = useRouter();
   const [coverLetters, setCoverLetters] = useState<CoverLetter[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [formData, setFormData] = useState<FormData>({
-    fullName: "",
-    email: "",
-    phone: "",
-    companyName: "",
-    jobTitle: "",
-    hiringManager: "",
-    keyPoints: [],
-    customization: {
-      tone: "professional",
-      style: "modern",
-      length: "medium",
-    },
-  });
+  const [isGenerating] = useState(false);
 
   const formatDate = (date: string) => {
     const now = new Date();

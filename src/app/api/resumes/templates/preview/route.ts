@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const pdfBuffer = await generateTemplatePreview(template);
+    const pdfBuffer = await generateTemplatePreview();
 
     // Return PDF with appropriate headers
     return new NextResponse(Buffer.from(JSON.stringify(pdfBuffer)), {
