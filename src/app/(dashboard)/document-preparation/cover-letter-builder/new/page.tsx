@@ -257,7 +257,7 @@ export default function NewCoverLetterPage() {
               <div className="space-y-2">
                 <Label>Key Points (One per line)</Label>
                 <Textarea
-                  placeholder="Enter key points you'd like to highlight in your cover letter..."
+                  placeholder="Enter key points you&apos;d like to highlight in your cover letter..."
                   className="h-24"
                   onChange={(e) =>
                     setFormData({
