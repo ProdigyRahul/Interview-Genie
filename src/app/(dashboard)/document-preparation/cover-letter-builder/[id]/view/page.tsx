@@ -56,27 +56,28 @@ export default function ViewCoverLetterPage() {
   ];
 
   useEffect(() => {
-    fetchCoverLetter();
-  }, [params.id]);
-
-  const fetchCoverLetter = async () => {
-    try {
-      setIsLoading(true);
-      const response = await fetch(`/api/cover-letter/${params.id}`);
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to fetch cover letter");
+    const fetchCoverLetter = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch(`/api/cover-letter/${params.id}`);
+        const data = await response.json();
+  
+        if (!response.ok) {
+          throw new Error(data.error || "Failed to fetch cover letter");
+        }
+  
+        setLetter(data.coverLetter);
+      } catch (error) {
+        console.error("Error fetching cover letter:", error);
+        toast.error("Failed to load cover letter");
+      } finally {
+        setIsLoading(false);
       }
+    };
 
-      setLetter(data.coverLetter);
-    } catch (error) {
-      console.error("Error fetching cover letter:", error);
-      toast.error("Failed to load cover letter");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    // Fix floating promise with void operator
+    void fetchCoverLetter();
+  }, [params.id]);
 
   const handleDownload = async () => {
     if (!letter) return;
