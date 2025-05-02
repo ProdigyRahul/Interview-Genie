@@ -1,7 +1,6 @@
 import { db } from "@/server/db";
 import { redis } from "@/server/redis";
 import { CACHE_KEYS, CACHE_TTL } from "@/server/redis";
-import type { Prisma, PrismaClient } from "@prisma/client";
 
 // Types for the dashboard data
 export interface DashboardData {
@@ -314,12 +313,12 @@ export async function getBatchedPracticeSessions(
     const completedSessions = sessions.filter((s) => s.endTime !== null);
     const completionRate = (completedSessions.length / sessions.length) * 100;
     const averageScore =
-      completedSessions.reduce((acc, curr) => acc + (curr.duration || 0), 0) /
+      completedSessions.reduce((acc, curr) => acc + (curr.duration ?? 0), 0) /
         completedSessions.length || 0;
 
     return {
       sessions,
-      totalDuration: stats?.totalDuration || 0,
+      totalDuration: stats?.totalDuration ?? 0,
       averageScore,
       completionRate,
     };

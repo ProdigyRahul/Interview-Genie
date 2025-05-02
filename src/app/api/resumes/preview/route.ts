@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const previewData = await generateTemplatePreview(template);
+    const previewData = await generateTemplatePreview();
     if (!previewData) {
       return NextResponse.json(
         { error: "Failed to generate preview" },

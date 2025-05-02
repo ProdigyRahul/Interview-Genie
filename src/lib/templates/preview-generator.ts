@@ -1,4 +1,4 @@
-import { type ResumeData, type TemplateType } from "@/lib/types/resume";
+import { type ResumeData } from "@/lib/types/resume";
 
 export const sampleData: ResumeData = {
   personalInfo: {
@@ -76,9 +76,7 @@ export const sampleData: ResumeData = {
   ],
 };
 
-export async function generateTemplatePreview(
-  template: TemplateType,
-): Promise<ResumeData> {
+export async function generateTemplatePreview(): Promise<ResumeData> {
   try {
     // Return sample data for preview
     return sampleData;

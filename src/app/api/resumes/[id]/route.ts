@@ -58,14 +58,6 @@ const achievementSchema = z.object({
   description: z.string().optional(),
 });
 
-const volunteerSchema = z.object({
-  organization: z.string().optional(),
-  role: z.string().optional(),
-  startDate: z.string().optional(),
-  endDate: z.string().optional(),
-  description: z.string().optional(),
-});
-
 const skillsSchema = z.object({
   technical: z.array(z.string()).min(1),
   soft: z.array(z.string()).optional(),

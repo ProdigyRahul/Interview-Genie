@@ -1,6 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY ?? "");
 
 // Types and Interfaces
 export interface GeminiResponse {
@@ -336,25 +336,4 @@ export const generateBulletPoints = async (
       error: "Failed to generate bullet points. Please try again.",
     };
   }
-};
-
-// Helper Functions
-const getPromptForSection = (
-  section: string,
-  context: Record<string, any>,
-): string => {
-  const prompts: Record<string, string> = {
-    name: `Generate a professional full name that would be suitable for a ${context.jobTitle} position.`,
-    jobTitle: `Based on the skills "${context.skills}" and ${context.experience} years of experience, suggest a professional job title that best represents this profile.`,
-    skills: `Based on the job title "${context.jobTitle}" and experience level of ${context.experience} years, suggest 5-7 relevant technical and soft skills that should be included in the resume. Format them as a comma-separated list.`,
-    summary: `Create a compelling professional summary for a ${context.jobTitle} with ${context.experience} years of experience. Focus on their expertise in ${context.skills.join(", ")}.`,
-    experience: `Create a detailed bullet point description for a ${context.jobTitle} role at ${context.company}, focusing on achievements and impact. Include metrics where possible.`,
-    education: `Create a professional description for education at ${context.school} studying ${context.degree} in ${context.fieldOfStudy}.`,
-    projects: `Create a compelling description for a project titled "${context.title}" that uses technologies: ${context.technologies.join(", ")}.`,
-    certifications: `Create a professional description highlighting the value and relevance of ${context.name} certification from ${context.issuingOrg}.`,
-    achievements: `Create an impactful description for a professional achievement titled "${context.title}" that demonstrates leadership and impact.`,
-    references: `Create a professional reference description for ${context.name} who is a ${context.position} at ${context.company}.`,
-  };
-
-  return prompts[section] || "Please provide content for this section.";
 };

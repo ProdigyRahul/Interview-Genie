@@ -1,4 +1,4 @@
-import { ResumeData, type TemplateType } from "@/lib/types/resume";
+import { type TemplateType } from "@/lib/types/resume";
 import { cn } from "@/lib/utils";
 import { ModernResume } from "./templates/modern";
 import { ClassicResume } from "./templates/classic";

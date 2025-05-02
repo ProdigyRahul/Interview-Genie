@@ -25,7 +25,7 @@ export async function GET() {
         : 0;
 
     // Calculate ATS score trend
-    const lastAtsScore = atsScores[atsScores.length - 1] || 0;
+    const lastAtsScore = atsScores[atsScores.length - 1] ?? 0;
     const atsTrend = lastAtsScore > 0 ? avgAtsScore - lastAtsScore : 0;
 
     // Get next ATS target
@@ -83,27 +83,27 @@ export async function GET() {
         progress: Math.min(Math.round((completedInterviews / 15) * 100), 100),
       },
       practiceTime: {
-        value: `${Math.round((practiceStats?.totalDuration || 0) / 3600)}h`,
-        trend: `${practiceStats?.weeklyDuration ? "+" : ""}${Math.round((practiceStats?.weeklyDuration || 0) / 3600)}h`,
+        value: `${Math.round((practiceStats?.totalDuration ?? 0) / 3600)}h`,
+        trend: `${practiceStats?.weeklyDuration ? "+" : ""}${Math.round((practiceStats?.weeklyDuration ?? 0) / 3600)}h`,
         trendType:
-          (practiceStats?.weeklyDuration || 0) >=
-          (practiceStats?.lastWeekDuration || 0)
+          (practiceStats?.weeklyDuration ?? 0) >=
+          (practiceStats?.lastWeekDuration ?? 0)
             ? "positive"
             : "negative",
         nextMilestone: "20h",
         progress: Math.min(
           Math.round(
-            ((practiceStats?.weeklyDuration || 0) / (20 * 3600)) * 100,
+            ((practiceStats?.weeklyDuration ?? 0) / (20 * 3600)) * 100,
           ),
           100,
         ),
       },
       credits: {
-        value: (user?.credits || 0).toString(),
+        value: (user?.credits ?? 0).toString(),
         trend: "+0",
         trendType: "positive",
-        nextMilestone: ((user?.credits || 0) + 50).toString(),
-        progress: Math.min(Math.round(((user?.credits || 0) / 200) * 100), 100),
+        nextMilestone: ((user?.credits ?? 0) + 50).toString(),
+        progress: Math.min(Math.round(((user?.credits ?? 0) / 200) * 100), 100),
       },
     };
 

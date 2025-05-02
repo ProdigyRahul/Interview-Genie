@@ -90,7 +90,7 @@ export function useSaveResume(
       console.log(`Validation result for ${section}:`, validationResult);
 
       if (!validationResult.success) {
-        const errors = validationResult.errors || [];
+        const errors = validationResult.errors ?? [];
         console.log(`Validation errors for ${section}:`, errors);
         setValidationErrors(errors);
         options.onValidationError?.(errors);
@@ -113,7 +113,7 @@ export function useSaveResume(
           // Handle server-side validation errors
           const serverErrors = error.errors.map(
             (err: { path?: string[]; message: string }) => ({
-              field: err.path?.join(".") || "unknown",
+              field: err.path?.join(".") ?? "unknown",
               message: err.message,
             }),
           );

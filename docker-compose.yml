@@ -1,0 +1,65 @@
+services:
+  app:
+    container_name: interview-genie
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - NODE_ENV=production
+    restart: always
+    ports:
+      - "3000:3000"
+    # Load environment variables from local files
+    env_file:
+      - .env.local
+    # Override specific environment variables if needed
+    environment:
+      - NODE_ENV=production
+      - NEXTAUTH_URL=http://localhost:3000
+      - NEXT_PUBLIC_APP_URL=http://localhost:3000
+      - AUTH_TRUST_HOST=true
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/interview_genie
+    volumes:
+      - ./public:/app/public
+      - interview-genie-data:/app/data
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - interview-genie-network
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    container_name: interview-genie-db
+    image: postgres:16-alpine
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=interview_genie
+    volumes:
+      - interview-genie-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - interview-genie-network
+
+networks:
+  interview-genie-network:
+    driver: bridge
+
+volumes:
+  interview-genie-data:
+    driver: local
+  interview-genie-db-data:
+    driver: local 
