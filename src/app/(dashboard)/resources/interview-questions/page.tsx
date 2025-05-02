@@ -47,11 +47,12 @@ const categories = [
 
 // SQL Questions Data (just using the SQL ones for now, can add others later)
 const questionsData = {
-  basic: [
-    {
-      id: "string-data-types",
-      question: "What are the String Data Types in MySQL?",
-      answer: `MySQL provides several string data types to store text and binary data:
+  sql: {
+    basic: [
+      {
+        id: "string-data-types",
+        question: "What are the String Data Types in MySQL?",
+        answer: `MySQL provides several string data types to store text and binary data:
 
 CHAR(n): Fixed-length string, padded with spaces to specified length
 VARCHAR(n): Variable-length string with maximum length n
@@ -71,11 +72,11 @@ CREATE TABLE users (
 \`\`\`
 
 Note: Choose VARCHAR over CHAR when the column length varies considerably to save space.`
-    },
-    {
-      id: "adding-users",
-      question: "How to add users in MySQL?",
-      answer: `There are two main ways to add users in MySQL:
+      },
+      {
+        id: "adding-users",
+        question: "How to add users in MySQL?",
+        answer: `There are two main ways to add users in MySQL:
 
 1. Using CREATE USER Statement:
 
@@ -111,11 +112,11 @@ Best Practices:
 - Always use strong passwords
 - Grant only necessary privileges (principle of least privilege)
 - Regularly review user privileges`
-    },
-    {
-      id: "blob-in-mysql",
-      question: "What is BLOB in MySQL?",
-      answer: `BLOB (Binary Large OBject) is a MySQL data type used to store large binary objects such as:
+      },
+      {
+        id: "blob-in-mysql",
+        question: "What is BLOB in MySQL?",
+        answer: `BLOB (Binary Large OBject) is a MySQL data type used to store large binary objects such as:
 
 - Images
 - Audio files
@@ -143,11 +144,11 @@ Best Practices:
 - Consider storing files in the filesystem and only storing file paths in the database for better performance
 - Use the smallest BLOB type that can accommodate your data
 - Be mindful of the maximum packet size in your MySQL configuration`
-    },
-    {
-      id: "temporal-data-types",
-      question: "What are the Temporal Data Types in MySQL?",
-      answer: `MySQL provides several temporal data types to store date and time information:
+      },
+      {
+        id: "temporal-data-types",
+        question: "What are the Temporal Data Types in MySQL?",
+        answer: `MySQL provides several temporal data types to store date and time information:
 
 - DATE: Stores date in 'YYYY-MM-DD' format (1000-01-01 to 9999-12-31)
 - TIME: Stores time in 'HH:MM:SS' format (-838:59:59 to 838:59:59)
@@ -176,11 +177,11 @@ Best Practices:
 - Use TIMESTAMP for tracking record creation/modification times
 - Use DATETIME for future dates or historical dates before 1970
 - Consider timezone implications when choosing between TIMESTAMP and DATETIME`
-    },
-    {
-      id: "what-is-mysql",
-      question: "What is MySQL?",
-      answer: `MySQL is an open-source relational database management system (RDBMS) that uses Structured Query Language (SQL). It was originally developed by MySQL AB and is now owned by Oracle Corporation.
+      },
+      {
+        id: "what-is-mysql",
+        question: "What is MySQL?",
+        answer: `MySQL is an open-source relational database management system (RDBMS) that uses Structured Query Language (SQL). It was originally developed by MySQL AB and is now owned by Oracle Corporation.
 
 Key Features:
 
@@ -204,13 +205,13 @@ Popular Stacks Using MySQL:
 - LAMP (Linux, Apache, MySQL, PHP/Python/Perl)
 - WAMP (Windows, Apache, MySQL, PHP)
 - MAMP (Mac, Apache, MySQL, PHP)`
-    }
-  ],
-  intermediate: [
-    {
-      id: "types-of-relationships",
-      question: "What are the types of relationships used in MySQL?",
-      answer: `In MySQL, relationships (also called relationships between tables) define how data in different tables is connected. There are three main types of relationships:
+      }
+    ],
+    intermediate: [
+      {
+        id: "types-of-relationships",
+        question: "What are the types of relationships used in MySQL?",
+        answer: `In MySQL, relationships (also called relationships between tables) define how data in different tables is connected. There are three main types of relationships:
 
 1. One-to-One (1:1):
 
@@ -282,11 +283,11 @@ Best Practices:
 - Consider referential integrity constraints
 - Plan for cascading updates/deletes
 - Document relationships in schema design`
-    },
-    {
-      id: "mysql-clients-utilities",
-      question: "What are the MySQL clients and utilities?",
-      answer: `MySQL provides various clients and utilities for different purposes:
+      },
+      {
+        id: "mysql-clients-utilities",
+        question: "What are the MySQL clients and utilities?",
+        answer: `MySQL provides various clients and utilities for different purposes:
 
 1. Command-Line Clients:
 
@@ -334,13 +335,13 @@ Common Tasks and Utilities:
 - Performance monitoring
 - User administration
 - Schema management`
-    }
-  ],
-  advanced: [
-    {
-      id: "transaction-storage-engines",
-      question: "What are Transaction Storage Engines in MySQL?",
-      answer: `Transaction Storage Engines in MySQL are components that handle the storage and retrieval of data, with each engine having different characteristics and capabilities regarding transactions, locking, and performance.
+      }
+    ],
+    advanced: [
+      {
+        id: "transaction-storage-engines",
+        question: "What are Transaction Storage Engines in MySQL?",
+        answer: `Transaction Storage Engines in MySQL are components that handle the storage and retrieval of data, with each engine having different characteristics and capabilities regarding transactions, locking, and performance.
 
 1. InnoDB (Default since MySQL 5.5):
 
@@ -411,11 +412,11 @@ Selection Criteria:
 - Recovery capabilities
 - Performance characteristics
 - Specific feature requirements`
-    },
-    {
-      id: "sharding-in-sql",
-      question: "What is Sharding in SQL?",
-      answer: `Sharding is a database architecture pattern related to horizontal partitioning — the practice of separating one table's rows into multiple different tables, known as partitions or shards. Each shard is held on a separate database server instance.
+      },
+      {
+        id: "sharding-in-sql",
+        question: "What is Sharding in SQL?",
+        answer: `Sharding is a database architecture pattern related to horizontal partitioning — the practice of separating one table's rows into multiple different tables, known as partitions or shards. Each shard is held on a separate database server instance.
 
 1. Sharding Methods:
 
@@ -476,8 +477,9 @@ Implementation Considerations:
 - Handle cross-shard queries
 - Manage schema changes
 - Monitor shard performance`
-    }
-  ],
+      }
+    ]
+  },
   python: {
     basic: [
       {
@@ -899,6 +901,414 @@ Best Use Cases:
 - High-concurrency servers`
       }
     ]
+  },
+  react: {
+    basic: [
+      {
+        id: "what-is-react",
+        question: "What is React?",
+        answer: `React is a powerful JavaScript library designed for building user interfaces, particularly for single-page applications where a fast and interactive user experience is critical. It was created by Facebook and is now maintained by both Facebook and a vibrant community of developers.
+
+React enables developers to construct large, dynamic web applications that can update data without requiring a full page reload. At its core, React revolves around the concept of components—reusable, self-contained pieces of code that can be combined to form complex user interfaces.
+
+Unlike traditional frameworks, React adopts a declarative approach, allowing developers to define how the UI should look based on its current state, making the code easier to understand and maintain. One of its standout features is the use of a virtual DOM, which optimizes updates to the actual DOM, resulting in improved performance by reducing unnecessary re-renders.`
+      },
+      {
+        id: "advantages-of-react",
+        question: "What are the advantages of using React?",
+        answer: `React offers a range of advantages that make it a go-to choice for modern web development:
+
+- **Component-Based Architecture:** Allows developers to break down the UI into reusable, modular pieces, which simplifies maintenance and enhances scalability.
+
+- **Virtual DOM:** A lightweight copy of the actual DOM that optimizes rendering by only updating the parts of the UI that change, boosting application performance.
+
+- **Declarative Syntax:** You describe what the UI should look like for a given state, making it easier to debug and predict behavior.
+
+- **Large, Active Community:** Provides extensive resources, tutorials, and third-party libraries to accelerate development.
+
+- **Flexibility:** Integrates seamlessly with other tools or frameworks for tasks like routing or state management.
+
+- **Server-Side Rendering:** Improves SEO and speeds up initial page loads.
+
+- **Gentle Learning Curve:** For developers familiar with JavaScript, React is relatively easy to learn, especially with the introduction of Hooks.`
+      },
+      {
+        id: "limitations-of-react",
+        question: "What are the limitations of React?",
+        answer: `While React is a fantastic tool, it does come with some limitations that developers should be aware of:
+
+- **View-Layer Only:** React is primarily a view-layer library, meaning it doesn't provide built-in solutions for things like routing or state management—you'll need to pair it with additional libraries like Redux or React Router.
+
+- **Overwhelming Documentation:** While comprehensive, React's documentation can feel overwhelming for beginners due to its size and the rapid pace of updates.
+
+- **Decision Fatigue:** React's flexibility can lead to decision fatigue since it doesn't enforce a specific structure, leaving developers to choose from countless complementary tools.
+
+- **JSX Complexity:** The JSX syntax, which blends HTML-like code with JavaScript, can be confusing for newcomers despite its power.
+
+- **Application Complexity:** Large React applications can become complex, requiring careful state and side-effect management to avoid performance issues.
+
+- **Learning Curve for Hooks:** The shift toward functional components and Hooks might pose a learning challenge for developers accustomed to class-based approaches.`
+      },
+      {
+        id: "use-state-hook",
+        question: "What is useState() in React?",
+        answer: `The useState() Hook is a fundamental feature in React that allows functional components to manage state, a capability that was previously exclusive to class components. Introduced with React Hooks, useState() provides a simple way to add stateful logic to your components without the verbosity of classes.
+
+When you call useState(), it returns an array with two elements: the current state value and a function to update it. This Hook is incredibly versatile, enabling dynamic UI updates based on user interactions or other events.
+
+\`\`\`jsx
+import React, { useState } from 'react';
+
+function Counter() {
+  const [count, setCount] = useState(0);
+
+  return (
+    <div>
+      <p>You clicked {count} times</p>
+      <button onClick={() => setCount(count + 1)}>
+        Click me
+      </button>
+    </div>
+  );
+}
+\`\`\`
+
+In this snippet, useState(0) initializes the count state variable to 0. The setCount function updates count when the button is clicked, triggering a re-render with the new value. This demonstrates how useState() empowers functional components to handle dynamic data efficiently, making them as powerful as their class-based counterparts while keeping the code concise and readable.`
+      },
+      {
+        id: "keys-in-react",
+        question: "What are keys in React?",
+        answer: `Keys in React are special attributes used when rendering lists of elements to help React identify which items have changed, been added, or been removed. They provide a stable identity to each element in a list, enabling React to optimize the rendering process by only updating the necessary parts of the DOM.
+
+Keys must be unique among sibling elements within the same list but don't need to be globally unique across the application. This mechanism is crucial for performance, especially in dynamic lists where items might shift, as it prevents React from re-rendering the entire list unnecessarily.
+
+\`\`\`jsx
+const numbers = [1, 2, 3, 4, 5];
+const listItems = numbers.map((number) => (
+  <li key={number.toString()}>
+    {number}
+  </li>
+));
+\`\`\`
+
+In this code, each <li> element is assigned a key based on the number converted to a string. When the list changes—say, an item is added or removed—React uses these keys to efficiently update only the affected elements rather than re-rendering the whole list.
+
+Without keys, React might struggle to track changes, leading to potential bugs or performance issues, making keys an essential tool for list rendering.`
+      }
+    ],
+    intermediate: [
+      {
+        id: "jsx-in-react",
+        question: "What is JSX?",
+        answer: `JSX, or JavaScript XML, is a syntax extension for JavaScript that allows developers to write HTML-like code directly within JavaScript files. It's a cornerstone of React development, making it easier to define and visualize the structure of UI components.
+
+While it looks like HTML, JSX is actually transpiled into regular JavaScript function calls by tools like Babel, which React then uses to create elements. This blend of markup and logic in one place enhances readability and maintainability.
+
+\`\`\`jsx
+const element = <h1>Hello, world!</h1>;
+\`\`\`
+
+This JSX is transformed into:
+
+\`\`\`javascript
+const element = React.createElement('h1', null, 'Hello, world!');
+\`\`\`
+
+Here, the JSX <h1>Hello, world!</h1> becomes a call to React.createElement(), which constructs the UI element.
+
+JSX isn't required in React—you could write raw JavaScript—but its intuitive syntax makes it the preferred choice for most developers, streamlining the process of building and understanding complex UIs.`
+      },
+      {
+        id: "components-difference",
+        question: "What are the differences between functional and class components?",
+        answer: `In React, components can be defined as either functional or class components, each with distinct characteristics:
+
+**Functional Components:**
+- Plain JavaScript functions that take props as an argument and return JSX
+- Simpler, more concise syntax
+- Can handle state and side effects with Hooks
+- Preferred in modern React development
+
+\`\`\`jsx
+import React, { useState } from 'react';
+
+function FunctionalComponent() {
+  const [count, setCount] = useState(0);
+  return <h1>{count}</h1>;
+}
+\`\`\`
+
+**Class Components:**
+- ES6 classes that extend React.Component
+- Require a render method to return JSX
+- Inherently support state and lifecycle methods
+- More verbose syntax
+
+\`\`\`jsx
+import React, { Component } from 'react';
+
+class ClassComponent extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { count: 0 };
+  }
+
+  render() {
+    return <h1>{this.state.count}</h1>;
+  }
+}
+\`\`\`
+
+In the functional component, useState manages the count, while in the class component, state is handled via this.state and updated with this.setState. Functional components are now preferred due to their simplicity and the power of Hooks, while class components remain relevant for legacy code or specific use cases requiring lifecycle methods not yet fully replicated by Hooks.`
+      },
+      {
+        id: "virtual-dom",
+        question: "What is the virtual DOM?",
+        answer: `The virtual DOM is a lightweight, in-memory representation of the actual DOM, and it's a key feature that sets React apart. Instead of directly manipulating the real DOM, which can be slow due to reflows and repaints, React maintains this virtual version to track the UI's state.
+
+When a component's state changes, React first updates the virtual DOM with the new data. It then performs a process called reconciliation, comparing the updated virtual DOM with the previous version to identify what's changed. Finally, React applies only those changes to the actual DOM, minimizing costly operations.
+
+This approach significantly boosts performance, especially in complex applications with frequent updates, by reducing unnecessary re-renders and ensuring the UI stays in sync with the state efficiently.
+
+The virtual DOM's benefits include:
+
+- **Improved Performance:** By batching DOM updates and only applying necessary changes
+- **Simplified Programming Model:** Developers can think in terms of the entire UI state at any time
+- **Cross-Platform Capabilities:** The virtual DOM abstraction allows React to target platforms beyond the browser (like React Native)
+- **Declarative API:** React handles the "how" of DOM updates, letting developers focus on the "what"`
+      },
+      {
+        id: "controlled-components",
+        question: "What are the differences between controlled and uncontrolled components?",
+        answer: `Controlled and uncontrolled components are two approaches to handling form data in React:
+
+**Controlled Components:**
+- Form input values are tied to component state
+- React fully manages the data through state updates
+- Provides fine-grained control over the form
+- Simplifies validation and conditional rendering
+
+\`\`\`jsx
+import React, { useState } from 'react';
+
+function ControlledComponent() {
+  const [value, setValue] = useState('');
+
+  const handleChange = (event) => {
+    setValue(event.target.value);
+  };
+
+  return <input value={value} onChange={handleChange} />;
+}
+\`\`\`
+
+**Uncontrolled Components:**
+- The DOM handles form data internally
+- Access data using refs when needed
+- Simpler approach with less code
+- Less control over form data
+
+\`\`\`jsx
+import React, { useRef } from 'react';
+
+function UncontrolledComponent() {
+  const inputRef = useRef(null);
+
+  const handleSubmit = () => {
+    alert(inputRef.current.value);
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input ref={inputRef} />
+      <button type="submit">Submit</button>
+    </form>
+  );
+}
+\`\`\`
+
+In the controlled example, the input's value is bound to the value state, and handleChange updates it. In the uncontrolled example, the input's value lives in the DOM, accessed via inputRef.current when the button is clicked.
+
+Controlled components are preferred for dynamic forms, while uncontrolled ones suit simpler scenarios.`
+      }
+    ],
+    advanced: [
+      {
+        id: "props-drilling",
+        question: "What is prop drilling in React?",
+        answer: `Prop drilling is a situation in React where data is passed from a parent component through multiple layers of child components via props, even if some intermediate components don't use the data themselves. This can clutter component code and make maintenance harder as the component tree grows.
+
+\`\`\`jsx
+function Grandparent() {
+  const data = "Hello from Grandparent";
+  return <Parent data={data} />;
+}
+
+function Parent({ data }) {
+  return <Child data={data} />;
+}
+
+function Child({ data }) {
+  return <p>{data}</p>;
+}
+\`\`\`
+
+In this case, Parent doesn't need data but must pass it to Child, demonstrating prop drilling. While this works for small apps, it becomes cumbersome in larger ones.
+
+Solutions to avoid prop drilling include:
+
+- **Context API:** Provides a way to share values between components without explicitly passing props through every level.
+- **State Management Libraries:** Redux, MobX, or Recoil can manage global state.
+- **Component Composition:** Restructuring components to avoid deep nesting.
+- **Custom Hooks:** Sharing stateful logic between components.
+
+These approaches allow data to be shared directly with deeper components, bypassing unnecessary prop passing and improving code scalability.`
+      },
+      {
+        id: "error-boundaries",
+        question: "What are error boundaries?",
+        answer: `Error boundaries are special React components that catch JavaScript errors in their child component tree, preventing the entire application from crashing. They act like a UI-level try-catch mechanism.
+
+To create an error boundary, a class component must implement one or both of the following lifecycle methods:
+- static getDerivedStateFromError(error): Updates the component's state to show a fallback UI.
+- componentDidCatch(error, errorInfo): Logs error details for debugging.
+
+\`\`\`jsx
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error("Error:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return <h1>Something went wrong.</h1>;
+    }
+    return this.props.children;
+  }
+}
+\`\`\`
+
+Usage Example:
+
+\`\`\`jsx
+<ErrorBoundary>
+    <MyComponent />
+</ErrorBoundary>
+\`\`\`
+
+If MyComponent throws an error, ErrorBoundary catches it and renders a fallback UI instead of breaking the app. This ensures a better user experience by gracefully handling unexpected errors.
+
+Limitations of Error Boundaries:
+- They do not catch errors in event handlers, asynchronous code (e.g., setTimeout, fetch), or server-side rendering.
+- They only work for their child components, not for themselves.
+- They must be class components, as there is no Hook equivalent yet.`
+      },
+      {
+        id: "react-hooks",
+        question: "What is React Hooks?",
+        answer: `React Hooks are functions introduced in React 16.8 that enable functional components to use state, lifecycle features, and other React functionalities traditionally limited to class components. They simplify code by eliminating the need for classes and enhance reusability through custom Hooks.
+
+Key built-in Hooks include:
+
+- **useState:** Manages state in functional components
+- **useEffect:** Handles side effects like data fetching, subscriptions, or DOM manipulation
+- **useContext:** Accesses React Context API for sharing data
+- **useReducer:** Manages complex state logic
+- **useRef:** Creates mutable references that persist across renders
+- **useMemo:** Memoizes expensive calculations to optimize performance
+- **useCallback:** Memoizes functions to prevent unnecessary re-renders
+
+\`\`\`jsx
+import React, { useState, useEffect } from 'react';
+
+function Counter() {
+  const [count, setCount] = useState(0);
+  
+  useEffect(() => {
+    document.title = \`You clicked \${count} times\`;
+  }, [count]);
+  
+  return (
+    <div>
+      <p>You clicked {count} times</p>
+      <button onClick={() => setCount(count + 1)}>
+        Click me
+      </button>
+    </div>
+  );
+}
+\`\`\`
+
+Hooks revolutionized React development by:
+- Making functional components as powerful as class components
+- Enabling better code organization and reuse
+- Reducing boilerplate code
+- Providing a more consistent way to use React features
+- Simplifying complex component logic
+
+They've become the standard approach for new React development due to their simplicity and flexibility.`
+      },
+      {
+        id: "react-router",
+        question: "What is React Router?",
+        answer: `React Router is a popular library for handling client-side routing in React applications. It allows developers to create single-page applications (SPAs) with multiple views or pages, each with its own URL, without requiring full page reloads.
+
+Key features include:
+
+- **Declarative Routing:** Define routes using components like \`<Route>\`, \`<Switch>\`, and \`<Link>\`
+- **Nested Routes:** Support for nested routes to handle complex layouts
+- **Route Parameters:** Dynamic segments in URLs (e.g., /users/:id) for dynamic data
+- **Programmatic Navigation:** Use useHistory or withRouter to navigate programmatically
+
+\`\`\`jsx
+import { BrowserRouter as Router, Route, Switch, Link } from 'react-router-dom';
+
+function Home() {
+  return <h2>Home Page</h2>;
+}
+
+function About() {
+  return <h2>About Page</h2>;
+}
+
+function App() {
+  return (
+    <Router>
+      <nav>
+        <Link to="/">Home</Link>
+        <Link to="/about">About</Link>
+      </nav>
+
+      <Switch>
+        <Route exact path="/">
+          <Home />
+        </Route>
+        <Route path="/about">
+          <About />
+        </Route>
+      </Switch>
+    </Router>
+  );
+}
+\`\`\`
+
+In this example:
+- \`<Router>\` wraps the app to enable routing
+- \`<Link>\` provides navigation links without reloading the page
+- \`<Switch>\` ensures only one \`<Route>\` matches and renders based on the URL
+
+React Router integrates seamlessly with React's component model, making it easy to manage navigation and maintain a smooth user experience in SPAs.`
+      }
+    ]
   }
 };
 
@@ -935,13 +1345,17 @@ export default function InterviewQuestionsPage() {
     );
   };
 
-  const basicQuestions = filterQuestions(questionsData.basic || [], searchTerm);
-  const intermediateQuestions = filterQuestions(questionsData.intermediate || [], searchTerm);
-  const advancedQuestions = filterQuestions(questionsData.advanced || [], searchTerm);
+  const basicQuestions = filterQuestions(questionsData.sql?.basic || [], searchTerm);
+  const intermediateQuestions = filterQuestions(questionsData.sql?.intermediate || [], searchTerm);
+  const advancedQuestions = filterQuestions(questionsData.sql?.advanced || [], searchTerm);
 
   const pythonBasicQuestions = filterQuestions(questionsData.python?.basic || [], searchTerm);
   const pythonIntermediateQuestions = filterQuestions(questionsData.python?.intermediate || [], searchTerm);
   const pythonAdvancedQuestions = filterQuestions(questionsData.python?.advanced || [], searchTerm);
+
+  const reactBasicQuestions = filterQuestions(questionsData.react?.basic || [], searchTerm);
+  const reactIntermediateQuestions = filterQuestions(questionsData.react?.intermediate || [], searchTerm);
+  const reactAdvancedQuestions = filterQuestions(questionsData.react?.advanced || [], searchTerm);
 
   return (
     <div className="space-y-8">
@@ -1230,7 +1644,112 @@ export default function InterviewQuestionsPage() {
           </motion.div>
         )}
 
-        {activeCategory !== "sql" && activeCategory !== "python" && (
+        {activeCategory === "react" && (
+          <motion.div
+            key="react-content"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Tabs defaultValue="basic" className="space-y-6">
+              <TabsList className="grid w-full max-w-md grid-cols-3">
+                <TabsTrigger value="basic">
+                  <BookOpen className="mr-2 h-4 w-4" />
+                  Basic
+                </TabsTrigger>
+                <TabsTrigger value="intermediate">
+                  <Code className="mr-2 h-4 w-4" />
+                  Intermediate
+                </TabsTrigger>
+                <TabsTrigger value="advanced">
+                  <Server className="mr-2 h-4 w-4" />
+                  Advanced
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="basic" className="space-y-4 mt-0">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold">Basic React Questions</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {reactBasicQuestions.length} questions
+                  </p>
+                </div>
+                <motion.div
+                  variants={container}
+                  initial="hidden"
+                  animate="show"
+                  className="space-y-4"
+                >
+                  {reactBasicQuestions.map((q) => (
+                    <motion.div key={q.id} variants={item}>
+                      <QuestionCard
+                        question={q.question}
+                        answer={q.answer}
+                        isExpanded={!!expandedQuestions[q.id]}
+                        onToggle={() => toggleQuestion(q.id)}
+                      />
+                    </motion.div>
+                  ))}
+                </motion.div>
+              </TabsContent>
+
+              <TabsContent value="intermediate" className="space-y-4 mt-0">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold">Intermediate React Questions</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {reactIntermediateQuestions.length} questions
+                  </p>
+                </div>
+                <motion.div
+                  variants={container}
+                  initial="hidden"
+                  animate="show"
+                  className="space-y-4"
+                >
+                  {reactIntermediateQuestions.map((q) => (
+                    <motion.div key={q.id} variants={item}>
+                      <QuestionCard
+                        question={q.question}
+                        answer={q.answer}
+                        isExpanded={!!expandedQuestions[q.id]}
+                        onToggle={() => toggleQuestion(q.id)}
+                      />
+                    </motion.div>
+                  ))}
+                </motion.div>
+              </TabsContent>
+
+              <TabsContent value="advanced" className="space-y-4 mt-0">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold">Advanced React Questions</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {reactAdvancedQuestions.length} questions
+                  </p>
+                </div>
+                <motion.div
+                  variants={container}
+                  initial="hidden"
+                  animate="show"
+                  className="space-y-4"
+                >
+                  {reactAdvancedQuestions.map((q) => (
+                    <motion.div key={q.id} variants={item}>
+                      <QuestionCard
+                        question={q.question}
+                        answer={q.answer}
+                        isExpanded={!!expandedQuestions[q.id]}
+                        onToggle={() => toggleQuestion(q.id)}
+                      />
+                    </motion.div>
+                  ))}
+                </motion.div>
+              </TabsContent>
+            </Tabs>
+          </motion.div>
+        )}
+
+        {activeCategory !== "sql" && activeCategory !== "python" && activeCategory !== "react" && (
           <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-12 text-center">
             <List className="mb-4 h-12 w-12 text-muted-foreground" />
             <h3 className="mb-2 text-xl font-semibold">Coming Soon</h3>
