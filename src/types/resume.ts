@@ -55,6 +55,7 @@ export interface ImprovementDetails {
   bullet_points: ImprovementSuggestion[];
   achievements: ImprovementSuggestion[];
   skills: ImprovementSuggestion[];
+  job_match_analysis?: JobMatchAnalysis;
 }
 
 export interface ImprovementSuggestions {
@@ -63,6 +64,7 @@ export interface ImprovementSuggestions {
   format: ImprovementSuggestion[];
   language: ImprovementSuggestion[];
   keywords: string[];
+  job_description_provided?: string;
 }
 
 export interface JobMatchAnalysis {

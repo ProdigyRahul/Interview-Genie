@@ -381,7 +381,7 @@ export default function ResumeOptimizerPage() {
   );
 
   const renderJobMatchAnalysis = () => {
-    if (!result?.ats_analysis.job_match_analysis) {
+    if (!result?.metadata.job_description_provided || !result?.ats_analysis.job_match_analysis) {
       return (
         <div className="text-center p-8 space-y-4">
           <Briefcase className="mx-auto h-12 w-12 text-muted-foreground/50" />
@@ -646,6 +646,7 @@ export default function ResumeOptimizerPage() {
                               reason?: string;
                             }>;
                             keywords: string[];
+                            job_description_provided?: boolean;
                           };
 
                           setResult({
@@ -657,6 +658,7 @@ export default function ResumeOptimizerPage() {
                               detailed_breakdown: analysis.detailedBreakdown,
                               keyword_match_rate: analysis.keywordMatchRate,
                               missing_keywords: analysis.missingKeywords,
+                              job_match_analysis: analysis.improvementDetails?.job_match_analysis
                             },
                             improvement_suggestions: {
                               high_priority: storedSuggestions.high_priority || [],
@@ -685,7 +687,7 @@ export default function ResumeOptimizerPage() {
                             },
                             metadata: {
                               filename: analysis.originalFilename,
-                              job_description_provided: false,
+                              job_description_provided: !!storedSuggestions.job_description_provided,
                               timestamp: analysis.createdAt,
                               file_url: analysis.fileUrl,
                             },
@@ -949,21 +951,28 @@ export default function ResumeOptimizerPage() {
             {/* Sidebar Navigation */}
             <Card className="col-span-2 p-4">
               <div className="space-y-4">
-                {sections.map(({ id, label, icon: Icon }) => (
-                  <button
-                    key={id}
-                    onClick={() => setActiveSection(id)}
-                    className={cn(
-                      "flex w-full items-center gap-3 rounded-lg px-4 py-2 text-sm font-medium transition-colors",
-                      activeSection === id
-                        ? "bg-primary text-primary-foreground"
-                        : "hover:bg-muted",
-                    )}
-                  >
-                    <Icon className="h-4 w-4" />
-                    {label}
-                  </button>
-                ))}
+                {sections.map(({ id, label, icon: Icon }) => {
+                  // Hide the job match section if no job description was provided
+                  if (id === "job-match" && !result.metadata.job_description_provided) {
+                    return null;
+                  }
+                  
+                  return (
+                    <button
+                      key={id}
+                      onClick={() => setActiveSection(id)}
+                      className={cn(
+                        "flex w-full items-center gap-3 rounded-lg px-4 py-2 text-sm font-medium transition-colors",
+                        activeSection === id
+                          ? "bg-primary text-primary-foreground"
+                          : "hover:bg-muted",
+                      )}
+                    >
+                      <Icon className="h-4 w-4" />
+                      {label}
+                    </button>
+                  );
+                })}
               </div>
             </Card>
 
