@@ -248,12 +248,15 @@ model ResumeAnalysis {
   detailedBreakdown    Json     // { format_analysis: {...}, content_analysis: {...}, language_analysis: {...}, competencies_analysis: {...} }
   keywordMatchRate     String
   missingKeywords      String[]
-  improvementSuggestions Json    // { high_priority: string[], content: [...], format: [...], language: [...], keywords: string[] }
-  improvementDetails    Json     // { bullet_points: [...], achievements: [...], skills: [...] }
+  jobDescriptionProvided Boolean  @default(false)
+  jobMatchAnalysis     Json?    // { match_percentage: number, key_requirements_met: string[], key_requirements_missing: string[], skills_alignment_score: number }
+  improvementSuggestions Json
+  improvementDetails    Json
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
 
   @@index([userId])
+  @@index([createdAt])
 }
 
 model CoverLetter {

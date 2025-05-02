@@ -65,6 +65,13 @@ export interface ImprovementSuggestions {
   keywords: string[];
 }
 
+export interface JobMatchAnalysis {
+  match_percentage: number;
+  key_requirements_met: string[];
+  key_requirements_missing: string[];
+  skills_alignment_score: number;
+}
+
 export interface ResumeAnalysisResult {
   success: boolean;
   file_url: string;
@@ -107,6 +114,7 @@ export interface ResumeAnalysisResult {
     };
     keyword_match_rate: string;
     missing_keywords: string[];
+    job_match_analysis?: JobMatchAnalysis;
   };
   improvement_suggestions: {
     high_priority: string[];
@@ -152,6 +160,8 @@ export interface StoredResumeAnalysis {
   detailedBreakdown: DetailedBreakdown;
   keywordMatchRate: string;
   missingKeywords: string[];
+  jobDescriptionProvided?: boolean;
+  jobMatchAnalysis?: JobMatchAnalysis;
   improvementSuggestions: ImprovementSuggestions;
   improvementDetails: ImprovementDetails;
   createdAt: string;
