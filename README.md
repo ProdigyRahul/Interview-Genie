@@ -46,7 +46,7 @@ AUTH_TRUST_HOST=true
 CSRF_SECRET=your_csrf_secret_key
 
 # Database
-DATABASE_URL=postgresql://username:password@hostname:port/database
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/interview_genie
 
 # Google services
 GOOGLE_CLIENT_ID=your_google_client_id
@@ -69,6 +69,36 @@ EMAIL_PASS=your_email_password
 # Redis cache
 UPSTASH_REDIS_REST_URL=your_redis_url
 UPSTASH_REDIS_REST_TOKEN=your_redis_token
+```
+
+## Database Setup
+
+We've included a PostgreSQL database in the Docker setup. To initialize the database:
+
+### Windows
+```bash
+setup-db.bat
+```
+
+### Linux/Mac
+```bash
+chmod +x setup-db.sh
+./setup-db.sh
+```
+
+This will:
+1. Start the PostgreSQL container
+2. Run Prisma migrations
+3. Generate the Prisma client
+
+If you need to reset the database:
+```bash
+npx prisma migrate reset
+```
+
+To view your database with Prisma Studio:
+```bash
+npx prisma studio
 ```
 
 ## Running with Docker
