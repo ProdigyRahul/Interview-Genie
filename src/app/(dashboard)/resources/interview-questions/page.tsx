@@ -14,7 +14,6 @@ import {
   BookOpen, 
   Search,
   List,
-  FileText,
   MessagesSquare,
   BookOpenText
 } from "lucide-react";
@@ -1798,8 +1797,9 @@ function QuestionCard({ question, answer, isExpanded, onToggle }: QuestionCardPr
               {answer.split("```").map((part, i) => {
                 // Code block handling
                 if (i % 2 === 1) {
-                  const [language, ...codeParts] = part.split("\n");
-                  const code = codeParts.join("\n");
+                  const codeParts = part.split("\n");
+                  // Skip the language identifier and just use the code
+                  const code = codeParts.slice(1).join("\n");
                   return (
                     <pre key={i} className="rounded-md bg-muted p-4">
                       <code className="text-xs font-mono text-muted-foreground">
