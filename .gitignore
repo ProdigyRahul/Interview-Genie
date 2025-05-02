@@ -48,10 +48,4 @@ yarn-error.log*
 
 ml/
 
-# docker
-docker-compose.yml
-docker-compose.dev.yml
-Dockerfile
-Dockerfile.dev
-
 

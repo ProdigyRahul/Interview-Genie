@@ -1,0 +1,32 @@
+services:
+  app:
+    container_name: interview-genie-dev
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      args:
+        - NODE_ENV=development
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.local
+    environment:
+      - NODE_ENV=development
+      - NEXTAUTH_URL=http://localhost:3000
+      - NEXT_PUBLIC_APP_URL=http://localhost:3000
+      - AUTH_TRUST_HOST=true
+    volumes:
+      - ./src:/app/src
+      - ./public:/app/public
+      - ./next.config.js:/app/next.config.js
+      - ./.env.local:/app/.env.local
+      - /app/node_modules
+      - /app/.next
+    command: npm run dev
+    networks:
+      - interview-genie-network
+
+networks:
+  interview-genie-network:
+    driver: bridge 
