@@ -6,6 +6,10 @@ export const metadata: Metadata = {
   description: "Practice interview questions based on job description",
 };
 
-export default function InterviewQuestionsPage() {
-  return <InterviewQuestionsClient />;
+export default function InterviewQuestionsPage({
+  params,
+}: {
+  params: { jobId: string };
+}) {
+  return <InterviewQuestionsClient jobId={params.jobId} />;
 }

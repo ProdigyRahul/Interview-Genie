@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -10,124 +10,214 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus } from "lucide-react";
-import { useState } from "react";
+import { Loader2, Upload, Sparkles, Check } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { v4 as uuidv4 } from "uuid";
 import { motion, AnimatePresence } from "framer-motion";
 
+// Function to generate a formatted date string
+const formatDate = () => {
+  const today = new Date();
+  return `${today.getMonth() + 1}/${today.getDate()}/${today.getFullYear()}`;
+};
+
 export function UploadJobDescriptionDialog() {
-  const [title, setTitle] = useState("");
-  const [company, setCompany] = useState("");
-  const [description, setDescription] = useState("");
+  const router = useRouter();
+  const [jobTitle, setJobTitle] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [jobDescription, setJobDescription] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isComplete, setIsComplete] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    // For now, just log the data and close the dialog
-    console.log({ title, company, description });
-    setIsOpen(false);
-    setTitle("");
-    setCompany("");
-    setDescription("");
+  const handleSubmit = async () => {
+    if (!jobTitle.trim() || !companyName.trim() || !jobDescription.trim()) {
+      return;
+    }
+
+    setIsGenerating(true);
+
+    try {
+      // This would typically be an API call to generate questions with Gemini
+      // For now, we'll simulate it with a timeout
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      
+      // Create a job ID
+      const jobId = uuidv4();
+      
+      // Normally you would save this to a database via an API call
+      // For now we'll use local storage to simulate persistence
+      const job = {
+        id: jobId,
+        title: jobTitle,
+        company: companyName,
+        description: jobDescription,
+        date: formatDate(),
+      };
+      
+      // Generate questions (in a real app this would be done by Gemini)
+      const questions = {
+        technical: [
+          `Explain your experience with ${jobTitle.split(' ').pop()} development.`,
+          `What recent technologies have you used in your ${jobTitle} role?`,
+          `How do you approach testing in your ${jobTitle} work?`,
+          `Describe your process for optimizing application performance.`,
+          `What are your favorite development tools and why?`,
+        ],
+        behavioral: [
+          "Tell me about a challenging project you worked on recently.",
+          "How do you handle disagreements with team members?",
+          "Describe a situation where you had to learn a new technology quickly.",
+          "How do you prioritize tasks when working on multiple projects?",
+          "Tell me about a time you had to deal with a tight deadline.",
+        ],
+        situational: [
+          "How would you handle a situation where requirements change mid-project?",
+          `What would you do if you discovered a critical bug in a ${jobTitle} project?`,
+          "How would you approach mentoring a junior developer?",
+          "What would you do if you disagreed with a design decision?",
+          "How would you handle technical debt in a fast-paced environment?",
+        ],
+      };
+      
+      // Save to local storage
+      const jobs = JSON.parse(localStorage.getItem('jobs') || '{}');
+      jobs[jobId] = job;
+      localStorage.setItem('jobs', JSON.stringify(jobs));
+      
+      const allQuestions = JSON.parse(localStorage.getItem('questions') || '{}');
+      allQuestions[jobId] = questions;
+      localStorage.setItem('questions', JSON.stringify(allQuestions));
+      
+      setIsComplete(true);
+      
+      // Give time for success animation before redirecting
+      setTimeout(() => {
+        setIsOpen(false);
+        router.push(`/interview-preparation/questions/${jobId}`);
+        
+        // Reset form after a delay
+        setTimeout(() => {
+          setJobTitle("");
+          setCompanyName("");
+          setJobDescription("");
+          setIsGenerating(false);
+          setIsComplete(false);
+        }, 500);
+      }, 1500);
+      
+    } catch (error) {
+      console.error("Error generating questions:", error);
+      setIsGenerating(false);
+    }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button className="gap-2 transition-transform hover:scale-105">
-          <Plus className="h-4 w-4" />
-          Add Job Description
+      <DialogTrigger asChild id="addJobBtn">
+        <Button className="gap-2" variant="outline">
+          <Upload className="h-4 w-4" />
+          Upload Description
         </Button>
       </DialogTrigger>
-      <AnimatePresence>
-        {isOpen && (
-          <DialogContent className="sm:max-w-[625px]">
-            <motion.form
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 20 }}
-              onSubmit={handleSubmit}
-              className="space-y-6"
-            >
-              <DialogHeader>
-                <DialogTitle className="text-2xl">
-                  Add New Job Description
-                </DialogTitle>
-                <DialogDescription className="text-base">
-                  Enter the job details to start preparing for your interview
-                </DialogDescription>
-              </DialogHeader>
-
+      <DialogContent className="sm:max-w-2xl">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-2xl">
+            <Sparkles className="h-5 w-5 text-primary" />
+            Create Interview Questions
+          </DialogTitle>
+          <DialogDescription>
+            Upload a job description to generate tailored interview questions using AI.
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div className="space-y-4 py-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label htmlFor="jobTitle" className="text-sm font-medium">
+                Job Title
+              </label>
+              <input
+                id="jobTitle"
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                placeholder="Senior Frontend Developer"
+                value={jobTitle}
+                onChange={(e) => setJobTitle(e.target.value)}
+                disabled={isGenerating}
+              />
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="companyName" className="text-sm font-medium">
+                Company Name
+              </label>
+              <input
+                id="companyName"
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                placeholder="Tech Corp"
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
+                disabled={isGenerating}
+              />
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <label htmlFor="jobDescription" className="text-sm font-medium">
+              Job Description
+            </label>
+            <Textarea
+              id="jobDescription"
+              className="min-h-[200px] resize-none"
+              placeholder="Paste the full job description here..."
+              value={jobDescription}
+              onChange={(e) => setJobDescription(e.target.value)}
+              disabled={isGenerating}
+            />
+          </div>
+        </div>
+        
+        <DialogFooter>
+          <AnimatePresence mode="wait">
+            {isComplete ? (
               <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.2 }}
-                className="space-y-6 py-4"
+                key="success"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="flex items-center gap-2 text-green-500"
               >
-                <div className="space-y-2">
-                  <Label htmlFor="title" className="text-sm font-medium">
-                    Job Title
-                  </Label>
-                  <Input
-                    id="title"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="e.g. Senior Software Engineer"
-                    className="focus-visible:ring-primary"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="company" className="text-sm font-medium">
-                    Company Name
-                  </Label>
-                  <Input
-                    id="company"
-                    value={company}
-                    onChange={(e) => setCompany(e.target.value)}
-                    placeholder="e.g. Acme Inc."
-                    className="focus-visible:ring-primary"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="description" className="text-sm font-medium">
-                    Job Description
-                  </Label>
-                  <Textarea
-                    id="description"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Paste the full job description here..."
-                    className="h-[200px] resize-none focus-visible:ring-primary"
-                  />
-                </div>
+                <Check className="h-5 w-5" />
+                <span>Questions generated successfully!</span>
               </motion.div>
-
-              <DialogFooter className="gap-2 sm:gap-0">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsOpen(false)}
-                  className="transition-colors hover:border-destructive"
-                >
+            ) : (
+              <motion.div key="buttons" className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setIsOpen(false)} disabled={isGenerating}>
                   Cancel
                 </Button>
-                <Button
-                  type="submit"
-                  className="gap-2 transition-transform hover:scale-105"
-                  disabled={!title || !company || !description}
+                <Button 
+                  onClick={handleSubmit} 
+                  disabled={!jobTitle || !companyName || !jobDescription || isGenerating}
+                  className="gap-2"
                 >
-                  <Plus className="h-4 w-4" />
-                  Add Description
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Generating Questions...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4" />
+                      Generate Questions
+                    </>
+                  )}
                 </Button>
-              </DialogFooter>
-            </motion.form>
-          </DialogContent>
-        )}
-      </AnimatePresence>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </DialogFooter>
+      </DialogContent>
     </Dialog>
   );
 }
