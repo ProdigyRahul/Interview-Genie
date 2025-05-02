@@ -147,7 +147,7 @@ export interface ResumeAnalysisResult {
     filename: string;
     file_url: string;
     file_path?: string;
-    job_description_provided: boolean;
+    job_description_provided: string;
     timestamp: string;
   };
 }
