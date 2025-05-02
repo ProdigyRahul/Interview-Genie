@@ -1,38 +1,21 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { UploadJobDescriptionDialog } from "@/components/job-description/upload-dialog";
-import { Search, ArrowRight, Plus, Briefcase } from "lucide-react";
-import { useState } from "react";
+import {
+  ArrowRight,
+  Briefcase,
+  Building2,
+  CalendarClock,
+  Upload,
+  Search,
+} from "lucide-react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { cn } from "@/lib/utils";
-
-const DUMMY_DATA = [
-  {
-    id: "1",
-    title: "Senior Frontend Developer",
-    company: "Tech Corp",
-    description: "We are looking for a senior frontend developer...",
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "2",
-    title: "Full Stack Engineer",
-    company: "Startup Inc",
-    description: "Join our fast-growing team...",
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "3",
-    title: "React Developer",
-    company: "Innovation Labs",
-    description: "Help us build the next generation...",
-    createdAt: new Date().toISOString(),
-  },
-];
+import { UploadJobDescriptionDialog } from "@/components/job-description/upload-dialog";
+import { JOBS } from "../questions/[jobId]/data";
 
 const container = {
   hidden: { opacity: 0 },
@@ -49,122 +32,104 @@ const item = {
   show: { y: 0, opacity: 1 },
 };
 
+interface Job {
+  id: string;
+  title: string;
+  company: string;
+  date: string;
+  description: string;
+}
+
 export default function JobDescriptionsPage() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [isLoading] = useState(false);
+  const [localJobs, setLocalJobs] = useState<Record<string, Job>>({});
   const router = useRouter();
 
-  const filteredJobs = DUMMY_DATA.filter(
-    (job) =>
-      job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      job.company.toLowerCase().includes(searchQuery.toLowerCase()),
+  // On component mount, check for jobs in localStorage
+  useEffect(() => {
+    const storedJobs = localStorage.getItem('jobs');
+    if (storedJobs) {
+      try {
+        setLocalJobs(JSON.parse(storedJobs));
+      } catch (e) {
+        console.error("Error parsing stored jobs:", e);
+      }
+    }
+  }, []);
+
+  // Combine default jobs with any from localStorage
+  const allJobs = { ...JOBS, ...localJobs };
+  
+  // Convert the combined jobs object to an array for filtering
+  const jobsArray = Object.values(allJobs);
+
+  // Filter jobs based on search query
+  const filteredJobs = jobsArray.filter((job) =>
+    job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    job.company.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    });
-  };
-
   return (
-    <div className="space-y-8">
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col gap-4"
-      >
-        <div className="flex items-center justify-between">
-          <div className="space-y-2">
-            <h1 className="text-3xl font-bold tracking-tight">
-              Job Descriptions
-            </h1>
-            <p className="text-muted-foreground">
-              Manage your job descriptions and prepare for interviews
-            </p>
-          </div>
-          <Button
-            className="gap-2 bg-primary hover:bg-primary/90"
-            onClick={() => document.getElementById("addJobBtn")?.click()}
-          >
-            <Plus className="h-4 w-4" />
-            Add Job Description
-          </Button>
-        </div>
-      </motion.div>
+    <div className="container mx-auto space-y-8 py-8">
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight">Job Descriptions</h1>
+        <p className="text-lg text-muted-foreground">
+          Generate interview questions based on job descriptions
+        </p>
+      </div>
 
-      <div className="relative">
-        <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search job descriptions..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="max-w-md bg-background pl-10"
-        />
+      <div className="flex flex-col gap-4 sm:flex-row">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Search by job title or company"
+            className="pl-9"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+        <UploadJobDescriptionDialog />
       </div>
 
       <motion.div
         variants={container}
         initial="hidden"
         animate="show"
-        className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
+        className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3"
       >
-        {isLoading ? (
-          <div className="col-span-full flex justify-center py-8">
-            <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary" />
-          </div>
-        ) : filteredJobs.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="col-span-full py-12 text-center"
-          >
-            <p className="text-xl text-muted-foreground">
-              No job descriptions found
+        {filteredJobs.length === 0 ? (
+          <div className="col-span-full rounded-lg border border-dashed p-10 text-center">
+            <h3 className="text-lg font-medium">No job descriptions found</h3>
+            <p className="mt-2 text-muted-foreground">
+              Try a different search or upload a new job description
             </p>
-            <Button
-              variant="outline"
-              className="mt-4"
-              onClick={() => setSearchQuery("")}
-            >
-              Clear search
-            </Button>
-          </motion.div>
+          </div>
         ) : (
           filteredJobs.map((job) => (
             <motion.div key={job.id} variants={item}>
-              <Card className="group h-full transition-all hover:border-primary hover:shadow-lg">
-                <div className="relative h-full p-6">
-                  {/* Animated gradient background */}
-                  <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-primary/5 via-primary/10 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-
-                  <div className="relative space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div
-                        className={cn(
-                          "w-fit rounded-lg p-2.5 transition-colors duration-300",
-                          "bg-primary/10",
-                          "group-hover:bg-primary/20",
-                        )}
-                      >
-                        <Briefcase className="h-6 w-6 text-primary transition-transform group-hover:scale-110" />
-                      </div>
+              <Card className="group overflow-hidden hover:shadow-md">
+                <div className="border-b p-6">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Briefcase className="h-5 w-5 text-primary" />
+                      <h3 className="text-xl font-semibold">{job.title}</h3>
                     </div>
-
-                    <div>
-                      <h3 className="mb-2 text-2xl font-semibold">
-                        {job.title}
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        {job.company}
-                      </p>
-                      <p className="mt-2 text-xs text-muted-foreground">
-                        Added on {formatDate(job.createdAt)}
-                      </p>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Building2 className="h-4 w-4" />
+                      <span>{job.company}</span>
                     </div>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <CalendarClock className="h-4 w-4" />
+                      <span>Added on {job.date}</span>
+                    </div>
+                  </div>
+                </div>
 
+                <div className="p-6">
+                  <div className="space-y-4">
+                    <p className="line-clamp-3 text-sm text-muted-foreground">
+                      {job.description}
+                    </p>
                     <div className="space-y-3 pt-4">
                       <Button
                         variant="outline"
@@ -197,9 +162,6 @@ export default function JobDescriptionsPage() {
           ))
         )}
       </motion.div>
-      <div className="hidden">
-        <UploadJobDescriptionDialog />
-      </div>
     </div>
   );
 }
