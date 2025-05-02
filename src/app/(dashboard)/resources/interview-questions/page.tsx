@@ -13,7 +13,10 @@ import {
   Hash, 
   BookOpen, 
   Search,
-  List
+  List,
+  FileText,
+  MessagesSquare,
+  BookOpenText
 } from "lucide-react";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -483,9 +486,16 @@ export default function InterviewQuestionsPage() {
   const [expandedQuestions, setExpandedQuestions] = useState<Record<string, boolean>>({});
 
   const breadcrumbItems = [
-    { label: "Home", href: "/" },
-    { label: "Resources", href: "/resources" },
-    { label: "Interview Questions", href: "/resources/interview-questions" },
+    {
+      href: "/resources",
+      label: "Resources",
+      icon: BookOpenText,
+    },
+    {
+      href: "/resources/interview-questions",
+      label: "Interview Questions",
+      icon: MessagesSquare,
+    },
   ];
 
   const toggleQuestion = (id: string) => {
