@@ -336,7 +336,7 @@ export async function POST(request: Request) {
         metadata: {
           filename: file.name,
           file_url: fileUrl,
-          job_description_provided: !!jobDescription,
+          job_description_provided: Boolean(jobDescription).toString(),
           timestamp: new Date().toISOString()
         }
       };
@@ -359,24 +359,25 @@ export async function POST(request: Request) {
           detailedBreakdown: data.ats_analysis.detailed_breakdown,
           keywordMatchRate: data.ats_analysis.keyword_match_rate,
           missingKeywords: data.ats_analysis.missing_keywords || [],
+          // Store all the additional fields in JSON objects:
           improvementSuggestions: {
             high_priority: data.improvement_suggestions.high_priority,
             content: data.improvement_suggestions.content,
             format: data.improvement_suggestions.format,
             language: data.improvement_suggestions.language,
             keywords: data.improvement_suggestions.keywords,
-            job_description_provided: jobDescription ? "true" : "false",
           },
           improvementDetails: {
             bullet_points: data.improvement_details.bullet_points,
             achievements: data.improvement_details.achievements,
             skills: data.improvement_details.skills,
+            has_job_description: !!jobDescription,
             job_match_analysis: data.ats_analysis.job_match_analysis ? {
               match_percentage: data.ats_analysis.job_match_analysis.match_percentage,
               key_requirements_met: data.ats_analysis.job_match_analysis.key_requirements_met,
               key_requirements_missing: data.ats_analysis.job_match_analysis.key_requirements_missing,
-              skills_alignment_score: data.ats_analysis.job_match_analysis.skills_alignment_score
-            } : undefined
+              skills_alignment_score: data.ats_analysis.job_match_analysis.skills_alignment_score,
+            } : null
           },
         },
       }),

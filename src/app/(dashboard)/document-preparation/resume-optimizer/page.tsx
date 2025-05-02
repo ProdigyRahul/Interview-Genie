@@ -380,8 +380,30 @@ export default function ResumeOptimizerPage() {
     </div>
   );
 
+  const hasJobDescription = (result: ResumeAnalysisResult | null): boolean => {
+    if (!result) return false;
+
+    try {
+      // First try to convert the string value from metadata
+      if (result.metadata && typeof result.metadata.job_description_provided === 'string') {
+        if (result.metadata.job_description_provided.toLowerCase() === 'true') return true;
+      }
+
+      // Also check if job match analysis exists
+      if (result.ats_analysis && result.ats_analysis.job_match_analysis) return true;
+
+      // Check improvementDetails for has_job_description (might be added runtime)
+      const details = result.improvement_details as any;
+      if (details && details.has_job_description) return true;
+    } catch (e) {
+      console.error('Error checking job description:', e);
+    }
+
+    return false;
+  };
+
   const renderJobMatchAnalysis = () => {
-    if (!result?.metadata.job_description_provided || !result?.ats_analysis.job_match_analysis) {
+    if (!result || !hasJobDescription(result) || !result.ats_analysis.job_match_analysis) {
       return (
         <div className="text-center p-8 space-y-4">
           <Briefcase className="mx-auto h-12 w-12 text-muted-foreground/50" />
@@ -393,8 +415,25 @@ export default function ResumeOptimizerPage() {
       );
     }
 
-    const { match_percentage, key_requirements_met, key_requirements_missing, skills_alignment_score } = 
-      result.ats_analysis.job_match_analysis;
+    // Ensure job_match_analysis has the expected structure
+    const jobMatchAnalysis = result.ats_analysis.job_match_analysis;
+    
+    // Extract the needed values with safe fallbacks
+    const match_percentage = typeof jobMatchAnalysis.match_percentage === 'number' 
+      ? jobMatchAnalysis.match_percentage 
+      : 0;
+    
+    const skills_alignment_score = typeof jobMatchAnalysis.skills_alignment_score === 'number'
+      ? jobMatchAnalysis.skills_alignment_score
+      : 0;
+    
+    const key_requirements_met = Array.isArray(jobMatchAnalysis.key_requirements_met)
+      ? jobMatchAnalysis.key_requirements_met
+      : [];
+    
+    const key_requirements_missing = Array.isArray(jobMatchAnalysis.key_requirements_missing)
+      ? jobMatchAnalysis.key_requirements_missing 
+      : [];
 
     return (
       <div className="space-y-8">
@@ -646,7 +685,7 @@ export default function ResumeOptimizerPage() {
                               reason?: string;
                             }>;
                             keywords: string[];
-                            job_description_provided?: boolean;
+                            job_description_provided?: string;
                           };
 
                           setResult({
@@ -687,7 +726,7 @@ export default function ResumeOptimizerPage() {
                             },
                             metadata: {
                               filename: analysis.originalFilename,
-                              job_description_provided: !!storedSuggestions.job_description_provided,
+                              job_description_provided: "true",
                               timestamp: analysis.createdAt,
                               file_url: analysis.fileUrl,
                             },
@@ -953,7 +992,7 @@ export default function ResumeOptimizerPage() {
               <div className="space-y-4">
                 {sections.map(({ id, label, icon: Icon }) => {
                   // Hide the job match section if no job description was provided
-                  if (id === "job-match" && !result.metadata.job_description_provided) {
+                  if (id === "job-match" && !hasJobDescription(result)) {
                     return null;
                   }
                   
