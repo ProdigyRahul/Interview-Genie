@@ -477,7 +477,429 @@ Implementation Considerations:
 - Manage schema changes
 - Monitor shard performance`
     }
-  ]
+  ],
+  python: {
+    basic: [
+      {
+        id: "init-method",
+        question: "What is __init__?",
+        answer: `The __init__ method is a special method in Python classes, also known as a constructor. It's automatically called when a new instance of a class is created.
+
+\`\`\`python
+class Person:
+    def __init__(self, name, age):
+        self.name = name
+        self.age = age
+
+# Creating an instance
+person = Person("John", 30)
+\`\`\`
+
+Note: The first parameter of __init__ is always self, which refers to the instance being created. It must be included even if you don't use it.
+
+Key Points:
+- Initializes instance attributes
+- Automatically called on object creation
+- Can accept parameters for initialization
+- Returns None implicitly`
+      },
+      {
+        id: "arrays-vs-lists",
+        question: "Arrays vs Lists",
+        answer: `Arrays and lists in Python serve different purposes and have distinct characteristics:
+
+Lists:
+- Can contain elements of different data types
+- More flexible and commonly used
+- Built-in Python data structure
+- More memory space but more versatile
+
+Arrays:
+- Must contain elements of same data type
+- More efficient for numerical computations
+- Requires importing array module
+- Less memory space but less flexible
+
+\`\`\`python
+# List example
+my_list = [1, "hello", 3.14, True]
+
+# Array example
+import array
+my_array = array.array('i', [1, 2, 3, 4])  # 'i' indicates integer type
+\`\`\``
+      },
+      {
+        id: "executable-script",
+        question: "Making Python Script Executable",
+        answer: `To make a Python script executable on Unix systems, you need to follow these steps:
+
+\`\`\`python
+#!/usr/bin/env python3
+print("Hello, World!")
+
+# In terminal:
+# chmod +x script.py
+# ./script.py
+\`\`\`
+
+Steps:
+1. Add shebang line (#!/usr/bin/env python3) at the start
+2. Make file executable using chmod command
+3. Execute script using ./script.py
+
+Note: The shebang line must be the first line of the file and specifies which interpreter should be used to run the script.`
+      },
+      {
+        id: "slicing",
+        question: "Slicing in Python",
+        answer: `Slicing is a technique in Python that allows you to extract parts of sequences like strings, lists, and tuples using a slice notation [start:stop:step].
+
+\`\`\`python
+# Basic slicing
+my_list = [0, 1, 2, 3, 4, 5]
+print(my_list[1:4])    # Output: [1, 2, 3]
+print(my_list[::2])    # Output: [0, 2, 4]
+print(my_list[::-1])   # Output: [5, 4, 3, 2, 1, 0]
+
+# String slicing
+text = "Python"
+print(text[1:4])       # Output: "yth"
+\`\`\`
+
+Slice Parameters:
+- start: First index (inclusive)
+- stop: Last index (exclusive)
+- step: Increment between each item`
+      },
+      {
+        id: "docstring",
+        question: "Docstring in Python",
+        answer: `A docstring (documentation string) is a string literal that appears as the first statement in a module, function, class, or method. It is used to document Python code.
+
+\`\`\`python
+def calculate_area(radius):
+    """
+    Calculate the area of a circle.
+    
+    Args:
+        radius (float): The radius of the circle
+        
+    Returns:
+        float: The area of the circle
+    """
+    return 3.14 * radius ** 2
+
+# Accessing docstring
+print(calculate_area.__doc__)
+\`\`\`
+
+Note: Docstrings are accessible through the __doc__ attribute and are used by tools like help() to generate documentation.
+
+Types of Docstrings:
+- Single-line docstrings
+- Multi-line docstrings
+- Module docstrings
+- Class docstrings`
+      }
+    ],
+    intermediate: [
+      {
+        id: "list-dict-comprehensions",
+        question: "What are List and Dictionary Comprehensions in Python?",
+        answer: `List and Dictionary comprehensions are concise ways to create lists and dictionaries using a single line of code. They provide a more readable and efficient alternative to using loops.
+
+\`\`\`python
+# List Comprehension
+numbers = [1, 2, 3, 4, 5]
+
+# Traditional way
+squares = []
+for n in numbers:
+    squares.append(n**2)
+
+# Using list comprehension
+squares = [n**2 for n in numbers]
+even_squares = [n**2 for n in numbers if n % 2 == 0]
+
+# Dictionary Comprehension
+# Traditional way
+square_dict = {}
+for n in numbers:
+    square_dict[n] = n**2
+
+# Using dict comprehension
+square_dict = {n: n**2 for n in numbers}
+even_square_dict = {n: n**2 for n in numbers if n % 2 == 0}
+\`\`\`
+
+Components of Comprehensions:
+- Output expression
+- Input sequence
+- Optional condition
+- Optional nested loops
+
+Note: While comprehensions can make code more concise, they should be used judiciously. Very complex comprehensions can reduce readability.`
+      },
+      {
+        id: "decorators",
+        question: "What are Decorators in Python?",
+        answer: `Decorators are a way to modify or enhance functions or classes without directly changing their source code. They use the @decorator syntax and are a form of metaprogramming.
+
+\`\`\`python
+# Simple function decorator
+def timer_decorator(func):
+    def wrapper(*args, **kwargs):
+        import time
+        start = time.time()
+        result = func(*args, **kwargs)
+        end = time.time()
+        print(f"{func.__name__} took {end - start} seconds")
+        return result
+    return wrapper
+
+@timer_decorator
+def slow_function():
+    import time
+    time.sleep(1)
+    return "Done!"
+
+# Class decorator
+def singleton(cls):
+    instances = {}
+    def get_instance(*args, **kwargs):
+        if cls not in instances:
+            instances[cls] = cls(*args, **kwargs)
+        return instances[cls]
+    return get_instance
+
+@singleton
+class Database:
+    def __init__(self):
+        print("Initializing database connection")
+\`\`\`
+
+Common Use Cases:
+- Logging and debugging
+- Performance measurement
+- Access control and authentication
+- Caching and memoization
+- Input validation
+
+Note: Decorators are executed at function definition time, not at function call time. They can be stacked (multiple decorators on a single function).`
+      },
+      {
+        id: "generators",
+        question: "What are Generators in Python?",
+        answer: `Generators are special functions that return an iterator object. They use the yield keyword to return values one at a time, making them memory efficient for handling large datasets.
+
+\`\`\`python
+# Simple generator function
+def count_up_to(n):
+    i = 1
+    while i <= n:
+        yield i
+        i += 1
+
+# Using the generator
+counter = count_up_to(5)
+print(next(counter))  # 1
+print(next(counter))  # 2
+
+# Generator expression (similar to list comprehension)
+squares = (x**2 for x in range(1000000))  # Memory efficient
+
+# Generator with multiple yields
+def fibonacci():
+    a, b = 0, 1
+    while True:
+        yield a
+        a, b = b, a + b
+
+# Using generator in a for loop
+fib = fibonacci()
+for _ in range(10):
+    print(next(fib))
+\`\`\`
+
+Advantages of Generators:
+- Memory efficient
+- Can represent infinite sequences
+- Lazy evaluation
+- Perfect for large datasets
+- Can be used in for loops
+
+Note: Once a generator has been exhausted (all values yielded), it cannot be reused. You need to create a new generator object.`
+      }
+    ],
+    advanced: [
+      {
+        id: "gil",
+        question: "What is the Global Interpreter Lock (GIL) in Python?",
+        answer: `The Global Interpreter Lock (GIL) is a mutex that protects access to Python objects, preventing multiple native threads from executing Python bytecodes simultaneously. This lock is necessary mainly because CPython's memory management is not thread-safe.
+
+\`\`\`python
+import threading
+import time
+
+# CPU-bound task (affected by GIL)
+def cpu_bound(n):
+    while n > 0:
+        n -= 1
+
+# I/O-bound task (less affected by GIL)
+def io_bound():
+    time.sleep(1)
+
+# Demonstrating GIL impact
+def run_tasks(func, n_threads):
+    start = time.time()
+    threads = []
+    
+    for _ in range(n_threads):
+        t = threading.Thread(target=func)
+        threads.append(t)
+        t.start()
+    
+    for t in threads:
+        t.join()
+    
+    return time.time() - start
+
+# Compare single vs multi-threaded performance
+def cpu_intensive():
+    cpu_bound(10**7)
+
+# Single thread
+print("Single thread time:", run_tasks(cpu_intensive, 1))
+
+# Multiple threads
+print("Multi thread time:", run_tasks(cpu_intensive, 4))
+\`\`\`
+
+GIL Impact:
+- Limits multi-core execution
+- Affects CPU-bound threads
+- Less impact on I/O-bound operations
+- Single-threaded performance optimization
+
+Working Around GIL:
+- Using multiprocessing
+- Using alternative Python implementations (Jython, IronPython)
+- C extensions that release GIL
+- Async I/O for concurrent operations`
+      },
+      {
+        id: "metaclasses",
+        question: "What are Metaclasses in Python?",
+        answer: `Metaclasses are classes for classes - they allow you to customize class creation. They define the type of a class, just as a class defines the type of an instance. Metaclasses are used for class creation customization, API design, and framework development.
+
+\`\`\`python
+# Basic metaclass example
+class MyMetaclass(type):
+    def __new__(cls, name, bases, attrs):
+        # Add a new method to the class
+        attrs['new_method'] = lambda self: "I'm a new method"
+        return super().__new__(cls, name, bases, attrs)
+
+class MyClass(metaclass=MyMetaclass):
+    pass
+
+# Instance creation will have the new method
+obj = MyClass()
+print(obj.new_method())  # Output: I'm a new method
+
+# Metaclass for abstract base classes
+from abc import ABCMeta, abstractmethod
+
+class Interface(metaclass=ABCMeta):
+    @abstractmethod
+    def my_method(self):
+        pass
+
+# Singleton using metaclass
+class Singleton(type):
+    _instances = {}
+    
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = super().__call__(*args, **kwargs)
+        return cls._instances[cls]
+
+class Database(metaclass=Singleton):
+    def __init__(self):
+        print("Initializing database connection")
+\`\`\`
+
+Common Use Cases:
+- Abstract Base Classes
+- Class Registration
+- Interface Enforcement
+- Attribute Creation Rules
+- Class Decoration
+
+Key Methods:
+- __new__: Class instance creation
+- __init__: Class initialization
+- __call__: Instance creation control
+- __prepare__: Namespace preparation`
+      },
+      {
+        id: "asyncio",
+        question: "What is Asyncio in Python?",
+        answer: `Asyncio is Python's built-in library for writing concurrent code using the async/await syntax. It provides a framework for writing single-threaded concurrent code using coroutines, multiplexing I/O access over sockets and other resources.
+
+\`\`\`python
+import asyncio
+import aiohttp
+import time
+
+# Basic coroutine
+async def hello_world():
+    print("Hello")
+    await asyncio.sleep(1)
+    print("World")
+
+# Running a coroutine
+asyncio.run(hello_world())
+
+# Multiple coroutines
+async def fetch_data(session, url):
+    async with session.get(url) as response:
+        return await response.text()
+
+async def main():
+    async with aiohttp.ClientSession() as session:
+        tasks = []
+        urls = [
+            'http://example.com',
+            'http://example.org',
+            'http://example.net'
+        ]
+        
+        for url in urls:
+            task = asyncio.create_task(fetch_data(session, url))
+            tasks.append(task)
+        
+        results = await asyncio.gather(*tasks)
+        return results
+\`\`\`
+
+Key Concepts:
+- Coroutines (async/await)
+- Event loops
+- Tasks and Futures
+- Asynchronous context managers
+- Exception handling
+
+Best Use Cases:
+- I/O-bound network operations
+- Web scraping
+- Real-time applications
+- High-concurrency servers`
+      }
+    ]
+  }
 };
 
 export default function InterviewQuestionsPage() {
@@ -516,6 +938,10 @@ export default function InterviewQuestionsPage() {
   const basicQuestions = filterQuestions(questionsData.basic || [], searchTerm);
   const intermediateQuestions = filterQuestions(questionsData.intermediate || [], searchTerm);
   const advancedQuestions = filterQuestions(questionsData.advanced || [], searchTerm);
+
+  const pythonBasicQuestions = filterQuestions(questionsData.python?.basic || [], searchTerm);
+  const pythonIntermediateQuestions = filterQuestions(questionsData.python?.intermediate || [], searchTerm);
+  const pythonAdvancedQuestions = filterQuestions(questionsData.python?.advanced || [], searchTerm);
 
   return (
     <div className="space-y-8">
@@ -699,7 +1125,112 @@ export default function InterviewQuestionsPage() {
           </motion.div>
         )}
 
-        {activeCategory !== "sql" && (
+        {activeCategory === "python" && (
+          <motion.div
+            key="python-content"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Tabs defaultValue="basic" className="space-y-6">
+              <TabsList className="grid w-full max-w-md grid-cols-3">
+                <TabsTrigger value="basic">
+                  <BookOpen className="mr-2 h-4 w-4" />
+                  Basic
+                </TabsTrigger>
+                <TabsTrigger value="intermediate">
+                  <Code className="mr-2 h-4 w-4" />
+                  Intermediate
+                </TabsTrigger>
+                <TabsTrigger value="advanced">
+                  <Server className="mr-2 h-4 w-4" />
+                  Advanced
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="basic" className="space-y-4 mt-0">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold">Basic Python Questions</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {pythonBasicQuestions.length} questions
+                  </p>
+                </div>
+                <motion.div
+                  variants={container}
+                  initial="hidden"
+                  animate="show"
+                  className="space-y-4"
+                >
+                  {pythonBasicQuestions.map((q) => (
+                    <motion.div key={q.id} variants={item}>
+                      <QuestionCard
+                        question={q.question}
+                        answer={q.answer}
+                        isExpanded={!!expandedQuestions[q.id]}
+                        onToggle={() => toggleQuestion(q.id)}
+                      />
+                    </motion.div>
+                  ))}
+                </motion.div>
+              </TabsContent>
+
+              <TabsContent value="intermediate" className="space-y-4 mt-0">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold">Intermediate Python Questions</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {pythonIntermediateQuestions.length} questions
+                  </p>
+                </div>
+                <motion.div
+                  variants={container}
+                  initial="hidden"
+                  animate="show"
+                  className="space-y-4"
+                >
+                  {pythonIntermediateQuestions.map((q) => (
+                    <motion.div key={q.id} variants={item}>
+                      <QuestionCard
+                        question={q.question}
+                        answer={q.answer}
+                        isExpanded={!!expandedQuestions[q.id]}
+                        onToggle={() => toggleQuestion(q.id)}
+                      />
+                    </motion.div>
+                  ))}
+                </motion.div>
+              </TabsContent>
+
+              <TabsContent value="advanced" className="space-y-4 mt-0">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold">Advanced Python Questions</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {pythonAdvancedQuestions.length} questions
+                  </p>
+                </div>
+                <motion.div
+                  variants={container}
+                  initial="hidden"
+                  animate="show"
+                  className="space-y-4"
+                >
+                  {pythonAdvancedQuestions.map((q) => (
+                    <motion.div key={q.id} variants={item}>
+                      <QuestionCard
+                        question={q.question}
+                        answer={q.answer}
+                        isExpanded={!!expandedQuestions[q.id]}
+                        onToggle={() => toggleQuestion(q.id)}
+                      />
+                    </motion.div>
+                  ))}
+                </motion.div>
+              </TabsContent>
+            </Tabs>
+          </motion.div>
+        )}
+
+        {activeCategory !== "sql" && activeCategory !== "python" && (
           <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-12 text-center">
             <List className="mb-4 h-12 w-12 text-muted-foreground" />
             <h3 className="mb-2 text-xl font-semibold">Coming Soon</h3>
