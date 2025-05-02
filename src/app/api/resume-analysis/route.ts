@@ -54,6 +54,7 @@ export async function POST(request: Request) {
 
     const formData = await request.formData();
     const file = formData.get('file');
+    const jobDescription = formData.get('jobDescription') as string | null;
     
     if (!file || !(file instanceof File)) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
@@ -81,24 +82,8 @@ export async function POST(request: Request) {
     // Generate the public URL
     const fileUrl = `/uploads/resumes/${uniqueFilename}`;
 
-    const { text: analysis } = await generateText({
-      model: google(MODEL_NAME, {
-        safetySettings: [
-          { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_LOW_AND_ABOVE' },
-          { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_LOW_AND_ABOVE' },
-          { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_LOW_AND_ABOVE' },
-          { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_LOW_AND_ABOVE' },
-          { category: 'HARM_CATEGORY_CIVIC_INTEGRITY', threshold: 'BLOCK_LOW_AND_ABOVE' }
-        ],
-        structuredOutputs: false // Disable structured outputs to avoid schema limitations
-      }),
-      messages: [
-        {
-          role: 'user',
-          content: [
-            {
-              type: 'text',
-              text: 'Analyze this resume and provide a detailed ATS analysis as a valid JSON object with the following structure:\n' +
+    // Construct the prompt based on whether job description is provided
+    let promptText = 'Analyze this resume and provide a detailed ATS analysis as a valid JSON object with the following structure:\n' +
                     '{\n' +
                     '  "ats_analysis": {\n' +
                     '    "total_score": number (0-100),\n' +
@@ -145,7 +130,85 @@ export async function POST(request: Request) {
                     '    }\n' +
                     '  }\n' +
                     '}\n' +
-                    'Do not add any markdown formatting, code blocks, or extra text outside the JSON structure.'
+                    'Do not add any markdown formatting, code blocks, or extra text outside the JSON structure.';
+
+    // Add job description context if provided
+    if (jobDescription && jobDescription.trim()) {
+      promptText = 'Analyze this resume against the provided job description and provide a detailed ATS analysis as a valid JSON object with the following structure:\n' +
+                    '{\n' +
+                    '  "ats_analysis": {\n' +
+                    '    "total_score": number (0-100),\n' +
+                    '    "section_scores": {\n' +
+                    '      "format": number (0-20),\n' +
+                    '      "content": number (0-20),\n' +
+                    '      "language": number (0-20),\n' +
+                    '      "competencies": number (0-20),\n' +
+                    '      "keywords": number (0-20)\n' +
+                    '    },\n' +
+                    '    "detailed_breakdown": {\n' +
+                    '      "format_analysis": {\n' +
+                    '        "length_depth_score": number (0-20),\n' +
+                    '        "bullet_usage_score": number (0-20),\n' +
+                    '        "bullet_length_score": number (0-20),\n' +
+                    '        "page_density_score": number (0-20),\n' +
+                    '        "formatting_score": number (0-20)\n' +
+                    '      },\n' +
+                    '      "content_analysis": { ... similar scores },\n' +
+                    '      "language_analysis": { ... similar scores },\n' +
+                    '      "competencies_analysis": { ... similar scores }\n' +
+                    '    },\n' +
+                    '    "keyword_match_rate": string,\n' +
+                    '    "missing_keywords": string[],\n' +
+                    '    "job_match_analysis": {\n' +
+                    '      "match_percentage": number (0-100),\n' +
+                    '      "key_requirements_met": string[],\n' +
+                    '      "key_requirements_missing": string[],\n' +
+                    '      "skills_alignment_score": number (0-100)\n' +
+                    '    },\n' +
+                    '    "improvement_suggestions": {\n' +
+                    '      "high_priority": string[],\n' +
+                    '      "content": [\n' +
+                    '        {\n' +
+                    '          "current": string,\n' +
+                    '          "suggested": string,\n' +
+                    '          "impact": string,\n' +
+                    '          "section": string\n' +
+                    '        }\n' +
+                    '      ],\n' +
+                    '      "format": [\n' +
+                    '        {\n' +
+                    '          "original": string,\n' +
+                    '          "improved": string,\n' +
+                    '          "reason": string\n' +
+                    '        }\n' +
+                    '      ],\n' +
+                    '      "language": [ ... similar to format ],\n' +
+                    '      "keywords": string[]\n' +
+                    '    }\n' +
+                    '  }\n' +
+                    '}\n' +
+                    'Do not add any markdown formatting, code blocks, or extra text outside the JSON structure.\n\n' +
+                    'Job Description:\n' + jobDescription;
+    }
+
+    const { text: analysis } = await generateText({
+      model: google(MODEL_NAME, {
+        safetySettings: [
+          { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_LOW_AND_ABOVE' },
+          { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_LOW_AND_ABOVE' },
+          { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_LOW_AND_ABOVE' },
+          { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_LOW_AND_ABOVE' },
+          { category: 'HARM_CATEGORY_CIVIC_INTEGRITY', threshold: 'BLOCK_LOW_AND_ABOVE' }
+        ],
+        structuredOutputs: false // Disable structured outputs to avoid schema limitations
+      }),
+      messages: [
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'text',
+              text: promptText
             },
             {
               type: 'file',
@@ -220,7 +283,13 @@ export async function POST(request: Request) {
           },
           keyword_match_rate: rawData.ats_analysis?.keyword_match_rate || "50%",
           missing_keywords: rawData.ats_analysis?.missing_keywords || 
-                           rawData.ats_analysis?.missing_important_keywords || []
+                           rawData.ats_analysis?.missing_important_keywords || [],
+          job_match_analysis: jobDescription ? {
+            match_percentage: rawData.ats_analysis?.job_match_analysis?.match_percentage || 70,
+            key_requirements_met: rawData.ats_analysis?.job_match_analysis?.key_requirements_met || [],
+            key_requirements_missing: rawData.ats_analysis?.job_match_analysis?.key_requirements_missing || [],
+            skills_alignment_score: rawData.ats_analysis?.job_match_analysis?.skills_alignment_score || 75
+          } : undefined
         },
         improvement_suggestions: {
           high_priority: rawData.ats_analysis?.improvement_suggestions?.high_priority || 
@@ -267,7 +336,7 @@ export async function POST(request: Request) {
         metadata: {
           filename: file.name,
           file_url: fileUrl,
-          job_description_provided: false,
+          job_description_provided: !!jobDescription,
           timestamp: new Date().toISOString()
         }
       };
@@ -296,11 +365,18 @@ export async function POST(request: Request) {
             format: data.improvement_suggestions.format,
             language: data.improvement_suggestions.language,
             keywords: data.improvement_suggestions.keywords,
+            job_description_provided: jobDescription ? "true" : "false",
           },
           improvementDetails: {
             bullet_points: data.improvement_details.bullet_points,
             achievements: data.improvement_details.achievements,
             skills: data.improvement_details.skills,
+            job_match_analysis: data.ats_analysis.job_match_analysis ? {
+              match_percentage: data.ats_analysis.job_match_analysis.match_percentage,
+              key_requirements_met: data.ats_analysis.job_match_analysis.key_requirements_met,
+              key_requirements_missing: data.ats_analysis.job_match_analysis.key_requirements_missing,
+              skills_alignment_score: data.ats_analysis.job_match_analysis.skills_alignment_score
+            } : undefined
           },
         },
       }),

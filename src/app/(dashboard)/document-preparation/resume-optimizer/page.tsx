@@ -22,6 +22,7 @@ import {
   Pencil,
   Download,
   FileSpreadsheet,
+  Briefcase,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -34,6 +35,18 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 
 const loadingStates = [
   { text: "Uploading your resume...", duration: 3000 },
@@ -53,6 +66,7 @@ const sections = [
   { id: "content", label: "Content Quality", icon: ScrollText },
   { id: "language", label: "Language", icon: Languages },
   { id: "competencies", label: "Core Competencies", icon: Target },
+  { id: "job-match", label: "Job Match", icon: Briefcase },
   { id: "improvements", label: "Improvements", icon: Lightbulb },
 ];
 
@@ -65,6 +79,8 @@ export default function ResumeOptimizerPage() {
   const [analyses, setAnalyses] = useState<StoredResumeAnalysis[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const [showAll, setShowAll] = useState(false);
+  const [jobDescription, setJobDescription] = useState<string>("");
+  const [isJobDescriptionModalOpen, setIsJobDescriptionModalOpen] = useState(false);
 
   const breadcrumbItems = [
     {
@@ -143,6 +159,11 @@ export default function ResumeOptimizerPage() {
 
       const formData = new FormData();
       formData.append("file", fileToAnalyze);
+      
+      // Add job description to form data if provided
+      if (jobDescription.trim()) {
+        formData.append("jobDescription", jobDescription);
+      }
 
       const response = await fetch("/api/resume-analysis", {
         method: "POST",
@@ -359,6 +380,145 @@ export default function ResumeOptimizerPage() {
     </div>
   );
 
+  const renderJobMatchAnalysis = () => {
+    if (!result?.metadata.job_description_provided || !result?.ats_analysis.job_match_analysis) {
+      return (
+        <div className="text-center p-8 space-y-4">
+          <Briefcase className="mx-auto h-12 w-12 text-muted-foreground/50" />
+          <h3 className="text-lg font-medium">No Job Description Provided</h3>
+          <p className="text-sm text-muted-foreground">
+            To see how well your resume matches a specific job, add a job description when analyzing your resume.
+          </p>
+        </div>
+      );
+    }
+
+    const { match_percentage, key_requirements_met, key_requirements_missing, skills_alignment_score } = 
+      result.ats_analysis.job_match_analysis;
+
+    return (
+      <div className="space-y-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card className="p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Overall Job Match</h3>
+              <span
+                className={cn(
+                  "text-2xl font-bold",
+                  match_percentage >= 80
+                    ? "text-emerald-500"
+                    : match_percentage >= 60
+                      ? "text-amber-500"
+                      : "text-rose-500",
+                )}
+              >
+                {match_percentage}%
+              </span>
+            </div>
+            <div className="h-3 w-full overflow-hidden rounded-full bg-muted/30">
+              <div
+                className={cn(
+                  "h-full transition-all duration-500",
+                  match_percentage >= 80
+                    ? "bg-gradient-to-r from-emerald-400/80 via-emerald-500/80 to-emerald-600/80"
+                    : match_percentage >= 60
+                      ? "bg-gradient-to-r from-amber-400/80 via-amber-500/80 to-amber-600/80"
+                      : "bg-gradient-to-r from-rose-400/80 via-rose-500/80 to-rose-600/80",
+                )}
+                style={{ width: `${match_percentage}%` }}
+              />
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {match_percentage >= 80
+                ? "Your resume is well aligned with this job"
+                : match_percentage >= 60
+                  ? "Your resume is moderately aligned with this job"
+                  : "Your resume could be better aligned with this job"}
+            </p>
+          </Card>
+
+          <Card className="p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Skills Alignment</h3>
+              <span
+                className={cn(
+                  "text-2xl font-bold",
+                  skills_alignment_score >= 80
+                    ? "text-emerald-500"
+                    : skills_alignment_score >= 60
+                      ? "text-amber-500"
+                      : "text-rose-500",
+                )}
+              >
+                {skills_alignment_score}%
+              </span>
+            </div>
+            <div className="h-3 w-full overflow-hidden rounded-full bg-muted/30">
+              <div
+                className={cn(
+                  "h-full transition-all duration-500",
+                  skills_alignment_score >= 80
+                    ? "bg-gradient-to-r from-emerald-400/80 via-emerald-500/80 to-emerald-600/80"
+                    : skills_alignment_score >= 60
+                      ? "bg-gradient-to-r from-amber-400/80 via-amber-500/80 to-amber-600/80"
+                      : "bg-gradient-to-r from-rose-400/80 via-rose-500/80 to-rose-600/80",
+                )}
+                style={{ width: `${skills_alignment_score}%` }}
+              />
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {skills_alignment_score >= 80
+                ? "Your skills match the job requirements well"
+                : skills_alignment_score >= 60
+                  ? "Your skills partially match the job requirements"
+                  : "Your skills need improvement to match the job requirements"}
+            </p>
+          </Card>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card className="p-6 space-y-4">
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-emerald-500" />
+              <span>Key Requirements Met</span>
+            </h3>
+            {key_requirements_met.length > 0 ? (
+              <ul className="space-y-2">
+                {key_requirements_met.map((requirement, index) => (
+                  <li key={`req-met-${index}`} className="flex items-start gap-2">
+                    <CheckCircle className="h-5 w-5 mt-0.5 flex-shrink-0 text-emerald-500" />
+                    <span className="text-sm">{requirement}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-muted-foreground">No key requirements matched.</p>
+            )}
+          </Card>
+
+          <Card className="p-6 space-y-4">
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-rose-500" />
+              <span>Missing Requirements</span>
+            </h3>
+            {key_requirements_missing.length > 0 ? (
+              <ul className="space-y-2">
+                {key_requirements_missing.map((requirement, index) => (
+                  <li key={`req-missing-${index}`} className="flex items-start gap-2">
+                    <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0 text-rose-500" />
+                    <span className="text-sm">{requirement}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-muted-foreground">No key requirements missing.</p>
+            )}
+          </Card>
+        </div>
+      </div>
+    );
+  };
+
   const renderHistory = () => {
     const displayedAnalyses = showAll ? analyses : analyses.slice(0, 3);
 
@@ -486,6 +646,7 @@ export default function ResumeOptimizerPage() {
                               reason?: string;
                             }>;
                             keywords: string[];
+                            job_description_provided?: boolean;
                           };
 
                           setResult({
@@ -497,6 +658,7 @@ export default function ResumeOptimizerPage() {
                               detailed_breakdown: analysis.detailedBreakdown,
                               keyword_match_rate: analysis.keywordMatchRate,
                               missing_keywords: analysis.missingKeywords,
+                              job_match_analysis: analysis.improvementDetails?.job_match_analysis
                             },
                             improvement_suggestions: {
                               high_priority: storedSuggestions.high_priority || [],
@@ -525,7 +687,7 @@ export default function ResumeOptimizerPage() {
                             },
                             metadata: {
                               filename: analysis.originalFilename,
-                              job_description_provided: false,
+                              job_description_provided: !!storedSuggestions.job_description_provided,
                               timestamp: analysis.createdAt,
                               file_url: analysis.fileUrl,
                             },
@@ -630,6 +792,111 @@ export default function ResumeOptimizerPage() {
     );
   };
 
+  // New component for file upload with job description option
+  const renderFileUpload = () => (
+    <Card
+      className={cn(
+        "flex min-h-[300px] w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 transition-colors",
+        isDragging
+          ? "border-primary/50 bg-primary/5"
+          : "border-muted-foreground/20 hover:border-primary/30 hover:bg-muted/5",
+      )}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      <div className="flex flex-col items-center justify-center space-y-6 text-center">
+        <div className="rounded-full bg-primary/10 p-4">
+          <Upload className="h-10 w-10 text-primary" />
+        </div>
+        <div className="space-y-2">
+          <h3 className="text-xl font-semibold">Upload Your Resume</h3>
+          <p className="text-sm text-muted-foreground">
+            Drag and drop your resume PDF file here or click to browse
+          </p>
+        </div>
+        
+        <div className="mt-2 flex flex-col sm:flex-row gap-4">
+          <input
+            type="file"
+            accept=".pdf"
+            onChange={handleFileChange}
+            className="hidden"
+            id="resume-file"
+          />
+          <label
+            htmlFor="resume-file"
+            className="inline-flex items-center justify-center whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer"
+          >
+            Select File
+          </label>
+          
+          <div className="mt-2">
+            <Dialog open={isJobDescriptionModalOpen} onOpenChange={setIsJobDescriptionModalOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="flex items-center gap-2">
+                  <Briefcase className="h-4 w-4" />
+                  <span>Add Job Description</span>
+                  {jobDescription.trim() && (
+                    <Badge variant="secondary" className="ml-2">Added</Badge>
+                  )}
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[625px]">
+                <DialogHeader>
+                  <DialogTitle>Add Job Description (Optional)</DialogTitle>
+                  <DialogDescription>
+                    Adding a job description will help tailor the ATS analysis to the specific role you're applying for.
+                  </DialogDescription>
+                </DialogHeader>
+                
+                <div className="grid gap-4 py-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="job-description">
+                      Job Description
+                    </Label>
+                    <Textarea
+                      id="job-description"
+                      placeholder="Paste the job description here to get more accurate ATS compatibility scores"
+                      rows={8}
+                      value={jobDescription}
+                      onChange={(e) => setJobDescription(e.target.value)}
+                      className="resize-none"
+                    />
+                  </div>
+                </div>
+                
+                <DialogFooter>
+                  <Button 
+                    variant="ghost" 
+                    onClick={() => {
+                      setJobDescription("");
+                      setIsJobDescriptionModalOpen(false);
+                      toast.info("Job description removed");
+                    }}
+                  >
+                    Remove
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    onClick={() => {
+                      setIsJobDescriptionModalOpen(false);
+                      if (jobDescription.trim()) {
+                        toast.success("Job description added");
+                      }
+                    }}
+                  >
+                    {jobDescription.trim() ? "Save" : "Continue without Job Description"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
+
   if (isAnalyzing) {
     return (
       <div className="space-y-8">
@@ -684,21 +951,28 @@ export default function ResumeOptimizerPage() {
             {/* Sidebar Navigation */}
             <Card className="col-span-2 p-4">
               <div className="space-y-4">
-                {sections.map(({ id, label, icon: Icon }) => (
-                  <button
-                    key={id}
-                    onClick={() => setActiveSection(id)}
-                    className={cn(
-                      "flex w-full items-center gap-3 rounded-lg px-4 py-2 text-sm font-medium transition-colors",
-                      activeSection === id
-                        ? "bg-primary text-primary-foreground"
-                        : "hover:bg-muted",
-                    )}
-                  >
-                    <Icon className="h-4 w-4" />
-                    {label}
-                  </button>
-                ))}
+                {sections.map(({ id, label, icon: Icon }) => {
+                  // Hide the job match section if no job description was provided
+                  if (id === "job-match" && !result.metadata.job_description_provided) {
+                    return null;
+                  }
+                  
+                  return (
+                    <button
+                      key={id}
+                      onClick={() => setActiveSection(id)}
+                      className={cn(
+                        "flex w-full items-center gap-3 rounded-lg px-4 py-2 text-sm font-medium transition-colors",
+                        activeSection === id
+                          ? "bg-primary text-primary-foreground"
+                          : "hover:bg-muted",
+                      )}
+                    >
+                      <Icon className="h-4 w-4" />
+                      {label}
+                    </button>
+                  );
+                })}
               </div>
             </Card>
 
@@ -875,6 +1149,9 @@ export default function ResumeOptimizerPage() {
                 </motion.div>
               )}
 
+              {/* Job Match Section */}
+              {activeSection === "job-match" && renderJobMatchAnalysis()}
+
               {/* Improvements Section */}
               {activeSection === "improvements" && (
                 <motion.div
@@ -1025,55 +1302,7 @@ export default function ResumeOptimizerPage() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3 }}
           >
-            <Card
-              className={cn(
-                "border-2 border-dashed p-12 transition-colors duration-200",
-                isDragging ? "border-primary/50 bg-primary/5" : "border-border",
-              )}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-            >
-              <div className="flex flex-col items-center justify-center space-y-4 text-center">
-                <div className="rounded-full bg-primary/10 p-4">
-                  <Upload className="h-8 w-8 text-primary" />
-                </div>
-                <div className="space-y-2">
-                  <h3 className="text-lg font-semibold">Upload your resume</h3>
-                  <p className="max-w-sm text-sm text-muted-foreground">
-                    Drag and drop your resume PDF here, or click to browse
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="file"
-                    accept=".pdf"
-                    onChange={handleFileChange}
-                    className="hidden"
-                    id="resume-upload"
-                  />
-                  <Button
-                    variant="outline"
-                    className="cursor-pointer"
-                    onClick={() =>
-                      document.getElementById("resume-upload")?.click()
-                    }
-                  >
-                    Browse Files
-                  </Button>
-                </div>
-                {file && !isAnalyzing && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <FileText className="h-4 w-4" />
-                    <span>{file.name}</span>
-                  </div>
-                )}
-                <div className="mt-4 flex items-center text-sm text-muted-foreground">
-                  <Sparkles className="mr-2 h-4 w-4 text-yellow-500" />
-                  Uses 30 credits
-                </div>
-              </div>
-            </Card>
+            {renderFileUpload()}
           </motion.div>
 
           {renderHistory()}
