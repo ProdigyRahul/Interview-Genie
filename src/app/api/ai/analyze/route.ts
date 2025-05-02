@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { writeFile } from "fs/promises";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
@@ -98,7 +99,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
     // Use the provided transcript if available
-    const actualTranscript = transcript || 
+    const actualTranscript = transcript ?? 
       "Based on your question about my experience with development, I've been working in this field for over three years. I've worked on multiple projects using React and Next.js, and I've also gained experience with backend technologies. I believe my skills match well with what you're looking for in this role.";
 
     // Mock video analysis response

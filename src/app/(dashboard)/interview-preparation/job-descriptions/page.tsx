@@ -9,7 +9,6 @@ import {
   Briefcase,
   Building2,
   CalendarClock,
-  Upload,
   Search,
 } from "lucide-react";
 import { motion } from "framer-motion";
@@ -47,14 +46,18 @@ export default function JobDescriptionsPage() {
 
   // On component mount, check for jobs in localStorage
   useEffect(() => {
-    const storedJobs = localStorage.getItem('jobs');
-    if (storedJobs) {
-      try {
-        setLocalJobs(JSON.parse(storedJobs));
-      } catch (e) {
-        console.error("Error parsing stored jobs:", e);
+    const loadStoredJobs = () => {
+      const storedJobs = localStorage.getItem('jobs');
+      if (storedJobs) {
+        try {
+          setLocalJobs(JSON.parse(storedJobs));
+        } catch (e) {
+          console.error("Error parsing stored jobs:", e);
+        }
       }
-    }
+    };
+    
+    loadStoredJobs();
   }, []);
 
   // Combine default jobs with any from localStorage

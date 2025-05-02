@@ -13,15 +13,14 @@ import {
   Play, 
   Pause, 
   SkipForward, 
-  Video as VideoIcon, 
-  Mic as MicIcon, 
+  Video as VideoIcon,
   AlertCircle,
   Loader2,
   CheckCircle2,
   XCircle,
   Info,
   Camera,
-  RefreshCw
+  RefreshCw,
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
@@ -59,13 +58,8 @@ export function InterviewPracticeClient({ jobId }: { jobId: string }) {
   const webcamRef = useRef<Webcam>(null);
   const {
     isRecording,
-    startRecording,
-    stopRecording,
     error: recordingError,
-    sendVideoForAnalysis,
-    isProcessing,
     analysisResults,
-    recordedChunks: providerRecordedChunks,
     resetRecording
   } = useRecording();
   
@@ -85,7 +79,7 @@ export function InterviewPracticeClient({ jobId }: { jobId: string }) {
   const recordedChunksRef = useRef<Blob[]>([]);
 
   // Add state for webcam permissions
-  const [permissionsRequested, setPermissionsRequested] = useState(false);
+  const [, setPermissionsRequested] = useState(false);
   const [permissionDenied, setPermissionDenied] = useState(false);
 
   // Load job and questions data
@@ -152,7 +146,7 @@ export function InterviewPracticeClient({ jobId }: { jobId: string }) {
       setLoadingData(false);
     };
 
-    loadData();
+    void loadData();
   }, [jobId]);
 
   // Handle user media access success
@@ -189,7 +183,7 @@ export function InterviewPracticeClient({ jobId }: { jobId: string }) {
     console.log("Is recording:", isRecording);
     console.log("Camera initialized:", cameraInitialized);
     console.log("Webcam ref available:", !!webcamRef.current);
-  }, [step, isRecording, cameraInitialized, webcamRef.current]);
+  }, [step, isRecording, cameraInitialized]);
 
   // Clean up on unmount
   useEffect(() => {
@@ -375,7 +369,7 @@ export function InterviewPracticeClient({ jobId }: { jobId: string }) {
       window.clearInterval(timerIntervalRef.current);
     }
 
-    processRecording();
+    void processRecording();
   };
 
   const processRecording = async () => {
@@ -405,7 +399,7 @@ export function InterviewPracticeClient({ jobId }: { jobId: string }) {
       resetRecording(); // Clear any previous recordings
       
       // Send video for analysis and get result
-      const questionText = practiceQuestions[currentQuestion] || "";
+      const questionText = practiceQuestions[currentQuestion] ?? "";
       console.log("Sending for analysis, question:", questionText);
       
       try {
@@ -426,8 +420,8 @@ export function InterviewPracticeClient({ jobId }: { jobId: string }) {
           setStep('result');
         }
       } catch (analysisError) {
-        console.error("Error during analysis:", analysisError);
-        setError(`Analysis failed: ${analysisError instanceof Error ? analysisError.message : 'Unknown error'}`);
+        console.error("Error analyzing video:", analysisError);
+        setError("Failed to analyze your response. Please try again.");
         setStep('setup');
       }
     } catch (error) {
@@ -694,12 +688,12 @@ export function InterviewPracticeClient({ jobId }: { jobId: string }) {
                 <div className="space-y-6">
                   <div className="flex items-center gap-3 text-primary">
                     <Info className="h-5 w-5" />
-                    <p>We'll need access to your camera and microphone for this mock interview. Please click "Allow" when prompted.</p>
+                    <p>We&apos;ll need access to your camera and microphone for this mock interview. Please click &quot;Allow&quot; when prompted.</p>
                   </div>
                   
                   <h2 className="text-2xl font-semibold">Ready to Start?</h2>
                   <p className="text-muted-foreground">
-                    You'll be asked {practiceQuestions.length} questions about {job.title} skills and experience.
+                    You&apos;ll be asked {practiceQuestions.length} questions about {job.title} skills and experience.
                     Your responses will be recorded and analyzed to provide feedback.
                   </p>
                   
@@ -747,7 +741,7 @@ export function InterviewPracticeClient({ jobId }: { jobId: string }) {
                   
                   <div className="rounded-md bg-muted/30 p-4">
                     <p className="text-sm text-muted-foreground">
-                      Your camera is ready. When you click "Start Recording", you'll have 90 seconds to answer 
+                      Your camera is ready. When you click &quot;Start Recording&quot;, you&apos;ll have 90 seconds to answer 
                       the question above. Try to structure your answer clearly and provide specific examples.
                     </p>
                   </div>
@@ -845,7 +839,7 @@ export function InterviewPracticeClient({ jobId }: { jobId: string }) {
                   <Loader2 className="h-12 w-12 animate-spin text-primary" />
                   <h2 className="text-xl font-semibold">Analyzing your response...</h2>
                   <p className="text-center text-muted-foreground">
-                    We're processing your video and analyzing your response.
+                    We&apos;re processing your video and analyzing your response.
                     This may take a moment.
                   </p>
                 </div>
@@ -1019,7 +1013,7 @@ export function InterviewPracticeClient({ jobId }: { jobId: string }) {
                   <div className="rounded-md border p-4">
                     <h3 className="font-medium">Overall Performance</h3>
                     <p className="mt-2 text-muted-foreground">
-                      You've completed all {practiceQuestions.length} questions. Here's a summary of your performance:
+                      You&apos;ve completed all {practiceQuestions.length} questions. Here&apos;s a summary of your performance:
                     </p>
                     
                     <div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-3">

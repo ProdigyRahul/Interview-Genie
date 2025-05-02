@@ -83,11 +83,11 @@ export function UploadJobDescriptionDialog() {
       };
       
       // Save to local storage
-      const jobs = JSON.parse(localStorage.getItem('jobs') || '{}');
+      const jobs = JSON.parse(localStorage.getItem('jobs') ?? '{}');
       jobs[jobId] = job;
       localStorage.setItem('jobs', JSON.stringify(jobs));
       
-      const allQuestions = JSON.parse(localStorage.getItem('questions') || '{}');
+      const allQuestions = JSON.parse(localStorage.getItem('questions') ?? '{}');
       allQuestions[jobId] = questions;
       localStorage.setItem('questions', JSON.stringify(allQuestions));
       

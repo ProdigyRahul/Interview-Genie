@@ -1,6 +1,7 @@
 "use client";
 
-import React, { createContext, useContext, useState, useRef, ReactNode } from "react";
+import React, { createContext, useContext, useState, useRef } from "react";
+import type { ReactNode } from "react";
 
 interface AnalysisResult {
   videoAnalysis?: {
@@ -47,12 +48,13 @@ const RecordingContext = createContext<RecordingContextType | undefined>(undefin
 export function RecordingProvider({ children }: { children: ReactNode }) {
   const [isRecording, setIsRecording] = useState(false);
   const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const [error, ] = useState<string | null>(null);
   const [recordedVideos, setRecordedVideos] = useState<Map<number, Blob>>(new Map());
   const [analysisResults, setAnalysisResults] = useState<Map<number, AnalysisResult>>(new Map());
   const [isProcessing, setIsProcessing] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioContextRef = useRef<AudioContext | null>(null);
+  // Remove or comment out the audioContextRef
+  // const audioContextRef = useRef<AudioContext | null>(null);
 
   const startRecording = () => {
     // This is now handled by the client component directly
@@ -70,7 +72,7 @@ export function RecordingProvider({ children }: { children: ReactNode }) {
   };
   
   // Function to transcribe audio using Web Speech API
-  const transcribeAudio = async (audioBlob: Blob): Promise<string> => {
+  const transcribeAudio = async (_audioBlob: Blob): Promise<string> => {
     // In a real implementation, you would extract audio from the video
     // and use the Web Speech API or a speech-to-text service
     

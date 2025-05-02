@@ -60,7 +60,7 @@ interface FormData {
 
 export default function ResumeBuilderPage() {
   const router = useRouter();
-  const [loading, _setLoading] = useState(false);
+  const [loading] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [isLoadingResumes, setIsLoadingResumes] = useState(true);

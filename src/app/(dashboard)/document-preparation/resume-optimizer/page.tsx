@@ -8,7 +8,6 @@ import { Breadcrumb } from "@/components/ui/breadcrumb";
 import {
   FileText,
   Upload,
-  Sparkles,
   BarChart3,
   AlertCircle,
   CheckCircle,
@@ -71,7 +70,6 @@ const sections = [
 ];
 
 export default function ResumeOptimizerPage() {
-  const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState<ResumeAnalysisResult | null>(null);
@@ -135,7 +133,6 @@ export default function ResumeOptimizerPage() {
 
     const droppedFile = e.dataTransfer.files[0];
     if (droppedFile && droppedFile.type === "application/pdf") {
-      setFile(droppedFile);
       await handleAnalyze(droppedFile);
     } else {
       toast.error("Please upload a PDF file");
@@ -145,7 +142,6 @@ export default function ResumeOptimizerPage() {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile && selectedFile.type === "application/pdf") {
-      setFile(selectedFile);
       await handleAnalyze(selectedFile);
       e.target.value = "";
     } else {
@@ -172,7 +168,7 @@ export default function ResumeOptimizerPage() {
 
       if (!response.ok) {
         const errorText = await response.json();
-        throw new Error(errorText.error || "Failed to analyze resume");
+        throw new Error(errorText.error ?? "Failed to analyze resume");
       }
 
       const data = await response.json();
@@ -885,7 +881,7 @@ export default function ResumeOptimizerPage() {
                 <DialogHeader>
                   <DialogTitle>Add Job Description (Optional)</DialogTitle>
                   <DialogDescription>
-                    Adding a job description will help tailor the ATS analysis to the specific role you're applying for.
+                    Adding a job description will help tailor the ATS analysis to the specific role you&apos;re applying for.
                   </DialogDescription>
                 </DialogHeader>
                 
